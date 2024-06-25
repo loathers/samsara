@@ -1,0 +1,107 @@
+import { Lifestyle, Ascension } from "@prisma/client";
+
+function trim(s: string) {
+  return s.replace(/(?:&nbsp;)+$/g, "").trim();
+}
+
+function parseDate(d: string) {
+  const [month, day, year] = d.split("/");
+  return new Date(`20${year}-${month}-${day}`);
+}
+
+const textContent = (s: string) => s.match(/<span.*?>(.*?)<\/span>/)?.[1] ?? s;
+
+const extractTitle = (s: string) => s?.match(/title="(.*?)"/s)?.[1];
+
+const parseLifestyle = (restrictions: string): Lifestyle => {
+  if (restrictions.includes("beanbag.gif")) return "CASUAL";
+  if (restrictions.includes("hardcorex.gif")) return "HARDCORE";
+  return "SOFTCORE";
+};
+
+const parseExtra = (extra: string) => {
+  if (extra === "") return {};
+  return Object.fromEntries(
+    extra.split(", ").map((pair) => {
+      const [value, ...key] = pair.includes(": ")
+        ? pair.split(": ").reverse()
+        : pair.split(" ");
+      return [key.join(" "), Number(value)];
+    }),
+  );
+};
+
+const parsePath = (path: string) => {
+  const parts = path.match(/(.*?) \((.*?)\)/) ||
+    path.match(/(.*?)\s*\n\s*(.*)/s) || [null, path, ""];
+  return [parts[1], parseExtra(parts[2])] as const;
+};
+
+const parseSign = (sign: string) => {
+  return !sign || sign === "(none)" ? "None" : sign;
+};
+
+const parseInteger = (num: string) => parseInt(num.replace(/,/g, ""));
+
+function parseAscensionRow(playerId: number, row: string): Ascension {
+  const cells = [...row.matchAll(/<td.*?>(.*?)<\/td>/gs)].map((cell) =>
+    trim(cell[1]),
+  );
+
+  const [ascensionNumber, dropped] = cells[0].endsWith("*")
+    ? [Number(cells[0].slice(0, -1)), true]
+    : [Number(cells[0]), false];
+
+  const base = {
+    ascensionNumber,
+    playerId,
+    date: parseDate(cells[1]),
+    dropped,
+  };
+
+  if (cells.length === 3) {
+    return {
+      ...base,
+      abandoned: true,
+      level: 0,
+      class: "None",
+      sign: "None",
+      turns: 0,
+      days: 0,
+      familiar: "None",
+      familiarPercentage: 0,
+      lifestyle: "SOFTCORE",
+      path: "None",
+      extra: {},
+    };
+  }
+
+  const familiar = (extractTitle(cells[7]) ?? "").match(
+    /^(.*?) \(([\d\.]+)%\)/,
+  );
+  const restrictions = cells[8].split("<img");
+  const path = parsePath(extractTitle(restrictions[2]) ?? "None");
+
+  return {
+    ...base,
+    abandoned: false,
+    level: parseInteger(textContent(cells[2])),
+    class: extractTitle(cells[3]) ?? "None",
+    sign: parseSign(cells[4]),
+    turns: parseInteger(textContent(cells[5])),
+    days: parseInteger(textContent(cells[6])),
+    familiar: familiar?.[1] ?? "None",
+    familiarPercentage: parseFloat(familiar?.[2] ?? "0"),
+    lifestyle: parseLifestyle(restrictions[1]),
+    path: path[0],
+    extra: path[1],
+  };
+}
+
+export function parseAscensionPage(page: string): Ascension[] {
+  const playerId = Number(page.match(/who=(\d+)/)?.[1]);
+  const rows = page.matchAll(
+    /<\/tr>(?:<td.*?>.*?<\/td>){2}(?:<td colspan.*?>.*?<\/td>|(?:<td.*?>.*?<\/td>){7})/gs,
+  );
+  return [...rows].map((row) => parseAscensionRow(playerId, row[0]));
+}
