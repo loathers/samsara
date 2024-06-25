@@ -35,6 +35,13 @@ describe("Ascension Page Parsing", () => {
     expect(dropped).toHaveProperty("sign", "None");
   });
 
+  it("can parse a run with an extra-wide familiar icon", async () => {
+    const camel = gausieAscensions.find((a) => a.ascensionNumber === 288);
+
+    expect(camel).toHaveProperty("familiar", "Melodramedary");
+    expect(camel).toHaveProperty("familiarPercentage", 17.5);
+  });
+
   it("can recognise an abandoned run", async () => {
     const page = await loadFixture("ascensionhistory_with_abandoned.html");
     const ascensions = parseAscensionPage(page);
