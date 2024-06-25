@@ -42,6 +42,17 @@ describe("Ascension Page Parsing", () => {
     expect(camel).toHaveProperty("familiarPercentage", 17.5);
   });
 
+  it.each(["before", "after"])(
+    "can parse an account that has not ascended %s NS13",
+    async (relativeToNS13) => {
+      const page = await loadFixture(
+        `ascensionhistory_none_${relativeToNS13}_ns13.html`,
+      );
+      const ascensions = parseAscensionPage(page);
+      expect(ascensions).toHaveLength(0);
+    },
+  );
+
   it("can recognise an abandoned run", async () => {
     const page = await loadFixture("ascensionhistory_with_abandoned.html");
     const ascensions = parseAscensionPage(page);
