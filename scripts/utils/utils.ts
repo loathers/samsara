@@ -52,6 +52,11 @@ const parseSign = (sign: string) => {
 const parseInteger = (num: string) => parseInt(num.replace(/,/g, ""));
 
 const parseIndex = (index: string): [number, boolean] => {
+  // The ascension index can have multiple asterisks
+  // 1. Dropped path
+  // 2. Replaced familiar with a Crimbo Shrub in Picky
+  // 3. ? Perhaps one day
+  // but we treat them all as a dropped path here.
   const match = index.match(/(\d+)(\*?)/);
   if (!match) return [0, false];
   const ascensionNumber = parseInt(match[1]);
