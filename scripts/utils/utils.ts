@@ -1,4 +1,12 @@
-import { Lifestyle, Ascension } from "@prisma/client";
+import {
+  type Lifestyle,
+  type Ascension as AscensionModel,
+  type Player,
+} from "@prisma/client";
+
+interface Ascension extends AscensionModel {
+  extra: Record<string, number>;
+}
 
 function trim(s: string) {
   return s.replace(/(?:&nbsp;)+$/g, "").trim();
@@ -43,14 +51,20 @@ const parseSign = (sign: string) => {
 
 const parseInteger = (num: string) => parseInt(num.replace(/,/g, ""));
 
+const parseIndex = (index: string): [number, boolean] => {
+  const match = index.match(/(\d+)(\*?)/);
+  if (!match) return [0, false];
+  const ascensionNumber = parseInt(match[1]);
+  const dropped = match[2].length > 0;
+  return [ascensionNumber, dropped];
+};
+
 function parseAscensionRow(playerId: number, row: string): Ascension {
   const cells = [...row.matchAll(/<td.*?>(.*?)<\/td>/gs)].map((cell) =>
     trim(cell[1]),
   );
 
-  const [ascensionNumber, dropped] = cells[0].endsWith("*")
-    ? [Number(cells[0].slice(0, -1)), true]
-    : [Number(cells[0]), false];
+  const [ascensionNumber, dropped] = parseIndex(cells[0]);
 
   const base = {
     ascensionNumber,
@@ -98,10 +112,32 @@ function parseAscensionRow(playerId: number, row: string): Ascension {
   };
 }
 
-export function parseAscensionPage(page: string): Ascension[] {
-  const playerId = Number(page.match(/who=(\d+)/)?.[1]);
+export function parseAscensions(page: string, playerId: number): Ascension[] {
   const rows = page.matchAll(
     /<\/tr>(?:<td.*?>.*?<\/td>){2}(?:<td colspan.*?>.*?<\/td>|(?:<td.*?>.*?<\/td>){7})/gs,
   );
   return [...rows].map((row) => parseAscensionRow(playerId, row[0]));
+}
+
+export function parsePlayer(page: string): Player | null {
+  const match = page.match(
+    /\(<a href="showplayer.php\?who=(\d+)\".*?><font.*?>(.*?)<\/font><\/a>\)/,
+  );
+  if (!match || match[1] === "0") return null;
+  return { id: parseInt(match[1]), name: match[2] };
+}
+
+export function parseRecentAscenders(page: string): Player[] {
+  const rows = page.matchAll(
+    /<td>\w{3}\d+&nbsp;<\/td><td>.*?who=(\d+).*?<b>(.*?)<\/b>/gs,
+  );
+
+  // All this to deduplicate players
+  const players = new Map<number, string>();
+
+  for (const row of rows) {
+    players.set(parseInt(row[1]), row[2]);
+  }
+
+  return [...players].map(([id, name]) => ({ id, name }));
 }
