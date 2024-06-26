@@ -95,9 +95,7 @@ function parseAscensionRow(playerId: number, row: string): Ascension {
     };
   }
 
-  const familiar = (extractTitle(cells[7]) ?? "").match(
-    /^(.*?) \(([\d.]+)%\)/,
-  );
+  const familiar = (extractTitle(cells[7]) ?? "").match(/^(.*?) \(([\d.]+)%\)/);
   const restrictions = cells[8].split("<img");
   const path = parsePath(extractTitle(restrictions[2]) ?? "None");
 

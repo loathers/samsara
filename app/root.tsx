@@ -5,6 +5,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
+import { ChakraProvider, Container } from "@chakra-ui/react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -25,5 +26,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <ChakraProvider>
+      <Container maxW={["100%", null, "container.xl"]} pt={10}>
+        <Outlet />
+      </Container>
+    </ChakraProvider>
+  );
 }

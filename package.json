@@ -14,12 +14,19 @@
     "recent": "node --import tsx --env-file .env scripts/recent.ts"
   },
   "dependencies": {
+    "@chakra-ui/react": "^2.8.2",
+    "@emotion/react": "^11.11.4",
+    "@emotion/server": "^11.11.0",
+    "@emotion/styled": "^11.11.5",
     "@remix-run/node": "^2.10.0",
     "@remix-run/react": "^2.10.0",
     "@remix-run/serve": "^2.10.0",
+    "@remix-run/web-fetch": "^4.4.2",
+    "framer-motion": "^11.2.12",
     "isbot": "^5.1.10",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "remix-utils": "^7.6.0"
   },
   "devDependencies": {
     "@prisma/client": "5.16.0",

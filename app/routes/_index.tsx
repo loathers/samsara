@@ -1,4 +1,6 @@
+import { Text, Stack, Heading } from "@chakra-ui/react";
 import type { MetaFunction } from "@remix-run/node";
+import { Link } from "@remix-run/react";
 
 export const meta: MetaFunction = () => {
   return [
@@ -9,8 +11,11 @@ export const meta: MetaFunction = () => {
 
 export default function Index() {
   return (
-    <div>
-      <h1>Saṃsāra ♻️</h1>
-    </div>
+    <Stack spacing={10}>
+      <Heading alignSelf="center">
+        <Link to="/">Saṃsāra ♻️</Link>
+      </Heading>
+      <Text>Welcome!</Text>
+    </Stack>
   );
 }
