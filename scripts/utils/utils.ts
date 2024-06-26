@@ -96,7 +96,7 @@ function parseAscensionRow(playerId: number, row: string): Ascension {
   }
 
   const familiar = (extractTitle(cells[7]) ?? "").match(
-    /^(.*?) \(([\d\.]+)%\)/,
+    /^(.*?) \(([\d.]+)%\)/,
   );
   const restrictions = cells[8].split("<img");
   const path = parsePath(extractTitle(restrictions[2]) ?? "None");
@@ -126,7 +126,7 @@ export function parseAscensions(page: string, playerId: number): Ascension[] {
 
 export function parsePlayer(page: string): Player | null {
   const match = page.match(
-    /\(<a href="showplayer.php\?who=(\d+)\".*?><font.*?>(.*?)<\/font><\/a>\)/,
+    /\(<a href="showplayer.php\?who=(\d+)".*?><font.*?>(.*?)<\/font><\/a>\)/,
   );
   if (!match || match[1] === "0") return null;
   return { id: parseInt(match[1]), name: match[2] };
