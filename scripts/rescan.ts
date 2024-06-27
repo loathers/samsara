@@ -11,7 +11,7 @@ const cli = program
   .option(
     "-s, --starting-id <id>",
     "Player id from which to iterate when scanning",
-    parseInt,
+    (v) => parseInt(v),
     6,
   )
   .option("--force", "Force rescan of all players", false)
@@ -22,13 +22,13 @@ function* counter(startFrom = 1, skip: number[] = []) {
 }
 
 async function main() {
-  const options = cli.opts<OptionValues>();
+  const { startingId, force } = cli.opts<OptionValues>();
 
-  const skip = options.force
+  const skip = force
     ? []
     : (await db.player.findMany({})).map((player) => player.id);
 
-  await checkPlayers(counter(options.startingId, skip));
+  await checkPlayers(counter(startingId, skip));
 }
 
 main();
