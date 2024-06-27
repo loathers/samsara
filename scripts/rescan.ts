@@ -18,7 +18,10 @@ const cli = program
   .parse();
 
 function* counter(startFrom = 1, skip: number[] = []) {
-  while (true) if (!skip.includes(startFrom)) yield startFrom++;
+  while (true) {
+    if (!skip.includes(startFrom)) yield startFrom;
+    startFrom++;
+  }
 }
 
 async function main() {
