@@ -1,14 +1,34 @@
+import { db } from "~/db.server.js";
 import { checkPlayers } from "./utils/client.js";
+import { program } from "commander";
 
-const STARTING_ID = 6;
+type OptionValues = {
+  startingId: number;
+  force: boolean;
+};
 
-function* counter(startFrom = 1) {
-  while (true) yield startFrom++;
+const cli = program
+  .option(
+    "-s, --starting-id <id>",
+    "Player id from which to iterate when scanning",
+    parseInt,
+    6,
+  )
+  .option("--force", "Force rescan of all players", false)
+  .parse();
+
+function* counter(startFrom = 1, skip: number[] = []) {
+  while (true) if (!skip.includes(startFrom)) yield startFrom++;
 }
 
 async function main() {
-  const startingId = parseInt(process.argv[2]) || STARTING_ID;
-  await checkPlayers(counter(startingId));
+  const options = cli.opts<OptionValues>();
+
+  const skip = options.force
+    ? []
+    : (await db.player.findMany({})).map((player) => player.id);
+
+  await checkPlayers(counter(options.startingId, skip));
 }
 
 main();

@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { db } from "~/db.server.js";
 import { parseAscensions, parsePlayer } from "./utils.js";
 import { parseWorkers } from "./Worker.js";
 
@@ -11,7 +11,6 @@ async function wait(ms: number) {
 const LATEST_KNOWN_ACCOUNT = 3726568;
 
 export const workers = parseWorkers(process.env);
-const db = new PrismaClient();
 
 export async function checkPlayers(ids: Generator<number>, stopOnBlank = true) {
   let shouldStop = false;
