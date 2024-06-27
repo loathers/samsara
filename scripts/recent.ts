@@ -12,6 +12,12 @@ async function main() {
   const recent = await kol.fetchText(
     "museum.php?place=leaderboards&whichboard=999&showhist=500",
   );
+
+  if (kol.isRollover()) {
+    console.log("Rollover detected, exiting");
+    return;
+  }
+
   const ascenders = parseRecentAscenders(recent);
 
   await checkPlayers(players(ascenders), false);

@@ -3,6 +3,7 @@ import {
   type Ascension as AscensionModel,
   type Player,
 } from "@prisma/client";
+import { Client } from "kol.js";
 
 interface Ascension extends AscensionModel {
   extra: Record<string, number>;
@@ -143,4 +144,19 @@ export function parseRecentAscenders(page: string): Player[] {
   }
 
   return [...players].map(([id, name]) => ({ id, name }));
+}
+
+export async function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function rolloverSafeFetch(client: Client, url: string) {
+  let response = await client.fetchText(url);
+
+  while (client.isRollover()) {
+    await wait(60000);
+    response = await client.fetchText(url);
+  }
+
+  return response;
 }

@@ -1,10 +1,11 @@
 import { db } from "~/db.server.js";
-import { parseAscensions, parsePlayer } from "./utils.js";
+import {
+  parseAscensions,
+  parsePlayer,
+  rolloverSafeFetch,
+  wait,
+} from "./utils.js";
 import { parseWorkers } from "./Worker.js";
-
-async function wait(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 // KoL used to purge accounts from inactivity and even now, sometimes accounts are purged. This is a sufficiently late known account
 // to let us know when to stop skipping gaps. If we ever encounter a future gap, this should be updated to have a greater value.
@@ -24,9 +25,11 @@ export async function checkPlayers(ids: Generator<number>, stopOnBlank = true) {
     const available = workers.find((w) => !w.isBusy())!;
 
     available.run(async (client) => {
-      const pre = await client.fetchText(
+      const pre = await rolloverSafeFetch(
+        client,
         `ascensionhistory.php?who=${id}&prens13=1`,
       );
+
       // Check the player here, no sense in trying post-NS13 if they don't exist.
       const player = parsePlayer(pre);
 
@@ -40,7 +43,10 @@ export async function checkPlayers(ids: Generator<number>, stopOnBlank = true) {
         return;
       }
 
-      const post = await client.fetchText(`ascensionhistory.php?who=${id}`);
+      const post = await rolloverSafeFetch(
+        client,
+        `ascensionhistory.php?who=${id}`,
+      );
 
       // Parse and merge pre and post NS13 ascensions
       const ascensions = [
