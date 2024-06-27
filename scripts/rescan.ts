@@ -7,7 +7,8 @@ function* counter(startFrom = 1) {
 }
 
 async function main() {
-  await checkPlayers(counter(STARTING_ID));
+  const startingId = parseInt(process.argv[2]) || STARTING_ID;
+  await checkPlayers(counter(startingId));
 }
 
 main();
