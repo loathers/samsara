@@ -11,7 +11,8 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { Ascension } from "@prisma/client";
-import { json, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
+import { JsonValue } from "@prisma/client/runtime/library";
+import { json, MetaFunction } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { useMemo } from "react";
 import { AscensionsGraph } from "~/components/AscensionsGraph";
@@ -20,10 +21,8 @@ import { ShowDate } from "~/components/ShowDate";
 import { db } from "~/db.server";
 import { derivePathInfo, getLeaderboard } from "~/utils";
 
-export const loader = async ({ params }: LoaderFunctionArgs) => {
-  const { name } = params;
-
-  if (!name) throw json({ message: "Invalid path name" }, { status: 400 });
+export const loader = async () => {
+  const name = "grey-goo";
 
   const [first] = await db.$queryRaw<Ascension[]>`
     SELECT * FROM "Ascension"
@@ -36,13 +35,13 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
   const path = derivePathInfo(first);
 
-  const bestHCEver = await getLeaderboard(name, "HARDCORE");
-  const bestSCEver = await getLeaderboard(name, "SOFTCORE");
+  const bestHCEver = await getLeaderboard(name, "HARDCORE", "Goo Score");
+  const bestSCEver = await getLeaderboard(name, "SOFTCORE", "Goo Score");
   const bestHCInSeason = path.end
-    ? await getLeaderboard(name, "HARDCORE", undefined, path.end)
+    ? await getLeaderboard(name, "HARDCORE", "Goo Score", path.end)
     : null;
   const bestSCInSeason = path.end
-    ? await getLeaderboard(name, "SOFTCORE", undefined, path.end)
+    ? await getLeaderboard(name, "SOFTCORE", "Goo Score", path.end)
     : null;
 
   const stats = await db.ascension.getStats(undefined, path.name);
@@ -66,6 +65,14 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     },
   ];
 };
+
+const numberFormat = new Intl.NumberFormat("en-GB");
+
+function getGooScore(a: { extra: JsonValue }) {
+  if (typeof a.extra !== "object" || a.extra === null || Array.isArray(a.extra))
+    return 0;
+  return numberFormat.format(Number(a.extra["Goo Score"] ?? 0));
+}
 
 export default function Path() {
   const {
@@ -112,10 +119,11 @@ export default function Path() {
           <AccordionItem>
             <AccordionButton>
               <HStack flex={1}>
-                <Heading size="md">Leaderboards</Heading>{" "}
+                <Heading size="md">Leaderboards (Goo)</Heading>{" "}
                 <Text>
                   The official leaderboards frozen once the path went
-                  out-of-season
+                  out-of-season. This season was ranked by Goo score, rather
+                  than days and turns.
                 </Text>
               </HStack>
               <AccordionIcon />
@@ -125,10 +133,12 @@ export default function Path() {
                 <Leaderboard
                   title="Softcore Leaderboard"
                   ascensions={scLeaderboard}
+                  alternativeScore={["Goo", getGooScore]}
                 />
                 <Leaderboard
                   title="Hardcore Leaderboard"
                   ascensions={hcLeaderboard}
+                  alternativeScore={["Goo", getGooScore]}
                 />
               </HStack>
             </AccordionPanel>
@@ -137,7 +147,7 @@ export default function Path() {
         <AccordionItem>
           <AccordionButton>
             <HStack flex={1}>
-              <Heading size="md">Pyrites</Heading>{" "}
+              <Heading size="md">Pyrites (Goo)</Heading>{" "}
               <Text>
                 A hypothetical leaderboard for all-time; invented, respected,
                 and dominated by fools
@@ -147,8 +157,16 @@ export default function Path() {
           </AccordionButton>
           <AccordionPanel>
             <HStack alignItems="start">
-              <Leaderboard title="Softcore Pyrites" ascensions={scPyrites} />
-              <Leaderboard title="Hardcore Pyrites" ascensions={hcPyrites} />
+              <Leaderboard
+                title="Softcore Pyrites"
+                ascensions={scPyrites}
+                alternativeScore={["Goo", getGooScore]}
+              />
+              <Leaderboard
+                title="Hardcore Pyrites"
+                ascensions={hcPyrites}
+                alternativeScore={["Goo", getGooScore]}
+              />
             </HStack>
           </AccordionPanel>
         </AccordionItem>

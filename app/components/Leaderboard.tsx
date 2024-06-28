@@ -16,6 +16,10 @@ import { Link as RemixLink } from "@remix-run/react";
 type Props = {
   title: string;
   ascensions: (Player & Ascension)[];
+  alternativeScore?: [
+    title: string,
+    renderer: (ascension: Player & Ascension) => React.ReactNode,
+  ];
 };
 
 function awardBg(rank: number) {
@@ -24,7 +28,7 @@ function awardBg(rank: number) {
   return "transparent";
 }
 
-export function Leaderboard({ title, ascensions }: Props) {
+export function Leaderboard({ title, ascensions, alternativeScore }: Props) {
   return (
     <TableContainer>
       <Heading textAlign="center" as="h3" size="sm">
@@ -36,6 +40,7 @@ export function Leaderboard({ title, ascensions }: Props) {
             <Th>#</Th>
             <Th>Player</Th>
             <Th>Date</Th>
+            {alternativeScore && <Th>{alternativeScore[0]}</Th>}
             <Th>Days / Turns</Th>
             <Th>Level</Th>
             <Th>Class</Th>
@@ -54,6 +59,7 @@ export function Leaderboard({ title, ascensions }: Props) {
               <Td>
                 <ShowDate date={a.date} />
               </Td>
+              {alternativeScore && <Td>{alternativeScore[1](a)}</Td>}
               <Td>
                 {a.days} / {a.turns}
               </Td>
