@@ -24,7 +24,11 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
   const player = await db.player.findUnique({
     where: { id: parseInt(id) },
-    include: { ascensions: true },
+    include: {
+      ascensions: {
+        orderBy: { ascensionNumber: "asc" },
+      },
+    },
   });
 
   if (!player) throw json({ message: "Player not found" }, { status: 404 });
@@ -41,6 +45,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 
 export default function Index() {
   const { player } = useLoaderData<typeof loader>();
+
   return (
     <Stack spacing={10}>
       <Heading alignSelf="center">{player.name}</Heading>
