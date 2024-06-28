@@ -6,6 +6,7 @@ import {
   wait,
 } from "./utils.js";
 import { parseWorkers } from "./Worker.js";
+import { Ascension } from "@prisma/client";
 
 // KoL used to purge accounts from inactivity and even now, sometimes accounts are purged. This is a sufficiently late known account
 // to let us know when to stop skipping gaps. If we ever encounter a future gap, this should be updated to have a greater value.
@@ -13,7 +14,11 @@ const LATEST_KNOWN_ACCOUNT = 3726568;
 
 export const workers = parseWorkers(process.env);
 
-export async function checkPlayers(ids: Generator<number>, stopOnBlank = true) {
+export async function checkPlayers(
+  ids: Generator<number>,
+  stopOnBlank = true,
+  ascensionUpdater?: (ascensions: Ascension[]) => Promise<number>,
+) {
   let shouldStop = false;
 
   for (const id of ids) {
@@ -69,11 +74,19 @@ export async function checkPlayers(ids: Generator<number>, stopOnBlank = true) {
         where: { id: player.id },
       });
 
-      // Ascensions never change, so we can skip duplicates
-      const { count: added } = await db.ascension.createMany({
-        data: ascensions,
-        skipDuplicates: true,
-      });
+      let added = 0;
+
+      if (ascensionUpdater) {
+        // We are correcting a parsing issue, so we can't skip duplicates
+        added = await ascensionUpdater(ascensions);
+      } else {
+        // Ascensions never change, so we can skip duplicates
+        const { count } = await db.ascension.createMany({
+          data: ascensions,
+          skipDuplicates: true,
+        });
+        added = count;
+      }
 
       console.log(
         `Processed ${ascensions.length} (${added} new) ascensions for ${player.name} (${player.id})`,

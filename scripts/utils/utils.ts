@@ -35,7 +35,7 @@ const parseExtra = (extra: string) => {
       const [value, ...key] = pair.includes(": ")
         ? pair.split(": ").reverse()
         : pair.split(" ");
-      return [key.join(" "), Number(value)];
+      return [key.join(" "), Number(value.replace(/,/g, ""))];
     }),
   );
 };

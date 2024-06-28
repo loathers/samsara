@@ -73,6 +73,22 @@ describe("Utils", () => {
       expect(dropped).toBeDefined();
       expect(dropped).toHaveProperty("dropped", true);
     });
+
+    it('can parse a Grey Goo "Goo Score"', async () => {
+      const goo = gausieAscensions.find((a) => a.ascensionNumber === 275);
+      expect(goo).toBeDefined();
+      expect(goo?.extra).toEqual({
+        "Goo Score": 9950,
+      });
+    });
+
+    it('can parse a One Crazy Random Summer "Fun" score', async () => {
+      const ocrs = gausieAscensions.find((a) => a.ascensionNumber === 279);
+      expect(ocrs).toBeDefined();
+      expect(ocrs?.extra).toEqual({
+        Fun: 7018,
+      });
+    });
   });
 
   describe("Parsing the player", () => {
