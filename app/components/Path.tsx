@@ -1,4 +1,5 @@
-import { Text } from "@chakra-ui/react";
+import { Link, Text } from "@chakra-ui/react";
+import { Link as RemixLink } from "@remix-run/react";
 import { Lifestyle } from "@prisma/client";
 
 const formatPath = (path: string) => {
@@ -15,15 +16,14 @@ const formatLifestyle = (lifestyle: Lifestyle) => {
 };
 
 type Props = {
-  path: string;
-  lifestyle: Lifestyle;
+  ascension: { path: string; lifestyle: Lifestyle; pathSlug: string };
 };
 
-export function Path({ path, lifestyle }: Props) {
+export function Path({ ascension: { path, lifestyle, pathSlug } }: Props) {
   if (lifestyle === "CASUAL") return <Text>{formatLifestyle(lifestyle)}</Text>;
   return (
-    <Text>
+    <Link as={RemixLink} to={`/path/${pathSlug}`}>
       {formatLifestyle(lifestyle)} {formatPath(path)}
-    </Text>
+    </Link>
   );
 }

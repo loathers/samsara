@@ -13,7 +13,7 @@ import { useLoaderData } from "@remix-run/react";
 
 import { db } from "../db.server.js";
 
-import { AscensionDate } from "../components/AscensionDate.js";
+import { ShowDate } from "../components/ShowDate.js";
 import { Path } from "../components/Path.js";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -43,7 +43,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   ];
 };
 
-export default function Index() {
+export default function Player() {
   const { player } = useLoaderData<typeof loader>();
 
   return (
@@ -68,7 +68,7 @@ export default function Index() {
                 <Tr key={ascension.ascensionNumber}>
                   <Td>{ascension.ascensionNumber}</Td>
                   <Td>
-                    <AscensionDate date={ascension.date} />
+                    <ShowDate date={ascension.date} />
                   </Td>
                   <Td colSpan={5} fontSize="sm" color="grey">
                     Run abandoned
@@ -79,11 +79,11 @@ export default function Index() {
               <Tr key={ascension.ascensionNumber}>
                 <Td>{ascension.ascensionNumber}</Td>
                 <Td>
-                  <AscensionDate date={ascension.date} />
+                  <ShowDate date={ascension.date} />
                 </Td>
                 <Td>{ascension.level}</Td>
                 <Td>
-                  <Path lifestyle={ascension.lifestyle} path={ascension.path} />
+                  <Path ascension={ascension} />
                 </Td>
                 <Td>{ascension.class}</Td>
                 <Td>{ascension.sign}</Td>

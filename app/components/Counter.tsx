@@ -87,7 +87,7 @@ export function Counter({ value, lineHeight = 35, duration = 1 }: Props) {
                 animationDuration: `${unitDuration}s`,
                 animationFillMode: "forwards",
                 animationIterationCount: iterations,
-                "&:first-child li": { borderLeft: "none" },
+                "&:first-of-type li": { borderLeft: "none" },
               }}
             >
               <Numbers lineHeight={lineHeight} />

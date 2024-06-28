@@ -6,7 +6,7 @@ const dateFormatter = Intl.DateTimeFormat(undefined, {
   dateStyle: "short",
 });
 
-export function AscensionDate({ date }: Props) {
+export function ShowDate({ date }: Props) {
   const d = new Date(date);
 
   return (

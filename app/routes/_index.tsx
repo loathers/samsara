@@ -1,6 +1,7 @@
-import { Text, Stack, Heading } from "@chakra-ui/react";
+import { Text, Stack, Heading, Box } from "@chakra-ui/react";
 import type { MetaFunction } from "@remix-run/node";
 import { json, Link, useLoaderData } from "@remix-run/react";
+import { AscensionsGraph } from "~/components/AscensionsGraph";
 import { Counter } from "~/components/Counter";
 import { db } from "~/db.server";
 
@@ -13,14 +14,17 @@ export const meta: MetaFunction = () => {
 
 export const loader = async () => {
   const totalTracked = await db.ascension.count();
-  return json({ totalTracked });
+
+  const stats = await db.ascension.getStats();
+
+  return json({ stats, totalTracked });
 };
 
 export default function Index() {
-  const { totalTracked } = useLoaderData<typeof loader>();
+  const { stats, totalTracked } = useLoaderData<typeof loader>();
   return (
-    <Stack spacing={10}>
-      <Stack spacing={6}>
+    <Stack spacing={10} alignItems="center">
+      <Stack spacing={6} alignItems="center">
         <Heading alignSelf="center">
           <Link to="/">Saṃsāra ♻️</Link>
         </Heading>
@@ -31,6 +35,9 @@ export default function Index() {
           <Text>incarnations!</Text>
         </Stack>
       </Stack>
+      <Box height={150} width="50%">
+        <AscensionsGraph data={stats} />
+      </Box>
     </Stack>
   );
 }
