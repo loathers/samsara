@@ -36,6 +36,8 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
   const path = derivePathInfo(first);
 
+  const isCurrent = !!path.end && new Date() < path.end;
+
   const bestHCEver = await getLeaderboard(name, "HARDCORE");
   const bestSCEver = await getLeaderboard(name, "SOFTCORE");
   const bestHCInSeason = path.end
@@ -50,6 +52,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   return json({
     path,
     stats,
+    isCurrent,
     bestHCEver,
     bestSCEver,
     bestHCInSeason,
@@ -70,6 +73,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 export default function Path() {
   const {
     path,
+    isCurrent,
     stats,
     bestHCInSeason,
     bestHCEver,
@@ -114,8 +118,9 @@ export default function Path() {
               <HStack flex={1}>
                 <Heading size="md">Leaderboards</Heading>{" "}
                 <Text>
-                  The official leaderboards frozen once the path went
-                  out-of-season
+                  {isCurrent
+                    ? "The official leaderboards as they currently stand"
+                    : "The official leaderboards frozen once the path went out-of-season"}
                 </Text>
               </HStack>
               <AccordionIcon />
@@ -134,24 +139,26 @@ export default function Path() {
             </AccordionPanel>
           </AccordionItem>
         )}
-        <AccordionItem>
-          <AccordionButton>
-            <HStack flex={1}>
-              <Heading size="md">Pyrites</Heading>{" "}
-              <Text>
-                A hypothetical leaderboard for all-time; invented, respected,
-                and dominated by fools
-              </Text>
-            </HStack>
-            <AccordionIcon />
-          </AccordionButton>
-          <AccordionPanel>
-            <HStack alignItems="start">
-              <Leaderboard title="Softcore Pyrites" ascensions={scPyrites} />
-              <Leaderboard title="Hardcore Pyrites" ascensions={hcPyrites} />
-            </HStack>
-          </AccordionPanel>
-        </AccordionItem>
+        {!isCurrent && (
+          <AccordionItem>
+            <AccordionButton>
+              <HStack flex={1}>
+                <Heading size="md">Pyrites</Heading>{" "}
+                <Text>
+                  A hypothetical leaderboard for all-time; invented, respected,
+                  and dominated by fools
+                </Text>
+              </HStack>
+              <AccordionIcon />
+            </AccordionButton>
+            <AccordionPanel>
+              <HStack alignItems="start">
+                <Leaderboard title="Softcore Pyrites" ascensions={scPyrites} />
+                <Leaderboard title="Hardcore Pyrites" ascensions={hcPyrites} />
+              </HStack>
+            </AccordionPanel>
+          </AccordionItem>
+        )}
       </Accordion>
     </Stack>
   );
