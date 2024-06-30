@@ -35,7 +35,7 @@ model Ascension {
   familiarPercentage Float
   lifestyle          Lifestyle
   pathName           String
-  // path              Path      @relation(fields: [pathName], references: [name])
+  path               Path      @relation(fields: [pathName], references: [name])
   extra              Json
 
   @@id(name: "id", [ascensionNumber, playerId])
@@ -50,9 +50,9 @@ enum Lifestyle {
 }
 
 model Path {
-  name  String  @id
-  slug  String  @unique
-  id    Int?
-  image String?
-  // ascensions Ascension[]
+  name       String      @id
+  slug       String      @unique
+  id         Int?
+  image      String?
+  ascensions Ascension[]
 }
