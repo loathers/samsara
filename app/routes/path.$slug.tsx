@@ -43,7 +43,13 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     ? await getLeaderboard(path.name, "SOFTCORE", undefined, path.end)
     : null;
 
-  const stats = await db.ascension.getStats(undefined, path.name);
+  const daysSinceStart =
+    (new Date().getTime() - (path.start?.getTime() ?? 0)) / (1000 * 3600 * 24);
+  const stats = await db.ascension.getStats(
+    undefined,
+    path.name,
+    daysSinceStart < 90 ? "week" : "month",
+  );
 
   return json({
     path,
