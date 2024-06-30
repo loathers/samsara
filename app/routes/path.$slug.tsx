@@ -7,6 +7,7 @@ import {
   Box,
   Heading,
   HStack,
+  Image,
   Stack,
   Text,
 } from "@chakra-ui/react";
@@ -17,7 +18,7 @@ import { AscensionsGraph } from "~/components/AscensionsGraph";
 import { Leaderboard } from "~/components/Leaderboard";
 import { FormattedDate } from "~/components/FormattedDate";
 import { db } from "~/db.server";
-import { derivePathInfo, getLeaderboard } from "~/utils";
+import { getLeaderboard } from "~/utils";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const { slug } = params;
@@ -25,30 +26,21 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const first = await db.ascension.findFirst({
-    where: { pathName: path.name },
-    orderBy: { date: "asc" },
-  });
-
-  if (!first) throw json({ message: "No ascensions found" }, { status: 404 });
-
-  const pathExtra = derivePathInfo(first);
-
-  const isCurrent = !!pathExtra.end && new Date() < pathExtra.end;
+  const isCurrent = !!path.end && new Date() < path.end;
 
   const bestHCEver = await getLeaderboard(path.name, "HARDCORE");
   const bestSCEver = await getLeaderboard(path.name, "SOFTCORE");
-  const bestHCInSeason = pathExtra.end
-    ? await getLeaderboard(path.name, "HARDCORE", undefined, pathExtra.end)
+  const bestHCInSeason = path.end
+    ? await getLeaderboard(path.name, "HARDCORE", undefined, path.end)
     : null;
-  const bestSCInSeason = pathExtra.end
-    ? await getLeaderboard(path.name, "SOFTCORE", undefined, pathExtra.end)
+  const bestSCInSeason = path.end
+    ? await getLeaderboard(path.name, "SOFTCORE", undefined, path.end)
     : null;
 
-  const stats = await db.ascension.getStats(undefined, pathExtra.name);
+  const stats = await db.ascension.getStats(undefined, path.name);
 
   return json({
-    path: { ...path, ...pathExtra },
+    path,
     stats,
     isCurrent,
     bestHCEver,
@@ -60,13 +52,15 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [
-    { title: `Saṃsāra ♻️ - ${data?.path}` },
+    { title: `Saṃsāra ♻️ - ${formatName(data?.path.name ?? "Unknown")}` },
     {
       name: "description",
-      content: `Ascension stats for the ${data?.path} path`,
+      content: `Ascension stats for the ${data?.path.name ?? "Unknown"} path`,
     },
   ];
 };
+
+const formatName = (name: string) => (name === "None" ? "No Path" : name);
 
 export default function Path() {
   const {
@@ -99,7 +93,14 @@ export default function Path() {
   return (
     <Stack spacing={10}>
       <Stack alignItems="center">
-        <Heading>{path.name}</Heading>
+        <HStack>
+          <Heading>{formatName(path.name)}</Heading>
+          {path.image && (
+            <Image
+              src={`http://images.kingdomofloathing.com/itemimages/${path.image}.gif`}
+            />
+          )}
+        </HStack>
         {path.start && path.end && (
           <Text size="md">
             <FormattedDate date={path.start} /> -{" "}

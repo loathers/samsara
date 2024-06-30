@@ -1,5 +1,6 @@
 import { db } from "~/db.server.js";
 import {
+  fetchPaths,
   parseAscensions,
   parsePlayer,
   rolloverSafeFetch,
@@ -82,8 +83,18 @@ export async function checkPlayers(
       const newPaths = ascensions.filter((a) => !paths.includes(a.pathName));
 
       if (newPaths.length > 0) {
+        const firstPerNewPath = Object.values(
+          newPaths.reduce(
+            (acc, a) => {
+              if (a.pathName in acc) return acc;
+              return { ...acc, [a.pathName]: a };
+            },
+            {} as Record<string, Ascension>,
+          ),
+        );
+
         await db.path.createMany({
-          data: newPaths.map((a) => ({
+          data: firstPerNewPath.map((a) => ({
             name: a.pathName,
             slug: slugify(a.pathName),
           })),
@@ -111,4 +122,61 @@ export async function checkPlayers(
       );
     });
   }
+
+  await updatePaths();
+}
+
+async function guessPathDates() {
+  const paths = await db.path.findMany({
+    where: { start: null, name: { not: "None" } },
+    include: {
+      ascensions: { select: { date: true }, orderBy: { date: "asc" }, take: 1 },
+    },
+  });
+
+  const updates = paths.map((path) => {
+    const { date } = path.ascensions[0];
+
+    const start = new Date(date);
+    start.setDate(15);
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + 3);
+    end.setDate(14);
+
+    return db.path.update({
+      where: { name: path.name },
+      data: { start, end },
+    });
+  });
+
+  await db.$transaction(updates);
+}
+
+async function fetchExtraPathData() {
+  const knownPaths = await fetchPaths();
+  if (!knownPaths) return;
+  const pathMap = new Map(knownPaths.map((p) => [p.name, p]));
+
+  // This path gets a shorter name in ascension logs
+  pathMap.set("Class Act II", pathMap.get("Class Act II: A Class For Pigs")!);
+
+  await db.$transaction(async (tx) => {
+    const paths = await tx.path.findMany({ where: { image: null } });
+
+    for (const path of paths) {
+      const knownPath = pathMap.get(path.name);
+      if (!knownPath) continue;
+
+      await tx.path.update({
+        where: { name: path.name },
+        data: { image: knownPath.image, id: knownPath.id },
+      });
+    }
+  });
+}
+
+export async function updatePaths() {
+  // Add start and end dates to paths
+  await guessPathDates();
+  await fetchExtraPathData();
 }

@@ -18,7 +18,7 @@ import { AscensionsGraph } from "~/components/AscensionsGraph";
 import { Leaderboard } from "~/components/Leaderboard";
 import { FormattedDate } from "~/components/FormattedDate";
 import { db } from "~/db.server";
-import { derivePathInfo, getLeaderboard } from "~/utils";
+import { getLeaderboard } from "~/utils";
 
 export const loader = async () => {
   const slug = "one-crazy-random-summer";
@@ -27,31 +27,22 @@ export const loader = async () => {
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const first = await db.ascension.findFirst({
-    where: { pathName: path.name },
-    orderBy: { date: "asc" },
-  });
-
-  if (!first) throw json({ message: "No ascensions found" }, { status: 404 });
-
-  const pathExtra = derivePathInfo(first);
-
   const bestHCEver = await getLeaderboard(path.name, "HARDCORE");
   const bestSCEver = await getLeaderboard(path.name, "SOFTCORE");
   const funnestHCEver = await getLeaderboard(path.name, "HARDCORE", "Fun");
   const funnestSCEver = await getLeaderboard(path.name, "SOFTCORE", "Fun");
 
-  const funnestHCInSeason = pathExtra.end
-    ? await getLeaderboard(path.name, "HARDCORE", "Fun", pathExtra.end)
+  const funnestHCInSeason = path.end
+    ? await getLeaderboard(path.name, "HARDCORE", "Fun", path.end)
     : null;
-  const funnestSCInSeason = pathExtra.end
-    ? await getLeaderboard(path.name, "SOFTCORE", "Fun", pathExtra.end)
+  const funnestSCInSeason = path.end
+    ? await getLeaderboard(path.name, "SOFTCORE", "Fun", path.end)
     : null;
-  const bestHCInSeason = pathExtra.end
-    ? await getLeaderboard(path.name, "HARDCORE", undefined, pathExtra.end)
+  const bestHCInSeason = path.end
+    ? await getLeaderboard(path.name, "HARDCORE", undefined, path.end)
     : null;
-  const bestSCInSeason = pathExtra.end
-    ? await getLeaderboard(path.name, "SOFTCORE", undefined, pathExtra.end)
+  const bestSCInSeason = path.end
+    ? await getLeaderboard(path.name, "SOFTCORE", undefined, path.end)
     : null;
 
   const stats = await db.ascension.getStats(undefined, path.name);
@@ -65,7 +56,7 @@ export const loader = async () => {
     funnestHCInSeason,
     funnestSCEver,
     funnestSCInSeason,
-    path: { ...path, ...pathExtra },
+    path,
     stats,
   });
 };

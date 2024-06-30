@@ -18,7 +18,7 @@ import { AscensionsGraph } from "~/components/AscensionsGraph";
 import { Leaderboard } from "~/components/Leaderboard";
 import { FormattedDate } from "~/components/FormattedDate";
 import { db } from "~/db.server";
-import { derivePathInfo, getLeaderboard } from "~/utils";
+import { getLeaderboard } from "~/utils";
 
 export const loader = async () => {
   const slug = "grey-goo";
@@ -27,28 +27,19 @@ export const loader = async () => {
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const first = await db.ascension.findFirst({
-    where: { pathName: path.name },
-    orderBy: { date: "asc" },
-  });
-
-  if (!first) throw json({ message: "No ascensions found" }, { status: 404 });
-
-  const pathExtra = derivePathInfo(first);
-
   const bestHCEver = await getLeaderboard(path.name, "HARDCORE", "Goo Score");
   const bestSCEver = await getLeaderboard(path.name, "SOFTCORE", "Goo Score");
-  const bestHCInSeason = pathExtra.end
-    ? await getLeaderboard(path.name, "HARDCORE", "Goo Score", pathExtra.end)
+  const bestHCInSeason = path.end
+    ? await getLeaderboard(path.name, "HARDCORE", "Goo Score", path.end)
     : null;
-  const bestSCInSeason = pathExtra.end
-    ? await getLeaderboard(path.name, "SOFTCORE", "Goo Score", pathExtra.end)
+  const bestSCInSeason = path.end
+    ? await getLeaderboard(path.name, "SOFTCORE", "Goo Score", path.end)
     : null;
 
   const stats = await db.ascension.getStats(undefined, path.name);
 
   return json({
-    path: { ...path, ...pathExtra },
+    path,
     stats,
     bestHCEver,
     bestSCEver,

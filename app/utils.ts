@@ -23,15 +23,3 @@ export async function getLeaderboard(
     LIMIT 35
   `;
 }
-
-export function derivePathInfo(firstAscension: Ascension) {
-  if (firstAscension.pathName === "None")
-    return { name: "None", start: null, end: null };
-  const start = new Date(firstAscension.date);
-  start.setDate(15);
-  const end = new Date(start);
-  end.setMonth(end.getMonth() + 3);
-  end.setDate(14);
-
-  return { name: firstAscension.pathName, start, end };
-}

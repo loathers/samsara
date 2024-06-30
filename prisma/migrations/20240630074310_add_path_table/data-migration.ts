@@ -1,13 +1,13 @@
 import { slugify } from "scripts/utils/utils";
 import { db } from "~/db.server";
 
-await db.$transaction(async () => {
-  const paths = await db.ascension.findMany({
+await db.$transaction(async (tx) => {
+  const paths = await tx.ascension.findMany({
     select: { pathName: true },
     distinct: ["pathName"],
   });
 
-  await db.path.createMany({
+  await tx.path.createMany({
     data: paths.map((a) => ({
       name: a.pathName,
       slug: slugify(a.pathName),

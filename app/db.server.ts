@@ -1,4 +1,10 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import {
+  Ascension,
+  Lifestyle,
+  Player,
+  Prisma,
+  PrismaClient,
+} from "@prisma/client";
 export const db = new PrismaClient().$extends({
   model: {
     ascension: {

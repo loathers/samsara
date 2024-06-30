@@ -52,6 +52,8 @@ enum Lifestyle {
 model Path {
   name       String      @id
   slug       String      @unique
+  start      DateTime?
+  end        DateTime?
   id         Int?
   image      String?
   ascensions Ascension[]
