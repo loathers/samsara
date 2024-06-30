@@ -105,7 +105,7 @@ export function PopularityGraph({ data }: Props) {
           iconType="circle"
           layout="vertical"
           content={({ payload }) => (
-            <Text fontSize="xs">
+            <Text fontSize="xs" textAlign="center">
               {payload?.map((entry, i) => (
                 <Fragment key={entry.value}>
                   {i > 0 && ", "}{" "}
