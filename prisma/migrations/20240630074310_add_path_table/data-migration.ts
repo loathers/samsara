@@ -13,5 +13,5 @@ await db.$transaction(async () => {
       slug: slugify(a.pathName),
     })),
     skipDuplicates: true,
-  })
+  });
 });

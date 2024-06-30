@@ -25,7 +25,10 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const first = await db.ascension.findFirst({ where: { pathName: path.name }, orderBy: { date: "asc" }}); 
+  const first = await db.ascension.findFirst({
+    where: { pathName: path.name },
+    orderBy: { date: "asc" },
+  });
 
   if (!first) throw json({ message: "No ascensions found" }, { status: 404 });
 
