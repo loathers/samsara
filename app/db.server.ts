@@ -1,7 +1,4 @@
 import {
-  Ascension,
-  Lifestyle,
-  Player,
   Prisma,
   PrismaClient,
 } from "@prisma/client";
