@@ -23,7 +23,7 @@ const formatLifestyle = (lifestyle: Lifestyle, shorten: boolean) => {
 };
 
 type Props = {
-  lifestyle: Lifestyle;
+  lifestyle?: Lifestyle;
   path: { slug: string; name: string };
   shorten?: boolean;
 };
@@ -31,9 +31,12 @@ type Props = {
 export function PathLink({ lifestyle, path, shorten = false }: Props) {
   if (lifestyle === "CASUAL")
     return <Text>{formatLifestyle(lifestyle, shorten)}</Text>;
+
+  const text = `${lifestyle ? `${formatLifestyle(lifestyle, shorten)} ` : ""} ${formatPath(path.name)}`;
+
   return (
     <Link as={RemixLink} to={`/path/${path.slug}`}>
-      {formatLifestyle(lifestyle, shorten)} {formatPath(path.name)}
+      {text}
     </Link>
   );
 }

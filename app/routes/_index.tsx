@@ -2,14 +2,10 @@ import {
   Text,
   Stack,
   Heading,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
-  StatArrow,
   Card,
   CardHeader,
   CardBody,
+  HStack,
 } from "@chakra-ui/react";
 import type { MetaFunction } from "@remix-run/node";
 import { json, Link, useLoaderData } from "@remix-run/react";
@@ -17,6 +13,8 @@ import { FrequencyGraph } from "../components/FrequencyGraph.js";
 import { Counter } from "../components/Counter.js";
 import { db } from "~/db.server";
 import { PopularityGraph } from "~/components/PopularityGraph";
+import { PathLink } from "~/components/PathLink";
+import { CoolStat } from "~/components/CoolStat";
 
 export const meta: MetaFunction = () => {
   return [
@@ -59,14 +57,65 @@ export const loader = async () => {
 
   const loopersChange = loopers / loopersPrev - 1;
 
-  return json({ loopers, loopersChange, frequency, totalTracked, popularity });
+  const currentPath = (await db.path.findFirst({
+    where: { start: { lt: new Date() }, end: { gte: new Date() } },
+  })) ?? { name: "Standard", slug: "standard" };
+
+  const [{ currentPathers }] = await db.$queryRaw<[{ currentPathers: number }]>`
+    SELECT COUNT(*)::integer AS "currentPathers" FROM (
+      SELECT
+        "name"
+      FROM "Player"
+      LEFT JOIN "Ascension" ON "Player"."id" = "Ascension"."playerId"
+      WHERE
+        "Ascension"."pathName" = ${currentPath.name} AND
+        "Ascension"."date" >= DATE_TRUNC('day', NOW() - interval '1 week') AND
+        "Ascension"."date" < DATE_TRUNC('day', NOW())
+      GROUP BY "Player"."id")
+  `;
+
+  const [{ currentPathersPrev }] = await db.$queryRaw<
+    [{ currentPathersPrev: number }]
+  >`
+    SELECT COUNT(*)::integer AS "currentPathersPrev" FROM (
+      SELECT
+        "name"
+      FROM "Player"
+      LEFT JOIN "Ascension" ON "Player"."id" = "Ascension"."playerId"
+      WHERE
+        "Ascension"."pathName" = ${currentPath.name} AND
+        "Ascension"."date" >= DATE_TRUNC('day', NOW() - interval '2 week') AND
+        "Ascension"."date" < DATE_TRUNC('day', NOW() - interval '1 week')
+      GROUP BY "Player"."id")
+    `;
+
+  const currentPathersChange = currentPathers / currentPathersPrev - 1;
+
+  return json({
+    loopers,
+    loopersChange,
+    currentPath,
+    currentPathers,
+    currentPathersChange,
+    frequency,
+    totalTracked,
+    popularity,
+  });
 };
 
 export default function Index() {
-  const { frequency, totalTracked, popularity, loopers, loopersChange } =
-    useLoaderData<typeof loader>();
+  const {
+    loopers,
+    loopersChange,
+    currentPath,
+    currentPathers,
+    currentPathersChange,
+    frequency,
+    totalTracked,
+    popularity,
+  } = useLoaderData<typeof loader>();
   return (
-    <Stack spacing={12} alignItems="stretch" mb={4}>
+    <Stack spacing={12} alignItems="stretch" mb={12}>
       <Stack spacing={8} alignItems="center">
         <Heading alignSelf="center">
           <Link to="/">Saṃsāra ♻️</Link>
@@ -94,28 +143,14 @@ export default function Index() {
           <FrequencyGraph data={frequency} />
         </CardBody>
       </Card>
-      <Card>
-        <CardBody>
-          <Stat>
-            <StatLabel>
-              Accounts that ascended every day in the last week
-            </StatLabel>
-            <StatNumber>{loopers}</StatNumber>
-            <StatHelpText>
-              {loopersChange === 0 ? (
-                "No change"
-              ) : (
-                <>
-                  <StatArrow
-                    type={loopersChange > 0 ? "increase" : "decrease"}
-                  />
-                  {(Math.abs(loopersChange) * 100).toFixed(1)}% on previous week
-                </>
-              )}
-            </StatHelpText>
-          </Stat>
-        </CardBody>
-      </Card>
+      <HStack justifyContent="space-around">
+        <CoolStat current={currentPathers} change={currentPathersChange}>
+          Accounts that ascended <PathLink path={currentPath} /> this week
+        </CoolStat>
+        <CoolStat current={loopers} change={loopersChange}>
+          Accounts that ascended every day in the last week
+        </CoolStat>
+      </HStack>
     </Stack>
   );
 }
