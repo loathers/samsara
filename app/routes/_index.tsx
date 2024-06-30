@@ -1,4 +1,14 @@
-import { Text, Stack, Heading } from "@chakra-ui/react";
+import {
+  Text,
+  Stack,
+  Heading,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  StatArrow,
+  Card,
+} from "@chakra-ui/react";
 import type { MetaFunction } from "@remix-run/node";
 import { json, Link, useLoaderData } from "@remix-run/react";
 import { FrequencyGraph } from "../components/FrequencyGraph.js";
@@ -20,21 +30,38 @@ export const loader = async () => {
   const popularity = await db.ascension.getPopularity();
 
   const [{ loopers }] = await db.$queryRaw<[{ loopers: number }]>`
-    SELECT COUNT(*)::integer AS "loopers"
-    FROM
-      (SELECT
-        FROM "Player"
-        LEFT JOIN "Ascension" ON "Player"."id" = "Ascension"."playerId"
-        WHERE "Ascension"."date" > '2024-06-23'
-        GROUP BY "Player"."id"
-        HAVING COUNT("Ascension"."ascensionNumber") >= 7)
+    SELECT COUNT(*)::integer AS "loopers" FROM (
+      SELECT
+        "name"
+	    FROM "Player"
+	    LEFT JOIN "Ascension" ON "Player"."id" = "Ascension"."playerId"
+	    WHERE
+		    "Ascension"."date" >= DATE_TRUNC('day', NOW() - interval '1 week') AND
+		    "Ascension"."date" < DATE_TRUNC('day', NOW())
+	    GROUP BY "Player"."id"
+	    HAVING COUNT("Ascension"."playerId") >= 7)
   `;
 
-  return json({ loopers, frequency, totalTracked, popularity });
+  const [{ loopersPrev }] = await db.$queryRaw<[{ loopersPrev: number }]>`
+    SELECT COUNT(*)::integer AS "loopersPrev" FROM (
+      SELECT
+        "name"
+      FROM "Player"
+      LEFT JOIN "Ascension" ON "Player"."id" = "Ascension"."playerId"
+      WHERE
+        "Ascension"."date" >= DATE_TRUNC('day', NOW() - interval '2 week') AND
+        "Ascension"."date" < DATE_TRUNC('day', NOW() - interval '1 week')
+      GROUP BY "Player"."id"
+      HAVING COUNT("Ascension"."playerId") >= 7)
+    `;
+
+  const loopersChange = loopers / loopersPrev - 1;
+
+  return json({ loopers, loopersChange, frequency, totalTracked, popularity });
 };
 
 export default function Index() {
-  const { frequency, totalTracked, popularity } =
+  const { frequency, totalTracked, popularity, loopers, loopersChange } =
     useLoaderData<typeof loader>();
   return (
     <Stack spacing={12} alignItems="center">
@@ -57,6 +84,24 @@ export default function Index() {
         <Heading size="md">All time ascension frequency</Heading>
         <FrequencyGraph data={frequency} />
       </Stack>
+      <Card p={5}>
+        <Stat>
+          <StatLabel>
+            Accounts that ascended every day in the last week
+          </StatLabel>
+          <StatNumber>{loopers}</StatNumber>
+          <StatHelpText>
+            {loopersChange === 0 ? (
+              "No change"
+            ) : (
+              <>
+                <StatArrow type={loopersChange > 0 ? "increase" : "decrease"} />
+                {(Math.abs(loopersChange) * 100).toFixed(1)}% on week before
+              </>
+            )}
+          </StatHelpText>
+        </Stat>
+      </Card>
     </Stack>
   );
 }
