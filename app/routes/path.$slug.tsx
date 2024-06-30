@@ -107,7 +107,7 @@ export default function Path() {
           <Heading>{formatName(path.name)}</Heading>
           {path.image && (
             <Image
-              src={`http://images.kingdomofloathing.com/itemimages/${path.image}.gif`}
+              src={`https://s3.amazonaws.com/images.kingdomofloathing.com/itemimages/${path.image}.gif`}
             />
           )}
         </HStack>
