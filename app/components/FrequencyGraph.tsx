@@ -1,5 +1,4 @@
 import {
-  Label,
   Line,
   LineChart,
   ReferenceLine,
@@ -11,16 +10,10 @@ import {
 type Datum = { date: string; count: number };
 type Props = { data: Datum[]; inSeasonTo?: string | null };
 
-export function AscensionsGraph({ data, inSeasonTo }: Props) {
+export function FrequencyGraph({ data, inSeasonTo }: Props) {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart
-        width={500}
-        height={300}
-        data={data}
-        title="Ascensions over time"
-      >
-        <Label value="Test" position="centerTop" />
+      <LineChart data={data} title="Ascensions over time">
         <XAxis
           type="number"
           dataKey={(d: Datum) => new Date(d.date).getTime()}

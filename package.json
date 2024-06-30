@@ -22,6 +22,7 @@
     "@remix-run/react": "^2.10.0",
     "@remix-run/serve": "^2.10.0",
     "@remix-run/web-fetch": "^4.4.2",
+    "create-color": "^2.0.6",
     "framer-motion": "^11.2.12",
     "isbot": "^5.1.10",
     "react": "^18.3.1",

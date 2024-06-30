@@ -1,9 +1,10 @@
-import { Text, Stack, Heading, Box } from "@chakra-ui/react";
+import { Text, Stack, Heading } from "@chakra-ui/react";
 import type { MetaFunction } from "@remix-run/node";
 import { json, Link, useLoaderData } from "@remix-run/react";
-import { AscensionsGraph } from "~/components/AscensionsGraph";
-import { Counter } from "~/components/Counter";
+import { FrequencyGraph } from "../components/FrequencyGraph.js";
+import { Counter } from "../components/Counter.js";
 import { db } from "~/db.server";
+import { PopularityGraph } from "~/components/PopularityGraph";
 
 export const meta: MetaFunction = () => {
   return [
@@ -15,16 +16,29 @@ export const meta: MetaFunction = () => {
 export const loader = async () => {
   const totalTracked = await db.ascension.count();
 
-  const stats = await db.ascension.getStats();
+  const frequency = await db.ascension.getStats();
+  const popularity = await db.ascension.getPopularity();
 
-  return json({ stats, totalTracked });
+  const [{ loopers }] = await db.$queryRaw<[{ loopers: number }]>`
+    SELECT COUNT(*)::integer AS "loopers"
+    FROM
+      (SELECT
+        FROM "Player"
+        LEFT JOIN "Ascension" ON "Player"."id" = "Ascension"."playerId"
+        WHERE "Ascension"."date" > '2024-06-23'
+        GROUP BY "Player"."id"
+        HAVING COUNT("Ascension"."ascensionNumber") >= 7)
+  `;
+
+  return json({ loopers, frequency, totalTracked, popularity });
 };
 
 export default function Index() {
-  const { stats, totalTracked } = useLoaderData<typeof loader>();
+  const { frequency, totalTracked, popularity } =
+    useLoaderData<typeof loader>();
   return (
-    <Stack spacing={10} alignItems="center">
-      <Stack spacing={6} alignItems="center">
+    <Stack spacing={12} alignItems="center">
+      <Stack spacing={8} alignItems="center">
         <Heading alignSelf="center">
           <Link to="/">Saṃsāra ♻️</Link>
         </Heading>
@@ -35,9 +49,14 @@ export default function Index() {
           <Text>incarnations!</Text>
         </Stack>
       </Stack>
-      <Box height={150} width="50%">
-        <AscensionsGraph data={stats} />
-      </Box>
+      <Stack spacing={8} height={300} width="50%" alignItems="center">
+        <Heading size="md">Top 10 paths in the last week</Heading>
+        <PopularityGraph data={popularity} />
+      </Stack>
+      <Stack spacing={8} height={150} width="50%" alignItems="center">
+        <Heading size="md">All time ascension frequency</Heading>
+        <FrequencyGraph data={frequency} />
+      </Stack>
     </Stack>
   );
 }

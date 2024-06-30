@@ -128,7 +128,7 @@ export async function checkPlayers(
 
 async function guessPathDates() {
   const paths = await db.path.findMany({
-    where: { start: null, name: { not: "None" } },
+    where: { start: null, name: { notIn: ["None", "Standard"] } },
     include: {
       ascensions: { select: { date: true }, orderBy: { date: "asc" }, take: 1 },
     },

@@ -14,7 +14,8 @@ import {
 import { json, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { useMemo } from "react";
-import { AscensionsGraph } from "~/components/AscensionsGraph";
+
+import { FrequencyGraph } from "~/components/FrequencyGraph";
 import { Leaderboard } from "~/components/Leaderboard";
 import { FormattedDate } from "~/components/FormattedDate";
 import { db } from "~/db.server";
@@ -25,6 +26,13 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   const path = await db.path.findFirst({ where: { slug } });
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
+
+  const isStandard = path.name === "Standard";
+
+  if (isStandard) {
+    path.start = new Date(new Date().getFullYear(), 0, 1);
+    path.end = new Date(new Date().getFullYear() + 1, 11, 31);
+  }
 
   const isCurrent = !!path.end && new Date() < path.end;
 
@@ -43,6 +51,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     path,
     stats,
     isCurrent,
+    isStandard,
     bestHCEver,
     bestSCEver,
     bestHCInSeason,
@@ -66,6 +75,7 @@ export default function Path() {
   const {
     path,
     isCurrent,
+    isStandard,
     stats,
     bestHCInSeason,
     bestHCEver,
@@ -109,7 +119,10 @@ export default function Path() {
         )}
       </Stack>
       <Box height={150} width="50%" alignSelf="center">
-        <AscensionsGraph data={stats} inSeasonTo={path.end} />
+        <FrequencyGraph
+          data={stats}
+          inSeasonTo={isStandard ? path.start : path.end}
+        />
       </Box>
       <Accordion allowToggle>
         {scLeaderboard && hcLeaderboard && (

@@ -1,6 +1,6 @@
 import { Link, Text } from "@chakra-ui/react";
 import { Link as RemixLink } from "@remix-run/react";
-import { Lifestyle, Path as PathType } from "@prisma/client";
+import { Lifestyle } from "@prisma/client";
 
 const formatPath = (path: string) => {
   switch (path) {
@@ -11,20 +11,29 @@ const formatPath = (path: string) => {
   }
 };
 
-const formatLifestyle = (lifestyle: Lifestyle) => {
-  return lifestyle.charAt(0) + lifestyle.slice(1).toLowerCase();
+const formatLifestyle = (lifestyle: Lifestyle, shorten: boolean) => {
+  switch (lifestyle) {
+    case "HARDCORE":
+      return shorten ? "HC" : "Hardcore";
+    case "SOFTCORE":
+      return shorten ? "SC" : "Softcore";
+    case "CASUAL":
+      return shorten ? "C" : "Casual";
+  }
 };
 
 type Props = {
-  ascension: { lifestyle: Lifestyle };
-  path: PathType;
+  lifestyle: Lifestyle;
+  path: { slug: string; name: string };
+  shorten?: boolean;
 };
 
-export function PathLink({ ascension: { lifestyle }, path }: Props) {
-  if (lifestyle === "CASUAL") return <Text>{formatLifestyle(lifestyle)}</Text>;
+export function PathLink({ lifestyle, path, shorten = false }: Props) {
+  if (lifestyle === "CASUAL")
+    return <Text>{formatLifestyle(lifestyle, shorten)}</Text>;
   return (
     <Link as={RemixLink} to={`/path/${path.slug}`}>
-      {formatLifestyle(lifestyle)} {formatPath(path.name)}
+      {formatLifestyle(lifestyle, shorten)} {formatPath(path.name)}
     </Link>
   );
 }

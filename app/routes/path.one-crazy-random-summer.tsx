@@ -14,7 +14,7 @@ import { JsonValue } from "@prisma/client/runtime/library";
 import { json, MetaFunction } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { useMemo } from "react";
-import { AscensionsGraph } from "~/components/AscensionsGraph";
+import { FrequencyGraph } from "~/components/FrequencyGraph";
 import { Leaderboard } from "~/components/Leaderboard";
 import { FormattedDate } from "~/components/FormattedDate";
 import { db } from "~/db.server";
@@ -138,7 +138,7 @@ export default function OCRSPath() {
         )}
       </Stack>
       <Box height={150} width="50%" alignSelf="center">
-        <AscensionsGraph data={stats} inSeasonTo={path.end} />
+        <FrequencyGraph data={stats} inSeasonTo={path.end} />
       </Box>
       <Accordion allowToggle>
         {scFunLeaderboard && hcFunLeaderboard && (

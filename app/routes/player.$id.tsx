@@ -90,7 +90,7 @@ export default function Player() {
                 <Td>{ascension.level}</Td>
                 <Td>
                   <PathLink
-                    ascension={ascension}
+                    lifestyle={ascension.lifestyle}
                     path={paths[ascension.pathName]}
                   />
                 </Td>
