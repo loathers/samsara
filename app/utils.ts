@@ -11,7 +11,7 @@ export async function getLeaderboard(
     SELECT * FROM (
       SELECT DISTINCT ON ("playerId") * 
       FROM "Ascension"
-      WHERE slugify("path") = ${path}
+      WHERE "pathName" = ${path}
       AND "lifestyle"::text = ${lifestyle}
       AND "dropped" = False
       AND "abandoned" = False
@@ -25,7 +25,7 @@ export async function getLeaderboard(
 }
 
 export function derivePathInfo(firstAscension: Ascension) {
-  if (firstAscension.path === "None")
+  if (firstAscension.pathName === "None")
     return { name: "None", start: null, end: null };
   const start = new Date(firstAscension.date);
   start.setDate(15);
@@ -33,5 +33,5 @@ export function derivePathInfo(firstAscension: Ascension) {
   end.setMonth(end.getMonth() + 3);
   end.setDate(14);
 
-  return { name: firstAscension.path, start, end };
+  return { name: firstAscension.pathName, start, end };
 }

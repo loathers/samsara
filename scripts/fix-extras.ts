@@ -23,7 +23,8 @@ async function main() {
       .filter(
         (a) =>
           isObject(a.extra) &&
-          (a.path === "Grey Goo" || a.path === "One Crazy Random Summer"),
+          (a.pathName === "Grey Goo" ||
+            a.pathName === "One Crazy Random Summer"),
       )
       .map((a) =>
         db.ascension.upsert({

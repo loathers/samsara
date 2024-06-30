@@ -1,6 +1,11 @@
 import { readFile } from "node:fs/promises";
 import { beforeAll, describe, expect, it } from "vitest";
-import { parseAscensions, parsePlayer, parseRecentAscenders } from "./utils.js";
+import {
+  parseAscensions,
+  parsePlayer,
+  parseRecentAscenders,
+  slugify,
+} from "./utils.js";
 import { join } from "node:path";
 import { Ascension } from "@prisma/client";
 
@@ -124,6 +129,22 @@ describe("Utils", () => {
 
       // Though the list is of 500 ascensions, it yields 405 unique ascenders.
       expect(ascensions).toHaveLength(405);
+    });
+  });
+
+  describe("Slugify", () => {
+    it("can slugify a simple path name", () => {
+      expect(slugify("The Source")).toBe("the-source");
+    });
+
+    it("can slugify a path name with punctuation", () => {
+      expect(slugify("You, Robot")).toBe("you-robot");
+    });
+
+    it("can slugify a path name with numbers", () => {
+      expect(slugify("11 Things I Hate About U")).toBe(
+        "11-things-i-hate-about-u",
+      );
     });
   });
 });

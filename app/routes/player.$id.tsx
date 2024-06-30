@@ -13,8 +13,9 @@ import { useLoaderData } from "@remix-run/react";
 
 import { db } from "../db.server.js";
 
-import { ShowDate } from "../components/ShowDate.js";
-import { Path } from "../components/Path.js";
+import { FormattedDate } from "../components/FormattedDate.js";
+import { Path as PathType } from "@prisma/client";
+import { PathLink } from "../components/PathLink.js";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const { id } = params;
@@ -31,9 +32,14 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     },
   });
 
+  const paths = (await db.path.findMany({})).reduce(
+    (acc, path) => ({ ...acc, [path.name]: path }),
+    {} as Record<string, PathType>,
+  );
+
   if (!player) throw json({ message: "Player not found" }, { status: 404 });
 
-  return json({ player });
+  return json({ player, paths });
 };
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -44,7 +50,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 };
 
 export default function Player() {
-  const { player } = useLoaderData<typeof loader>();
+  const { player, paths } = useLoaderData<typeof loader>();
 
   return (
     <Stack spacing={10}>
@@ -68,7 +74,7 @@ export default function Player() {
                 <Tr key={ascension.ascensionNumber}>
                   <Td>{ascension.ascensionNumber}</Td>
                   <Td>
-                    <ShowDate date={ascension.date} />
+                    <FormattedDate date={ascension.date} />
                   </Td>
                   <Td colSpan={5} fontSize="sm" color="grey">
                     Run abandoned
@@ -79,11 +85,14 @@ export default function Player() {
               <Tr key={ascension.ascensionNumber}>
                 <Td>{ascension.ascensionNumber}</Td>
                 <Td>
-                  <ShowDate date={ascension.date} />
+                  <FormattedDate date={ascension.date} />
                 </Td>
                 <Td>{ascension.level}</Td>
                 <Td>
-                  <Path ascension={ascension} />
+                  <PathLink
+                    ascension={ascension}
+                    path={paths[ascension.pathName]}
+                  />
                 </Td>
                 <Td>{ascension.class}</Td>
                 <Td>{ascension.sign}</Td>

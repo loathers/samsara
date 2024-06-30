@@ -10,7 +10,7 @@ import {
   Tr,
 } from "@chakra-ui/react";
 import { Ascension, Player } from "@prisma/client";
-import { ShowDate } from "./ShowDate";
+import { FormattedDate } from "./FormattedDate";
 import { Link as RemixLink } from "@remix-run/react";
 
 type Props = {
@@ -57,7 +57,7 @@ export function Leaderboard({ title, ascensions, alternativeScore }: Props) {
                 </Link>
               </Td>
               <Td>
-                <ShowDate date={a.date} />
+                <FormattedDate date={a.date} />
               </Td>
               {alternativeScore && <Td>{alternativeScore[1](a)}</Td>}
               <Td>

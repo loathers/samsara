@@ -91,7 +91,7 @@ function parseAscensionRow(playerId: number, row: string): Ascension {
       familiar: "None",
       familiarPercentage: 0,
       lifestyle: "SOFTCORE",
-      path: "None",
+      pathName: "None",
       extra: {},
     };
   }
@@ -111,7 +111,7 @@ function parseAscensionRow(playerId: number, row: string): Ascension {
     familiar: familiar?.[1] ?? "None",
     familiarPercentage: parseFloat(familiar?.[2] ?? "0"),
     lifestyle: parseLifestyle(restrictions[1]),
-    path: path[0],
+    pathName: path[0],
     extra: path[1],
   };
 }
@@ -160,3 +160,12 @@ export async function rolloverSafeFetch(client: Client, url: string) {
 
   return response;
 }
+
+export const slugify = (name: string) =>
+  name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+/g, "")
+    .replace(/-+$/g, "");

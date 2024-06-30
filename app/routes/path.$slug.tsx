@@ -10,47 +10,42 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { Ascension } from "@prisma/client";
 import { json, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { useMemo } from "react";
 import { AscensionsGraph } from "~/components/AscensionsGraph";
 import { Leaderboard } from "~/components/Leaderboard";
-import { ShowDate } from "~/components/ShowDate";
+import { FormattedDate } from "~/components/FormattedDate";
 import { db } from "~/db.server";
 import { derivePathInfo, getLeaderboard } from "~/utils";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
-  const { name } = params;
+  const { slug } = params;
+  const path = await db.path.findFirst({ where: { slug } });
 
-  if (!name) throw json({ message: "Invalid path name" }, { status: 400 });
+  if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const [first] = await db.$queryRaw<Ascension[]>`
-    SELECT * FROM "Ascension"
-    WHERE slugify("path") = ${name}
-    ORDER BY "date" ASC
-    LIMIT 1
-  `;
+  const first = await db.ascension.findFirst({ where: { pathName: path.name }, orderBy: { date: "asc" }}); 
 
-  if (!first) throw json({ message: "Path not found" }, { status: 404 });
+  if (!first) throw json({ message: "No ascensions found" }, { status: 404 });
 
-  const path = derivePathInfo(first);
+  const pathExtra = derivePathInfo(first);
 
-  const isCurrent = !!path.end && new Date() < path.end;
+  const isCurrent = !!pathExtra.end && new Date() < pathExtra.end;
 
-  const bestHCEver = await getLeaderboard(name, "HARDCORE");
-  const bestSCEver = await getLeaderboard(name, "SOFTCORE");
-  const bestHCInSeason = path.end
-    ? await getLeaderboard(name, "HARDCORE", undefined, path.end)
+  const bestHCEver = await getLeaderboard(path.name, "HARDCORE");
+  const bestSCEver = await getLeaderboard(path.name, "SOFTCORE");
+  const bestHCInSeason = pathExtra.end
+    ? await getLeaderboard(path.name, "HARDCORE", undefined, pathExtra.end)
     : null;
-  const bestSCInSeason = path.end
-    ? await getLeaderboard(name, "SOFTCORE", undefined, path.end)
+  const bestSCInSeason = pathExtra.end
+    ? await getLeaderboard(path.name, "SOFTCORE", undefined, pathExtra.end)
     : null;
 
-  const stats = await db.ascension.getStats(undefined, path.name);
+  const stats = await db.ascension.getStats(undefined, pathExtra.name);
 
   return json({
-    path,
+    path: { ...path, ...pathExtra },
     stats,
     isCurrent,
     bestHCEver,
@@ -104,7 +99,8 @@ export default function Path() {
         <Heading>{path.name}</Heading>
         {path.start && path.end && (
           <Text size="md">
-            <ShowDate date={path.start} /> - <ShowDate date={path.end} />
+            <FormattedDate date={path.start} /> -{" "}
+            <FormattedDate date={path.end} />
           </Text>
         )}
       </Stack>

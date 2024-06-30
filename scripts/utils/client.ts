@@ -3,6 +3,7 @@ import {
   parseAscensions,
   parsePlayer,
   rolloverSafeFetch,
+  slugify,
   wait,
 } from "./utils.js";
 import { parseWorkers } from "./Worker.js";
@@ -20,6 +21,10 @@ export async function checkPlayers(
   ascensionUpdater?: (ascensions: Ascension[]) => Promise<number>,
 ) {
   let shouldStop = false;
+
+  const paths = (await db.path.findMany({ select: { name: true } })).map(
+    (p) => p.name,
+  );
 
   for (const id of ids) {
     if (shouldStop && stopOnBlank) break;
@@ -73,6 +78,19 @@ export async function checkPlayers(
         update: { name: player.name },
         where: { id: player.id },
       });
+
+      const newPaths = ascensions.filter((a) => !paths.includes(a.pathName));
+
+      if (newPaths.length > 0) {
+        await db.path.createMany({
+          data: newPaths.map((a) => ({
+            name: a.pathName,
+            slug: slugify(a.pathName),
+          })),
+          skipDuplicates: true,
+        });
+        paths.push(...newPaths.map((a) => a.pathName));
+      }
 
       let added = 0;
 

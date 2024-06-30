@@ -34,14 +34,25 @@ model Ascension {
   familiar           String
   familiarPercentage Float
   lifestyle          Lifestyle
-  path               String
+  pathName           String
+  // path              Path      @relation(fields: [pathName], references: [name])
   extra              Json
 
   @@id(name: "id", [ascensionNumber, playerId])
+  @@index([pathName], type: Hash)
+  @@index([days, turns])
 }
 
 enum Lifestyle {
   CASUAL
   SOFTCORE
   HARDCORE
+}
+
+model Path {
+  name  String  @id
+  slug  String  @unique
+  id    Int?
+  image String?
+  // ascensions Ascension[]
 }

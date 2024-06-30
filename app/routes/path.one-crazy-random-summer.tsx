@@ -10,47 +10,45 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { Ascension } from "@prisma/client";
 import { JsonValue } from "@prisma/client/runtime/library";
 import { json, MetaFunction } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { useMemo } from "react";
 import { AscensionsGraph } from "~/components/AscensionsGraph";
 import { Leaderboard } from "~/components/Leaderboard";
-import { ShowDate } from "~/components/ShowDate";
+import { FormattedDate } from "~/components/FormattedDate";
 import { db } from "~/db.server";
 import { derivePathInfo, getLeaderboard } from "~/utils";
 
 export const loader = async () => {
-  const name = "one-crazy-random-summer";
+  const slug = "one-crazy-random-summer";
 
-  const [first] = await db.$queryRaw<Ascension[]>`
-    SELECT * FROM "Ascension"
-    WHERE slugify("path") = ${name}
-    ORDER BY "date" ASC
-    LIMIT 1
-  `;
+  const path = await db.path.findFirst({ where: { slug } });
 
-  if (!first) throw json({ message: "Path not found" }, { status: 404 });
+  if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const path = derivePathInfo(first);
+  const first = await db.ascension.findFirst({ where: { pathName: path.name }, orderBy: { date: "asc" }}); 
 
-  const bestHCEver = await getLeaderboard(name, "HARDCORE");
-  const bestSCEver = await getLeaderboard(name, "SOFTCORE");
-  const funnestHCEver = await getLeaderboard(name, "HARDCORE", "Fun");
-  const funnestSCEver = await getLeaderboard(name, "SOFTCORE", "Fun");
+  if (!first) throw json({ message: "No ascensions found" }, { status: 404 });
 
-  const funnestHCInSeason = path.end
-    ? await getLeaderboard(name, "HARDCORE", "Fun", path.end)
+  const pathExtra = derivePathInfo(first);
+
+  const bestHCEver = await getLeaderboard(path.name, "HARDCORE");
+  const bestSCEver = await getLeaderboard(path.name, "SOFTCORE");
+  const funnestHCEver = await getLeaderboard(path.name, "HARDCORE", "Fun");
+  const funnestSCEver = await getLeaderboard(path.name, "SOFTCORE", "Fun");
+
+  const funnestHCInSeason = pathExtra.end
+    ? await getLeaderboard(path.name, "HARDCORE", "Fun", pathExtra.end)
     : null;
-  const funnestSCInSeason = path.end
-    ? await getLeaderboard(name, "SOFTCORE", "Fun", path.end)
+  const funnestSCInSeason = pathExtra.end
+    ? await getLeaderboard(path.name, "SOFTCORE", "Fun", pathExtra.end)
     : null;
-  const bestHCInSeason = path.end
-    ? await getLeaderboard(name, "HARDCORE", undefined, path.end)
+  const bestHCInSeason = pathExtra.end
+    ? await getLeaderboard(path.name, "HARDCORE", undefined, pathExtra.end)
     : null;
-  const bestSCInSeason = path.end
-    ? await getLeaderboard(name, "SOFTCORE", undefined, path.end)
+  const bestSCInSeason = pathExtra.end
+    ? await getLeaderboard(path.name, "SOFTCORE", undefined, pathExtra.end)
     : null;
 
   const stats = await db.ascension.getStats(undefined, path.name);
@@ -64,7 +62,7 @@ export const loader = async () => {
     funnestHCInSeason,
     funnestSCEver,
     funnestSCInSeason,
-    path,
+    path: { ...path, ...pathExtra },
     stats,
   });
 };
@@ -87,7 +85,7 @@ function getFunScore(a: { extra: JsonValue }) {
   return numberFormat.format(Number(a.extra["Fun"] ?? 0));
 }
 
-export default function Path() {
+export default function OCRSPath() {
   const {
     bestHCEver,
     bestHCInSeason,
@@ -140,7 +138,8 @@ export default function Path() {
         <Heading>{path.name}</Heading>
         {path.start && path.end && (
           <Text size="md">
-            <ShowDate date={path.start} /> - <ShowDate date={path.end} />
+            <FormattedDate date={path.start} /> -{" "}
+            <FormattedDate date={path.end} />
           </Text>
         )}
       </Stack>
