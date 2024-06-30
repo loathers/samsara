@@ -10,6 +10,11 @@ import {
 type Datum = { date: string; count: number };
 type Props = { data: Datum[]; inSeasonTo?: string | null };
 
+const compactNumber = Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
+
 export function FrequencyGraph({ data, inSeasonTo }: Props) {
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -21,7 +26,12 @@ export function FrequencyGraph({ data, inSeasonTo }: Props) {
           tickFormatter={(ts: number) => new Date(ts).getFullYear().toString()}
           domain={["dataMin", "dataMax"]}
         />
-        <YAxis tick={{ fontSize: 9 }} domain={[0, "auto"]} />
+        <YAxis
+          tick={{ fontSize: 9 }}
+          domain={[0, "auto"]}
+          tickFormatter={(num: number) => compactNumber.format(num)}
+          width={25}
+        />
         <Line type="monotone" dataKey="count" dot={false} />
         {inSeasonTo && (
           <ReferenceLine x={new Date(inSeasonTo).getTime()} stroke="red" />

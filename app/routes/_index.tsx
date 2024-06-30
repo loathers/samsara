@@ -8,6 +8,8 @@ import {
   StatHelpText,
   StatArrow,
   Card,
+  CardHeader,
+  CardBody,
 } from "@chakra-ui/react";
 import type { MetaFunction } from "@remix-run/node";
 import { json, Link, useLoaderData } from "@remix-run/react";
@@ -64,7 +66,7 @@ export default function Index() {
   const { frequency, totalTracked, popularity, loopers, loopersChange } =
     useLoaderData<typeof loader>();
   return (
-    <Stack spacing={12} alignItems="center">
+    <Stack spacing={12} alignItems="stretch" mb={4}>
       <Stack spacing={8} alignItems="center">
         <Heading alignSelf="center">
           <Link to="/">Saṃsāra ♻️</Link>
@@ -76,31 +78,43 @@ export default function Index() {
           <Text>incarnations!</Text>
         </Stack>
       </Stack>
-      <Stack spacing={8} height={300} width="50%" alignItems="center">
-        <Heading size="md">Top 10 paths in the last week</Heading>
-        <PopularityGraph data={popularity} />
-      </Stack>
-      <Stack spacing={8} height={150} width="50%" alignItems="center">
-        <Heading size="md">All time ascension frequency</Heading>
-        <FrequencyGraph data={frequency} />
-      </Stack>
-      <Card p={5}>
-        <Stat>
-          <StatLabel>
-            Accounts that ascended every day in the last week
-          </StatLabel>
-          <StatNumber>{loopers}</StatNumber>
-          <StatHelpText>
-            {loopersChange === 0 ? (
-              "No change"
-            ) : (
-              <>
-                <StatArrow type={loopersChange > 0 ? "increase" : "decrease"} />
-                {(Math.abs(loopersChange) * 100).toFixed(1)}% on week before
-              </>
-            )}
-          </StatHelpText>
-        </Stat>
+      <Card height={400}>
+        <CardHeader>
+          <Heading size="md">Top 10 paths in the last week</Heading>
+        </CardHeader>
+        <CardBody>
+          <PopularityGraph data={popularity} />
+        </CardBody>
+      </Card>
+      <Card height={200}>
+        <CardHeader>
+          <Heading size="md">All time ascension frequency</Heading>
+        </CardHeader>
+        <CardBody>
+          <FrequencyGraph data={frequency} />
+        </CardBody>
+      </Card>
+      <Card>
+        <CardBody>
+          <Stat>
+            <StatLabel>
+              Accounts that ascended every day in the last week
+            </StatLabel>
+            <StatNumber>{loopers}</StatNumber>
+            <StatHelpText>
+              {loopersChange === 0 ? (
+                "No change"
+              ) : (
+                <>
+                  <StatArrow
+                    type={loopersChange > 0 ? "increase" : "decrease"}
+                  />
+                  {(Math.abs(loopersChange) * 100).toFixed(1)}% on previous week
+                </>
+              )}
+            </StatHelpText>
+          </Stat>
+        </CardBody>
       </Card>
     </Stack>
   );

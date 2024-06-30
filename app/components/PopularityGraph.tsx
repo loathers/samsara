@@ -97,7 +97,7 @@ export function PopularityGraph({ data }: Props) {
           tickCount={8}
           domain={["dataMin", "dataMax"]}
         />
-        <YAxis tick={{ fontSize: 9 }} domain={[0, "auto"]} />
+        <YAxis tick={{ fontSize: 9 }} domain={[0, "auto"]} width={25} />
         {seriesKeys.map((line) => (
           <Line key={line.dataKey} type="monotone" {...line} dot={false} />
         ))}
