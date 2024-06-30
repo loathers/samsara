@@ -4,10 +4,8 @@ import {
   AccordionIcon,
   AccordionItem,
   AccordionPanel,
-  Box,
   Heading,
   HStack,
-  Image,
   Stack,
   Text,
 } from "@chakra-ui/react";
@@ -15,11 +13,11 @@ import { json, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { useMemo } from "react";
 
-import { FrequencyGraph } from "~/components/FrequencyGraph";
 import { Leaderboard } from "~/components/Leaderboard";
-import { FormattedDate } from "~/components/FormattedDate";
 import { db } from "~/db.server";
-import { getLeaderboard } from "~/utils";
+import { formatPathName } from "~/utils";
+import { PathHeader } from "~/components/PathHeader";
+import { getLeaderboard } from "~/utils.server";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const { slug } = params;
@@ -61,15 +59,13 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [
-    { title: `Saṃsāra ♻️ - ${formatName(data?.path.name ?? "Unknown")}` },
+    { title: `Saṃsāra ♻️ - ${formatPathName(data?.path.name ?? "Unknown")}` },
     {
       name: "description",
       content: `Ascension stats for the ${data?.path.name ?? "Unknown"} path`,
     },
   ];
 };
-
-const formatName = (name: string) => (name === "None" ? "No Path" : name);
 
 export default function Path() {
   const {
@@ -102,28 +98,7 @@ export default function Path() {
 
   return (
     <Stack spacing={10}>
-      <Stack alignItems="center">
-        <HStack>
-          <Heading>{formatName(path.name)}</Heading>
-          {path.image && (
-            <Image
-              src={`https://s3.amazonaws.com/images.kingdomofloathing.com/itemimages/${path.image}.gif`}
-            />
-          )}
-        </HStack>
-        {path.start && path.end && (
-          <Text size="md">
-            <FormattedDate date={path.start} /> -{" "}
-            <FormattedDate date={path.end} />
-          </Text>
-        )}
-      </Stack>
-      <Box height={150} width="50%" alignSelf="center">
-        <FrequencyGraph
-          data={stats}
-          inSeasonTo={isStandard ? path.start : path.end}
-        />
-      </Box>
+      <PathHeader path={path} stats={stats} isStandard={isStandard} />
       <Accordion allowToggle>
         {scLeaderboard && hcLeaderboard && (
           <AccordionItem>

@@ -8,7 +8,7 @@ import {
 } from "recharts";
 
 type Datum = { date: string; count: number };
-type Props = { data: Datum[]; inSeasonTo?: string | null };
+type Props = { data: Datum[]; inSeasonTo?: Date | string | null };
 
 const compactNumber = Intl.NumberFormat("en-US", {
   notation: "compact",

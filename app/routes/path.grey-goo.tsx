@@ -4,7 +4,6 @@ import {
   AccordionIcon,
   AccordionItem,
   AccordionPanel,
-  Box,
   Heading,
   HStack,
   Stack,
@@ -14,11 +13,11 @@ import { JsonValue } from "@prisma/client/runtime/library";
 import { json, MetaFunction } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { useMemo } from "react";
-import { FrequencyGraph } from "~/components/FrequencyGraph";
 import { Leaderboard } from "~/components/Leaderboard";
-import { FormattedDate } from "~/components/FormattedDate";
+import { PathHeader } from "~/components/PathHeader";
 import { db } from "~/db.server";
-import { getLeaderboard } from "~/utils";
+import { formatPathName } from "~/utils";
+import { getLeaderboard } from "~/utils.server";
 
 export const loader = async () => {
   const slug = "grey-goo";
@@ -50,10 +49,10 @@ export const loader = async () => {
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [
-    { title: `Saṃsāra ♻️ - ${data?.path}` },
+    { title: `Saṃsāra ♻️ - ${formatPathName(data?.path.name ?? "Unknown")}` },
     {
       name: "description",
-      content: `Ascension stats for the ${data?.path} path`,
+      content: `Ascension stats for the ${formatPathName(data?.path.name ?? "Unknown")} path`,
     },
   ];
 };
@@ -95,18 +94,7 @@ export default function GreyGooPath() {
 
   return (
     <Stack spacing={10}>
-      <Stack alignItems="center">
-        <Heading>{path.name}</Heading>
-        {path.start && path.end && (
-          <Text size="md">
-            <FormattedDate date={path.start} /> -{" "}
-            <FormattedDate date={path.end} />
-          </Text>
-        )}
-      </Stack>
-      <Box height={150} width="50%" alignSelf="center">
-        <FrequencyGraph data={stats} inSeasonTo={path.end} />
-      </Box>
+      <PathHeader path={path} stats={stats} />
       <Accordion allowToggle>
         {scLeaderboard && hcLeaderboard && (
           <AccordionItem>
