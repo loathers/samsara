@@ -6,7 +6,20 @@ type GetStatOptions = {
   path?: string;
 };
 
-export const db = new PrismaClient().$extends({
+const prisma = new PrismaClient({
+  log: [
+    {
+      emit: "event",
+      level: "query",
+    },
+  ],
+});
+
+// prisma.$on("query", async (e) => {
+//   console.log(`${e.query} ${e.params}`)
+// })
+
+export const db = prisma.$extends({
   model: {
     ascension: {
       async getStats(

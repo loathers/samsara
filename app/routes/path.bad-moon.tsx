@@ -13,9 +13,9 @@ export const loader = defineLoader(async () => {
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const bestHCEver = await getLeaderboard(path.name, "HARDCORE");
-  const bestSCEver = await getLeaderboard(path.name, "SOFTCORE");
-  const bestCasualEver = await getLeaderboard(path.name, "CASUAL");
+  const bestHCEver = await getLeaderboard(path, "HARDCORE");
+  const bestSCEver = await getLeaderboard(path, "SOFTCORE");
+  const bestCasualEver = await getLeaderboard(path, "CASUAL");
 
   const stats = await db.ascension.getStats(undefined, path.name);
 

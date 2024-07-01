@@ -16,35 +16,15 @@ export const loader = defineLoader(async () => {
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const bestHCEver = await getLeaderboard(path.name, "HARDCORE");
-  const bestSCEver = await getLeaderboard(path.name, "SOFTCORE");
-  const funnestHCEver = await getLeaderboard(path.name, "HARDCORE", "Fun");
-  const funnestSCEver = await getLeaderboard(path.name, "SOFTCORE", "Fun");
+  const bestHCEver = await getLeaderboard(path, "HARDCORE");
+  const bestSCEver = await getLeaderboard(path, "SOFTCORE");
+  const funnestHCEver = await getLeaderboard(path, "HARDCORE", false, "Fun");
+  const funnestSCEver = await getLeaderboard(path, "SOFTCORE", false, "Fun");
 
-  const funnestHCInSeason = await getLeaderboard(
-    path.name,
-    "HARDCORE",
-    "Fun",
-    path.end!,
-  );
-  const funnestSCInSeason = await getLeaderboard(
-    path.name,
-    "SOFTCORE",
-    "Fun",
-    path.end!,
-  );
-  const bestHCInSeason = await getLeaderboard(
-    path.name,
-    "HARDCORE",
-    undefined,
-    path.end!,
-  );
-  const bestSCInSeason = await getLeaderboard(
-    path.name,
-    "SOFTCORE",
-    undefined,
-    path.end!,
-  );
+  const funnestHCInSeason = await getLeaderboard(path, "HARDCORE", true, "Fun");
+  const funnestSCInSeason = await getLeaderboard(path, "SOFTCORE", true, "Fun");
+  const bestHCInSeason = await getLeaderboard(path, "HARDCORE", true);
+  const bestSCInSeason = await getLeaderboard(path, "SOFTCORE", true);
 
   const stats = await db.ascension.getStats(undefined, path.name);
 

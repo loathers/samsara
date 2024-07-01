@@ -15,21 +15,32 @@ export const loader = defineLoader(async ({ params }) => {
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  if (!path.seasonal) {
+  const standard = path.name === "Standard";
+
+  const current =
+    (path.start &&
+      path.end &&
+      new Date() > path.start &&
+      new Date() < path.end) ??
+    true;
+  const hasPyrites = path.seasonal && (!current || standard);
+
+  if (standard) {
     path.start = new Date(new Date().getFullYear(), 0, 1);
-    path.end = new Date(new Date().getFullYear() + 1, 11, 31);
+    path.end = new Date(new Date().getFullYear(), 11, 31);
   }
 
-  const isCurrent = !!path.end && new Date() < path.end;
+  const bestSCEver = await getLeaderboard(path, "SOFTCORE");
+  const bestHCEver = await getLeaderboard(path, "HARDCORE");
 
-  const bestHCEver = await getLeaderboard(path.name, "HARDCORE");
-  const bestSCEver = await getLeaderboard(path.name, "SOFTCORE");
-  const bestHCInSeason = path.end
-    ? await getLeaderboard(path.name, "HARDCORE", undefined, path.end)
-    : [];
-  const bestSCInSeason = path.end
-    ? await getLeaderboard(path.name, "SOFTCORE", undefined, path.end)
-    : [];
+  const [scLeaderboard, hcLeaderboard, scPyrite, hcPyrite] = hasPyrites
+    ? [
+        await getLeaderboard(path, "SOFTCORE", true),
+        await getLeaderboard(path, "HARDCORE", true),
+        bestSCEver,
+        bestHCEver,
+      ]
+    : [bestSCEver, bestHCEver, [], []];
 
   const daysSinceStart =
     (new Date().getTime() - (path.start?.getTime() ?? 0)) / (1000 * 3600 * 24);
@@ -43,11 +54,11 @@ export const loader = defineLoader(async ({ params }) => {
   return {
     path,
     stats,
-    isCurrent,
-    bestHCEver,
-    bestSCEver,
-    bestHCInSeason,
-    bestSCInSeason,
+    current,
+    scLeaderboard,
+    hcLeaderboard,
+    scPyrite,
+    hcPyrite,
   };
 });
 
@@ -64,41 +75,38 @@ export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
 export default function Path() {
   const {
     path,
-    isCurrent,
+    current,
     stats,
-    bestHCInSeason,
-    bestHCEver,
-    bestSCEver,
-    bestSCInSeason,
+    scLeaderboard,
+    hcLeaderboard,
+    scPyrite,
+    hcPyrite,
   } = useLoaderData<typeof loader>();
-
   return (
     <Stack spacing={10}>
       <PathHeader path={path} stats={stats} />
       <Accordion allowToggle>
-        {bestSCInSeason.length + bestHCInSeason.length > 0 && (
-          <LeaderboardAccordionItem
-            title="Leaderboards"
-            description={
-              isCurrent
-                ? "The official leaderboards as they currently stand"
-                : "The official leaderboards frozen once the path went out-of-season"
-            }
-          >
-            <Leaderboard
-              title="Softcore Leaderboard"
-              ascensions={bestSCInSeason}
-            />
-            <Leaderboard
-              title="Hardcore Leaderboard"
-              ascensions={bestHCInSeason}
-            />
-          </LeaderboardAccordionItem>
-        )}
-        {!isCurrent && (
+        <LeaderboardAccordionItem
+          title="Leaderboards"
+          description={
+            current
+              ? "The official leaderboards as they currently stand"
+              : "The official leaderboards frozen once the path went out-of-season"
+          }
+        >
+          <Leaderboard
+            title="Softcore Leaderboard"
+            ascensions={scLeaderboard}
+          />
+          <Leaderboard
+            title="Hardcore Leaderboard"
+            ascensions={hcLeaderboard}
+          />
+        </LeaderboardAccordionItem>
+        {scPyrite.length + hcPyrite.length > 0 && (
           <LeaderboardAccordionItem title="Pyrites" description="{PYRITE}">
-            <Leaderboard title="Softcore Pyrites" ascensions={bestSCEver} />
-            <Leaderboard title="Hardcore Pyrites" ascensions={bestHCEver} />
+            <Leaderboard title="Softcore Pyrites" ascensions={scPyrite} />
+            <Leaderboard title="Hardcore Pyrites" ascensions={hcPyrite} />
           </LeaderboardAccordionItem>
         )}
       </Accordion>

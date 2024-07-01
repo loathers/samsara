@@ -14,19 +14,19 @@ export const loader = defineLoader(async () => {
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const bestHCEver = await getLeaderboard(path.name, "HARDCORE", "Goo Score");
-  const bestSCEver = await getLeaderboard(path.name, "SOFTCORE", "Goo Score");
+  const bestHCEver = await getLeaderboard(path, "HARDCORE", "Goo Score");
+  const bestSCEver = await getLeaderboard(path, "SOFTCORE", "Goo Score");
   const bestHCInSeason = await getLeaderboard(
-    path.name,
+    path,
     "HARDCORE",
     "Goo Score",
-    path.end!,
+    true,
   );
   const bestSCInSeason = await getLeaderboard(
     path.name,
     "SOFTCORE",
     "Goo Score",
-    path.end!,
+    true,
   );
 
   const stats = await db.ascension.getStats(undefined, path.name);

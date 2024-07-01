@@ -72,7 +72,7 @@ export default function Player() {
       <Stack spacing={4}>
         <Heading alignSelf="center">{player.name}</Heading>
         <ButtonGroup justifyContent="center">
-          <Button as={Link} leftIcon={<>←</>} to="/">
+          <Button as={Link} leftIcon={<span>←</span>} to="/">
             home
           </Button>
         </ButtonGroup>
