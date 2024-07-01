@@ -36,74 +36,25 @@ export const loader = async () => {
   const frequency = await db.ascension.getStats();
   const popularity = await db.ascension.getPopularity();
 
-  const [{ loopers }] = await db.$queryRaw<[{ loopers: number }]>`
-    SELECT COUNT(*)::integer AS "loopers" FROM (
-      SELECT
-        "name"
-	    FROM "Player"
-	    LEFT JOIN "Ascension" ON "Player"."id" = "Ascension"."playerId"
-	    WHERE
-		    "Ascension"."date" >= DATE_TRUNC('day', NOW() - interval '1 week') AND
-		    "Ascension"."date" < DATE_TRUNC('day', NOW())
-	    GROUP BY "Player"."id"
-	    HAVING COUNT("Ascension"."playerId") >= 7)
-  `;
-
-  const [{ loopersPrev }] = await db.$queryRaw<[{ loopersPrev: number }]>`
-    SELECT COUNT(*)::integer AS "loopersPrev" FROM (
-      SELECT
-        "name"
-      FROM "Player"
-      LEFT JOIN "Ascension" ON "Player"."id" = "Ascension"."playerId"
-      WHERE
-        "Ascension"."date" >= DATE_TRUNC('day', NOW() - interval '2 week') AND
-        "Ascension"."date" < DATE_TRUNC('day', NOW() - interval '1 week')
-      GROUP BY "Player"."id"
-      HAVING COUNT("Ascension"."playerId") >= 7)
-    `;
-
-  const loopersChange = loopers / loopersPrev - 1;
-
-  const currentPath = (await db.path.findFirst({
-    where: { start: { lt: new Date() }, end: { gte: new Date() } },
-  })) ?? { name: "Standard", slug: "standard" };
-
-  const [{ currentPathers }] = await db.$queryRaw<[{ currentPathers: number }]>`
-    SELECT COUNT(*)::integer AS "currentPathers" FROM (
-      SELECT
-        "name"
-      FROM "Player"
-      LEFT JOIN "Ascension" ON "Player"."id" = "Ascension"."playerId"
-      WHERE
-        "Ascension"."pathName" = ${currentPath.name} AND
-        "Ascension"."date" >= DATE_TRUNC('day', NOW() - interval '1 week') AND
-        "Ascension"."date" < DATE_TRUNC('day', NOW())
-      GROUP BY "Player"."id")
-  `;
-
-  const [{ currentPathersPrev }] = await db.$queryRaw<
-    [{ currentPathersPrev: number }]
-  >`
-    SELECT COUNT(*)::integer AS "currentPathersPrev" FROM (
-      SELECT
-        "name"
-      FROM "Player"
-      LEFT JOIN "Ascension" ON "Player"."id" = "Ascension"."playerId"
-      WHERE
-        "Ascension"."pathName" = ${currentPath.name} AND
-        "Ascension"."date" >= DATE_TRUNC('day', NOW() - interval '2 week') AND
-        "Ascension"."date" < DATE_TRUNC('day', NOW() - interval '1 week')
-      GROUP BY "Player"."id")
-  `;
-
-  const currentPathersChange = currentPathers / currentPathersPrev - 1;
-
   // If we could add raw SQL, `ORDER BY id = 999, id DESC, name ASC` would do this
   const paths = (
     await db.path.findMany({
       orderBy: [{ id: { nulls: "last", sort: "desc" } }, { name: "asc" }],
     })
   ).sort((a, b) => (a.id === 999 ? 1 : b.id === 999 ? -1 : 0));
+
+  // This works because the list of paths is ordered such that the most recent seasonal is first.
+  const currentPath =
+    paths[0].end && paths[0].end > new Date()
+      ? paths[0]
+      : { name: "Standard", slug: "standard" };
+
+  const [currentPathers, currentPathersChange] = await db.ascension.getStat({
+    path: currentPath.name,
+  });
+  const [loopers, loopersChange] = await db.ascension.getStat({
+    numberOfAscensions: 7,
+  });
 
   return json({
     paths,

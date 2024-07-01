@@ -1,4 +1,10 @@
 import { Lifestyle, Prisma, PrismaClient } from "@prisma/client";
+
+type GetStatOptions = {
+  numberOfAscensions?: number;
+  path?: string;
+};
+
 export const db = new PrismaClient().$extends({
   model: {
     ascension: {
@@ -49,6 +55,41 @@ export const db = new PrismaClient().$extends({
           slug: undefined,
           path: { name: r.name, slug: r.slug },
         }));
+      },
+      async getStat({ numberOfAscensions, path }: GetStatOptions) {
+        const [{ stat }] = await db.$queryRaw<[{ stat: number }]>`
+          SELECT COUNT(*)::integer AS "stat" FROM (
+            SELECT
+              "name"
+            FROM "Player"
+            LEFT JOIN "Ascension" ON "Player"."id" = "Ascension"."playerId"
+            WHERE
+              ${path ? Prisma.sql`"Ascension"."pathName" = ${path} AND` : Prisma.empty}
+              "Ascension"."date" >= DATE_TRUNC('day', NOW() - interval '1 week') AND
+              "Ascension"."date" < DATE_TRUNC('day', NOW())
+            GROUP BY "Player"."id"
+            ${numberOfAscensions === undefined ? Prisma.empty : Prisma.sql`HAVING COUNT("Ascension"."playerId") >= ${numberOfAscensions}`})
+        `;
+
+        const [{ previousStat }] = await db.$queryRaw<
+          [{ previousStat: number }]
+        >`
+          SELECT COUNT(*)::integer AS "previousStat" FROM (
+            SELECT
+              "name"
+            FROM "Player"
+            LEFT JOIN "Ascension" ON "Player"."id" = "Ascension"."playerId"
+            WHERE
+              "Ascension"."date" >= DATE_TRUNC('day', NOW() - interval '2 week') AND
+              "Ascension"."date" < DATE_TRUNC('day', NOW() - interval '1 week')
+            GROUP BY "Player"."id"
+            HAVING COUNT("Ascension"."playerId") >= 7)
+          `;
+
+        return [stat, stat / previousStat - 1] as [
+          stat: number,
+          change: number,
+        ];
       },
     },
   },
