@@ -98,6 +98,7 @@ export const loader = async () => {
 
   const currentPathersChange = currentPathers / currentPathersPrev - 1;
 
+  // If we could add raw SQL, `ORDER BY id = 999, id DESC, name ASC` would do this
   const paths = (
     await db.path.findMany({
       orderBy: [{ id: { nulls: "last", sort: "desc" } }, { name: "asc" }],
