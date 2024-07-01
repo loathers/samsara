@@ -12,8 +12,9 @@ import {
   InputGroup,
   InputRightAddon,
 } from "@chakra-ui/react";
-import type { MetaFunction } from "@remix-run/node";
-import { json, Link, useLoaderData, useNavigate } from "@remix-run/react";
+import { unstable_defineLoader as defineLoader } from "@remix-run/node";
+import { Link, useLoaderData, useNavigate } from "@remix-run/react";
+
 import { FrequencyGraph } from "../components/FrequencyGraph.js";
 import { Counter } from "../components/Counter.js";
 import { db } from "~/db.server";
@@ -23,14 +24,14 @@ import { CoolStat } from "~/components/CoolStat";
 import { FormEventHandler, useCallback } from "react";
 import { formatPathName } from "~/utils.js";
 
-export const meta: MetaFunction = () => {
+export const meta = () => {
   return [
     { title: "Saṃsāra ♻️" },
     { name: "description", content: "Kingdom of Loathing ascension database" },
   ];
 };
 
-export const loader = async () => {
+export const loader = defineLoader(async () => {
   const totalTracked = await db.ascension.count();
 
   const frequency = await db.ascension.getStats();
@@ -56,7 +57,7 @@ export const loader = async () => {
     numberOfAscensions: 7,
   });
 
-  return json({
+  return {
     paths,
     loopers,
     loopersChange,
@@ -66,8 +67,8 @@ export const loader = async () => {
     frequency,
     totalTracked,
     popularity,
-  });
-};
+  };
+});
 
 export default function Index() {
   const {

@@ -7,8 +7,8 @@ import {
   YAxis,
 } from "recharts";
 
-type Datum = { date: string; count: number };
-type Props = { data: Datum[]; inSeasonTo?: Date | string | null };
+type Datum = { date: Date; count: number };
+type Props = { data: Datum[]; inSeasonTo?: Date | null };
 
 const compactNumber = Intl.NumberFormat("en-US", {
   notation: "compact",
@@ -21,7 +21,7 @@ export function FrequencyGraph({ data, inSeasonTo }: Props) {
       <LineChart data={data} title="Ascensions over time">
         <XAxis
           type="number"
-          dataKey={(d: Datum) => new Date(d.date).getTime()}
+          dataKey={(d: Datum) => d.date.getTime()}
           tick={{ fontSize: 9 }}
           tickFormatter={(ts: number) => new Date(ts).getFullYear().toString()}
           domain={["dataMin", "dataMax"]}
@@ -33,9 +33,7 @@ export function FrequencyGraph({ data, inSeasonTo }: Props) {
           width={25}
         />
         <Line type="monotone" dataKey="count" dot={false} />
-        {inSeasonTo && (
-          <ReferenceLine x={new Date(inSeasonTo).getTime()} stroke="red" />
-        )}
+        {inSeasonTo && <ReferenceLine x={inSeasonTo.getTime()} stroke="red" />}
       </LineChart>
     </ResponsiveContainer>
   );

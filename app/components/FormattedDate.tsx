@@ -1,5 +1,5 @@
 type Props = {
-  date: string | Date;
+  date: Date;
 };
 
 const dateFormatter = Intl.DateTimeFormat(undefined, {
@@ -7,11 +7,9 @@ const dateFormatter = Intl.DateTimeFormat(undefined, {
 });
 
 export function FormattedDate({ date }: Props) {
-  const d = new Date(date);
-
   return (
-    <time dateTime={d.toDateString()} suppressHydrationWarning={true}>
-      {dateFormatter.format(d)}
+    <time dateTime={date.toDateString()} suppressHydrationWarning={true}>
+      {dateFormatter.format(date)}
     </time>
   );
 }

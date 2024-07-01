@@ -14,13 +14,13 @@ import { FormattedDate } from "./FormattedDate";
 import { formatPathName } from "../utils";
 import { Link } from "@remix-run/react";
 
-type Datum = { date: string; count: number };
+type Datum = { date: Date; count: number };
 type Props = {
   path: {
     name: string;
     seasonal: boolean;
-    start: string | null;
-    end: string | null;
+    start: Date | null;
+    end: Date | null;
     image: string | null;
   };
   stats: Datum[];

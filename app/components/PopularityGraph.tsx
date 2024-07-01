@@ -14,7 +14,7 @@ import { Lifestyle } from "@prisma/client";
 import { PathLink } from "./PathLink";
 
 type Datum = {
-  date: string;
+  date: Date;
   path: { slug: string; name: string };
   lifestyle: Lifestyle;
   count: number;
@@ -62,9 +62,9 @@ export function PopularityGraph({ data }: Props) {
         .reduce(
           (acc, d) => ({
             ...acc,
-            [d.date]: {
-              ...(acc[d.date] || {
-                date: new Date(d.date).getTime(),
+            [d.date.toISOString()]: {
+              ...(acc[d.date.toISOString()] || {
+                date: d.date,
               }),
               [toKey(d)]: d.count,
             },
@@ -88,7 +88,7 @@ export function PopularityGraph({ data }: Props) {
       >
         <XAxis
           type="number"
-          dataKey={(d: Datum) => new Date(d.date).getTime()}
+          dataKey={(d: Datum) => d.date.getTime()}
           tick={{ fontSize: 9 }}
           tickFormatter={(ts: number) => {
             const d = new Date(ts);

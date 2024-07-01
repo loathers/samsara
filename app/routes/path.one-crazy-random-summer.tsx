@@ -1,8 +1,7 @@
 import { Accordion, Stack } from "@chakra-ui/react";
 import { JsonValue } from "@prisma/client/runtime/library";
-import { json, MetaFunction } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
-import { useMemo } from "react";
+import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
+import { MetaArgs_SingleFetch, useLoaderData } from "@remix-run/react";
 import { Leaderboard } from "~/components/Leaderboard";
 import { db } from "~/db.server";
 import { getLeaderboard } from "~/utils.server";
@@ -10,7 +9,7 @@ import { formatPathName } from "~/utils";
 import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 
-export const loader = async () => {
+export const loader = defineLoader(async () => {
   const slug = "one-crazy-random-summer";
 
   const path = await db.path.findFirst({ where: { slug } });
@@ -22,22 +21,34 @@ export const loader = async () => {
   const funnestHCEver = await getLeaderboard(path.name, "HARDCORE", "Fun");
   const funnestSCEver = await getLeaderboard(path.name, "SOFTCORE", "Fun");
 
-  const funnestHCInSeason = path.end
-    ? await getLeaderboard(path.name, "HARDCORE", "Fun", path.end)
-    : null;
-  const funnestSCInSeason = path.end
-    ? await getLeaderboard(path.name, "SOFTCORE", "Fun", path.end)
-    : null;
-  const bestHCInSeason = path.end
-    ? await getLeaderboard(path.name, "HARDCORE", undefined, path.end)
-    : null;
-  const bestSCInSeason = path.end
-    ? await getLeaderboard(path.name, "SOFTCORE", undefined, path.end)
-    : null;
+  const funnestHCInSeason = await getLeaderboard(
+    path.name,
+    "HARDCORE",
+    "Fun",
+    path.end!,
+  );
+  const funnestSCInSeason = await getLeaderboard(
+    path.name,
+    "SOFTCORE",
+    "Fun",
+    path.end!,
+  );
+  const bestHCInSeason = await getLeaderboard(
+    path.name,
+    "HARDCORE",
+    undefined,
+    path.end!,
+  );
+  const bestSCInSeason = await getLeaderboard(
+    path.name,
+    "SOFTCORE",
+    undefined,
+    path.end!,
+  );
 
   const stats = await db.ascension.getStats(undefined, path.name);
 
-  return json({
+  return {
     bestHCEver,
     bestHCInSeason,
     bestSCEver,
@@ -48,10 +59,10 @@ export const loader = async () => {
     funnestSCInSeason,
     path,
     stats,
-  });
-};
+  };
+});
 
-export const meta: MetaFunction<typeof loader> = ({ data }) => {
+export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
   return [
     { title: `Saṃsāra ♻️ - ${formatPathName(data?.path.name ?? "Unknown")}` },
     {
@@ -83,92 +94,54 @@ export default function OCRSPath() {
     stats,
   } = useLoaderData<typeof loader>();
 
-  const scLeaderboard = useMemo(
-    () => bestSCInSeason?.map((a) => ({ ...a, date: new Date(a.date) })),
-    [bestSCInSeason],
-  );
-  const hcLeaderboard = useMemo(
-    () => bestHCInSeason?.map((a) => ({ ...a, date: new Date(a.date) })),
-    [bestHCInSeason],
-  );
-  const scFunLeaderboard = useMemo(
-    () => funnestSCInSeason?.map((a) => ({ ...a, date: new Date(a.date) })),
-    [funnestSCInSeason],
-  );
-  const hcFunLeaderboard = useMemo(
-    () => funnestHCInSeason?.map((a) => ({ ...a, date: new Date(a.date) })),
-    [funnestHCInSeason],
-  );
-  const scFunPyrites = useMemo(
-    () => funnestSCEver.map((a) => ({ ...a, date: new Date(a.date) })),
-    [funnestSCEver],
-  );
-  const hcFunPyrites = useMemo(
-    () => funnestHCEver.map((a) => ({ ...a, date: new Date(a.date) })),
-    [funnestHCEver],
-  );
-  const scPyrites = useMemo(
-    () => bestSCEver.map((a) => ({ ...a, date: new Date(a.date) })),
-    [bestSCEver],
-  );
-  const hcPyrites = useMemo(
-    () => bestHCEver.map((a) => ({ ...a, date: new Date(a.date) })),
-    [bestHCEver],
-  );
-
   return (
     <Stack spacing={10}>
       <PathHeader path={path} stats={stats} />
       <Accordion allowToggle>
-        {scFunLeaderboard && hcFunLeaderboard && (
-          <LeaderboardAccordionItem
-            title="Leaderboards (Fun)"
-            description={
-              <>
-                The leaderboards frozen once the path went out-of-season. This
-                season was ranked by <i>Fun</i> score, rather than days and
-                turns.
-              </>
-            }
-          >
-            <Leaderboard
-              title="Softcore Leaderboard"
-              ascensions={scFunLeaderboard}
-              alternativeScore={["Fun", getFunScore]}
-            />
-            <Leaderboard
-              title="Hardcore Leaderboard"
-              ascensions={hcFunLeaderboard}
-              alternativeScore={["Fun", getFunScore]}
-            />
-          </LeaderboardAccordionItem>
-        )}
-        {scLeaderboard && hcLeaderboard && (
-          <LeaderboardAccordionItem
-            title="Leaderboards (Days/Turns)"
-            description="Essentially a special pyrite; in-season leaderboards had this had been a normally ranked path."
-          >
-            <Leaderboard
-              title="Softcore Leaderboard"
-              ascensions={scLeaderboard}
-              alternativeScore={["Fun", getFunScore]}
-            />
-            <Leaderboard
-              title="Hardcore Leaderboard"
-              ascensions={hcLeaderboard}
-              alternativeScore={["Fun", getFunScore]}
-            />
-          </LeaderboardAccordionItem>
-        )}
+        <LeaderboardAccordionItem
+          title="Leaderboards (Fun)"
+          description={
+            <>
+              The leaderboards frozen once the path went out-of-season. This
+              season was ranked by <i>Fun</i> score, rather than days and turns.
+            </>
+          }
+        >
+          <Leaderboard
+            title="Softcore Leaderboard"
+            ascensions={funnestSCInSeason}
+            alternativeScore={["Fun", getFunScore]}
+          />
+          <Leaderboard
+            title="Hardcore Leaderboard"
+            ascensions={funnestHCInSeason}
+            alternativeScore={["Fun", getFunScore]}
+          />
+        </LeaderboardAccordionItem>
+        <LeaderboardAccordionItem
+          title="Leaderboards (Days/Turns)"
+          description="Essentially a special pyrite; in-season leaderboards had this had been a normally ranked path."
+        >
+          <Leaderboard
+            title="Softcore Leaderboard"
+            ascensions={bestSCInSeason}
+            alternativeScore={["Fun", getFunScore]}
+          />
+          <Leaderboard
+            title="Hardcore Leaderboard"
+            ascensions={bestHCInSeason}
+            alternativeScore={["Fun", getFunScore]}
+          />
+        </LeaderboardAccordionItem>
         <LeaderboardAccordionItem title="Pyrites (Fun)" description="{PYRITE}">
           <Leaderboard
             title="Softcore Pyrites"
-            ascensions={scFunPyrites}
+            ascensions={funnestSCEver}
             alternativeScore={["Fun", getFunScore]}
           />
           <Leaderboard
             title="Hardcore Pyrites"
-            ascensions={hcFunPyrites}
+            ascensions={funnestHCEver}
             alternativeScore={["Fun", getFunScore]}
           />
         </LeaderboardAccordionItem>
@@ -178,12 +151,12 @@ export default function OCRSPath() {
         >
           <Leaderboard
             title="Softcore Pyrites"
-            ascensions={scPyrites}
+            ascensions={bestSCEver}
             alternativeScore={["Fun", getFunScore]}
           />
           <Leaderboard
             title="Hardcore Pyrites"
-            ascensions={hcPyrites}
+            ascensions={bestHCEver}
             alternativeScore={["Fun", getFunScore]}
           />
         </LeaderboardAccordionItem>

@@ -1,7 +1,6 @@
 import { Accordion, Stack } from "@chakra-ui/react";
-import { json, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
-import { useMemo } from "react";
+import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
+import { MetaArgs_SingleFetch, useLoaderData } from "@remix-run/react";
 
 import { Leaderboard } from "~/components/Leaderboard";
 import { db } from "~/db.server";
@@ -10,7 +9,7 @@ import { PathHeader } from "~/components/PathHeader";
 import { getLeaderboard } from "~/utils.server";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 
-export const loader = async ({ params }: LoaderFunctionArgs) => {
+export const loader = defineLoader(async ({ params }) => {
   const { slug } = params;
   const path = await db.path.findFirst({ where: { slug } });
 
@@ -27,10 +26,10 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   const bestSCEver = await getLeaderboard(path.name, "SOFTCORE");
   const bestHCInSeason = path.end
     ? await getLeaderboard(path.name, "HARDCORE", undefined, path.end)
-    : null;
+    : [];
   const bestSCInSeason = path.end
     ? await getLeaderboard(path.name, "SOFTCORE", undefined, path.end)
-    : null;
+    : [];
 
   const daysSinceStart =
     (new Date().getTime() - (path.start?.getTime() ?? 0)) / (1000 * 3600 * 24);
@@ -40,7 +39,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     daysSinceStart < 90 ? "week" : "month",
   );
 
-  return json({
+  return {
     path,
     stats,
     isCurrent,
@@ -48,10 +47,10 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     bestSCEver,
     bestHCInSeason,
     bestSCInSeason,
-  });
-};
+  };
+});
 
-export const meta: MetaFunction<typeof loader> = ({ data }) => {
+export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
   return [
     { title: `Saṃsāra ♻️ - ${formatPathName(data?.path.name ?? "Unknown")}` },
     {
@@ -72,28 +71,11 @@ export default function Path() {
     bestSCInSeason,
   } = useLoaderData<typeof loader>();
 
-  const scLeaderboard = useMemo(
-    () => bestSCInSeason?.map((a) => ({ ...a, date: new Date(a.date) })),
-    [bestSCInSeason],
-  );
-  const hcLeaderboard = useMemo(
-    () => bestHCInSeason?.map((a) => ({ ...a, date: new Date(a.date) })),
-    [bestHCInSeason],
-  );
-  const scPyrites = useMemo(
-    () => bestSCEver.map((a) => ({ ...a, date: new Date(a.date) })),
-    [bestSCEver],
-  );
-  const hcPyrites = useMemo(
-    () => bestHCEver.map((a) => ({ ...a, date: new Date(a.date) })),
-    [bestHCEver],
-  );
-
   return (
     <Stack spacing={10}>
       <PathHeader path={path} stats={stats} />
       <Accordion allowToggle>
-        {scLeaderboard && hcLeaderboard && (
+        {bestSCInSeason.length + bestHCInSeason.length > 0 && (
           <LeaderboardAccordionItem
             title="Leaderboards"
             description={
@@ -104,18 +86,18 @@ export default function Path() {
           >
             <Leaderboard
               title="Softcore Leaderboard"
-              ascensions={scLeaderboard}
+              ascensions={bestSCInSeason}
             />
             <Leaderboard
               title="Hardcore Leaderboard"
-              ascensions={hcLeaderboard}
+              ascensions={bestHCInSeason}
             />
           </LeaderboardAccordionItem>
         )}
         {!isCurrent && (
           <LeaderboardAccordionItem title="Pyrites" description="{PYRITE}">
-            <Leaderboard title="Softcore Pyrites" ascensions={scPyrites} />
-            <Leaderboard title="Hardcore Pyrites" ascensions={hcPyrites} />
+            <Leaderboard title="Softcore Pyrites" ascensions={bestSCEver} />
+            <Leaderboard title="Hardcore Pyrites" ascensions={bestHCEver} />
           </LeaderboardAccordionItem>
         )}
       </Accordion>
