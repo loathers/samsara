@@ -1,19 +1,10 @@
-import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  Heading,
-  HStack,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
+import { Accordion, Stack } from "@chakra-ui/react";
 import { JsonValue } from "@prisma/client/runtime/library";
 import { json, MetaFunction } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { useMemo } from "react";
 import { Leaderboard } from "~/components/Leaderboard";
+import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
 import { db } from "~/db.server";
 import { formatPathName } from "~/utils";
@@ -97,60 +88,34 @@ export default function GreyGooPath() {
       <PathHeader path={path} stats={stats} />
       <Accordion allowToggle>
         {scLeaderboard && hcLeaderboard && (
-          <AccordionItem>
-            <AccordionButton>
-              <HStack flex={1}>
-                <Heading size="md">Leaderboards (Goo)</Heading>{" "}
-                <Text>
-                  The official leaderboards frozen once the path went
-                  out-of-season. This season was ranked by Goo score, rather
-                  than days and turns.
-                </Text>
-              </HStack>
-              <AccordionIcon />
-            </AccordionButton>
-            <AccordionPanel>
-              <HStack alignItems="start">
-                <Leaderboard
-                  title="Softcore Leaderboard"
-                  ascensions={scLeaderboard}
-                  alternativeScore={["Goo", getGooScore]}
-                />
-                <Leaderboard
-                  title="Hardcore Leaderboard"
-                  ascensions={hcLeaderboard}
-                  alternativeScore={["Goo", getGooScore]}
-                />
-              </HStack>
-            </AccordionPanel>
-          </AccordionItem>
+          <LeaderboardAccordionItem
+            title="Leaderboards (Goo)"
+            description="The official leaderboards frozen once the path went out-of-season. This season was ranked by Goo score, rather than days and turns."
+          >
+            <Leaderboard
+              title="Softcore Leaderboard"
+              ascensions={scLeaderboard}
+              alternativeScore={["Goo", getGooScore]}
+            />
+            <Leaderboard
+              title="Hardcore Leaderboard"
+              ascensions={hcLeaderboard}
+              alternativeScore={["Goo", getGooScore]}
+            />
+          </LeaderboardAccordionItem>
         )}
-        <AccordionItem>
-          <AccordionButton>
-            <HStack flex={1}>
-              <Heading size="md">Pyrites (Goo)</Heading>{" "}
-              <Text>
-                A hypothetical leaderboard for all-time; invented, respected,
-                and dominated by fools
-              </Text>
-            </HStack>
-            <AccordionIcon />
-          </AccordionButton>
-          <AccordionPanel>
-            <HStack alignItems="start">
-              <Leaderboard
-                title="Softcore Pyrites"
-                ascensions={scPyrites}
-                alternativeScore={["Goo", getGooScore]}
-              />
-              <Leaderboard
-                title="Hardcore Pyrites"
-                ascensions={hcPyrites}
-                alternativeScore={["Goo", getGooScore]}
-              />
-            </HStack>
-          </AccordionPanel>
-        </AccordionItem>
+        <LeaderboardAccordionItem title="Pyrites (Goo)" description="{PYRITE}">
+          <Leaderboard
+            title="Softcore Leaderboard"
+            ascensions={scPyrites}
+            alternativeScore={["Goo", getGooScore]}
+          />
+          <Leaderboard
+            title="Hardcore Leaderboard"
+            ascensions={hcPyrites}
+            alternativeScore={["Goo", getGooScore]}
+          />
+        </LeaderboardAccordionItem>
       </Accordion>
     </Stack>
   );

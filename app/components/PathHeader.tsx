@@ -35,7 +35,7 @@ export function PathHeader({ path, stats, isStandard = false }: Props) {
           </Text>
         )}
       </Stack>
-      <Box height={150} width="50%" alignSelf="center">
+      <Box height={150} width={["100%", null, "60%"]} alignSelf="center">
         <FrequencyGraph
           data={stats}
           inSeasonTo={isStandard ? path.start : path.end}

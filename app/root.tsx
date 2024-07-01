@@ -28,7 +28,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <ChakraProvider>
-      <Container maxW={["100%", null, "container.xl"]} pt={10}>
+      <Container maxW={["100%", null, "container.xl"]} py={12}>
         <Outlet />
       </Container>
     </ChakraProvider>

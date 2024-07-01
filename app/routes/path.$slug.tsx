@@ -1,14 +1,4 @@
-import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  Heading,
-  HStack,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
+import { Accordion, Stack } from "@chakra-ui/react";
 import { json, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { useMemo } from "react";
@@ -18,6 +8,7 @@ import { db } from "~/db.server";
 import { formatPathName } from "~/utils";
 import { PathHeader } from "~/components/PathHeader";
 import { getLeaderboard } from "~/utils.server";
+import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const { slug } = params;
@@ -107,51 +98,29 @@ export default function Path() {
       <PathHeader path={path} stats={stats} isStandard={isStandard} />
       <Accordion allowToggle>
         {scLeaderboard && hcLeaderboard && (
-          <AccordionItem>
-            <AccordionButton>
-              <HStack flex={1}>
-                <Heading size="md">Leaderboards</Heading>{" "}
-                <Text>
-                  {isCurrent
-                    ? "The official leaderboards as they currently stand"
-                    : "The official leaderboards frozen once the path went out-of-season"}
-                </Text>
-              </HStack>
-              <AccordionIcon />
-            </AccordionButton>
-            <AccordionPanel>
-              <HStack alignItems="start">
-                <Leaderboard
-                  title="Softcore Leaderboard"
-                  ascensions={scLeaderboard}
-                />
-                <Leaderboard
-                  title="Hardcore Leaderboard"
-                  ascensions={hcLeaderboard}
-                />
-              </HStack>
-            </AccordionPanel>
-          </AccordionItem>
+          <LeaderboardAccordionItem
+            title="Leaderboards"
+            description={
+              isCurrent
+                ? "The official leaderboards as they currently stand"
+                : "The official leaderboards frozen once the path went out-of-season"
+            }
+          >
+            <Leaderboard
+              title="Softcore Leaderboard"
+              ascensions={scLeaderboard}
+            />
+            <Leaderboard
+              title="Hardcore Leaderboard"
+              ascensions={hcLeaderboard}
+            />
+          </LeaderboardAccordionItem>
         )}
         {!isCurrent && (
-          <AccordionItem>
-            <AccordionButton>
-              <HStack flex={1}>
-                <Heading size="md">Pyrites</Heading>{" "}
-                <Text>
-                  A hypothetical leaderboard for all-time; invented, respected,
-                  and dominated by fools
-                </Text>
-              </HStack>
-              <AccordionIcon />
-            </AccordionButton>
-            <AccordionPanel>
-              <HStack alignItems="start">
-                <Leaderboard title="Softcore Pyrites" ascensions={scPyrites} />
-                <Leaderboard title="Hardcore Pyrites" ascensions={hcPyrites} />
-              </HStack>
-            </AccordionPanel>
-          </AccordionItem>
+          <LeaderboardAccordionItem title="Pyrites" description="{PYRITE}">
+            <Leaderboard title="Softcore Pyrites" ascensions={scPyrites} />
+            <Leaderboard title="Hardcore Pyrites" ascensions={hcPyrites} />
+          </LeaderboardAccordionItem>
         )}
       </Accordion>
     </Stack>

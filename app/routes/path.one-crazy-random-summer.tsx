@@ -1,14 +1,4 @@
-import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  Heading,
-  HStack,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
+import { Accordion, Stack } from "@chakra-ui/react";
 import { JsonValue } from "@prisma/client/runtime/library";
 import { json, MetaFunction } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
@@ -18,6 +8,7 @@ import { db } from "~/db.server";
 import { getLeaderboard } from "~/utils.server";
 import { formatPathName } from "~/utils";
 import { PathHeader } from "~/components/PathHeader";
+import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 
 export const loader = async () => {
   const slug = "one-crazy-random-summer";
@@ -130,114 +121,72 @@ export default function OCRSPath() {
       <PathHeader path={path} stats={stats} />
       <Accordion allowToggle>
         {scFunLeaderboard && hcFunLeaderboard && (
-          <AccordionItem>
-            <AccordionButton>
-              <HStack flex={1}>
-                <Heading size="md">Leaderboards (Fun)</Heading>{" "}
-                <Text>
-                  The leaderboards frozen once the path went out-of-season. This
-                  season was ranked by <i>Fun</i> score, rather than days and
-                  turns.
-                </Text>
-              </HStack>
-              <AccordionIcon />
-            </AccordionButton>
-            <AccordionPanel>
-              <HStack alignItems="start">
-                <Leaderboard
-                  title="Softcore Leaderboard"
-                  ascensions={scFunLeaderboard}
-                  alternativeScore={["Fun", getFunScore]}
-                />
-                <Leaderboard
-                  title="Hardcore Leaderboard"
-                  ascensions={hcFunLeaderboard}
-                  alternativeScore={["Fun", getFunScore]}
-                />
-              </HStack>
-            </AccordionPanel>
-          </AccordionItem>
+          <LeaderboardAccordionItem
+            title="Leaderboards (Fun)"
+            description={
+              <>
+                The leaderboards frozen once the path went out-of-season. This
+                season was ranked by <i>Fun</i> score, rather than days and
+                turns.
+              </>
+            }
+          >
+            <Leaderboard
+              title="Softcore Leaderboard"
+              ascensions={scFunLeaderboard}
+              alternativeScore={["Fun", getFunScore]}
+            />
+            <Leaderboard
+              title="Hardcore Leaderboard"
+              ascensions={hcFunLeaderboard}
+              alternativeScore={["Fun", getFunScore]}
+            />
+          </LeaderboardAccordionItem>
         )}
         {scLeaderboard && hcLeaderboard && (
-          <AccordionItem>
-            <AccordionButton>
-              <HStack flex={1}>
-                <Heading size="md">Leaderboards (Days/Turns)</Heading>{" "}
-                <Text>
-                  Essentially a special pyrite, in-season leaderboard if this
-                  had been a normally ranked path.
-                </Text>
-              </HStack>
-              <AccordionIcon />
-            </AccordionButton>
-            <AccordionPanel>
-              <HStack alignItems="start">
-                <Leaderboard
-                  title="Softcore Leaderboard"
-                  ascensions={scLeaderboard}
-                  alternativeScore={["Fun", getFunScore]}
-                />
-                <Leaderboard
-                  title="Hardcore Leaderboard"
-                  ascensions={hcLeaderboard}
-                  alternativeScore={["Fun", getFunScore]}
-                />
-              </HStack>
-            </AccordionPanel>
-          </AccordionItem>
+          <LeaderboardAccordionItem
+            title="Leaderboards (Days/Turns)"
+            description="Essentially a special pyrite; in-season leaderboards had this had been a normally ranked path."
+          >
+            <Leaderboard
+              title="Softcore Leaderboard"
+              ascensions={scLeaderboard}
+              alternativeScore={["Fun", getFunScore]}
+            />
+            <Leaderboard
+              title="Hardcore Leaderboard"
+              ascensions={hcLeaderboard}
+              alternativeScore={["Fun", getFunScore]}
+            />
+          </LeaderboardAccordionItem>
         )}
-        <AccordionItem>
-          <AccordionButton>
-            <HStack flex={1}>
-              <Heading size="md">Pyrites (Fun)</Heading>{" "}
-              <Text>
-                A hypothetical leaderboard for all-time; invented, respected,
-                and dominated by fools.
-              </Text>
-            </HStack>
-            <AccordionIcon />
-          </AccordionButton>
-          <AccordionPanel>
-            <HStack alignItems="start">
-              <Leaderboard
-                title="Softcore Pyrites"
-                ascensions={scFunPyrites}
-                alternativeScore={["Fun", getFunScore]}
-              />
-              <Leaderboard
-                title="Hardcore Pyrites"
-                ascensions={hcFunPyrites}
-                alternativeScore={["Fun", getFunScore]}
-              />
-            </HStack>
-          </AccordionPanel>
-        </AccordionItem>
-        <AccordionItem>
-          <AccordionButton>
-            <HStack flex={1}>
-              <Heading size="md">Pyrites (Days/Turns)</Heading>{" "}
-              <Text>
-                A doubly hypothetical leaderboard for all-time; invented,
-                respected, and dominated by turbo-fools.
-              </Text>
-            </HStack>
-            <AccordionIcon />
-          </AccordionButton>
-          <AccordionPanel>
-            <HStack alignItems="start">
-              <Leaderboard
-                title="Softcore Pyrites"
-                ascensions={scPyrites}
-                alternativeScore={["Fun", getFunScore]}
-              />
-              <Leaderboard
-                title="Hardcore Pyrites"
-                ascensions={hcPyrites}
-                alternativeScore={["Fun", getFunScore]}
-              />
-            </HStack>
-          </AccordionPanel>
-        </AccordionItem>
+        <LeaderboardAccordionItem title="Pyrites (Fun)" description="{PYRITE}">
+          <Leaderboard
+            title="Softcore Pyrites"
+            ascensions={scFunPyrites}
+            alternativeScore={["Fun", getFunScore]}
+          />
+          <Leaderboard
+            title="Hardcore Pyrites"
+            ascensions={hcFunPyrites}
+            alternativeScore={["Fun", getFunScore]}
+          />
+        </LeaderboardAccordionItem>
+        <LeaderboardAccordionItem
+          title="Pyrites (Days/Turns)"
+          description="A doubly hypothetical leaderboard for all-time; invented, respected, and dominated by turbo-fools."
+        >
+          <Leaderboard
+            title="Softcore Pyrites"
+            ascensions={scPyrites}
+            alternativeScore={["Fun", getFunScore]}
+          />
+          <Leaderboard
+            title="Hardcore Pyrites"
+            ascensions={hcPyrites}
+            alternativeScore={["Fun", getFunScore]}
+          />
+        </LeaderboardAccordionItem>
       </Accordion>
     </Stack>
   );

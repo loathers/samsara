@@ -115,7 +115,7 @@ export default function Index() {
     popularity,
   } = useLoaderData<typeof loader>();
   return (
-    <Stack spacing={12} alignItems="stretch" mb={12}>
+    <Stack spacing={12} alignItems="stretch">
       <Stack spacing={8} alignItems="center">
         <Heading alignSelf="center">
           <Link to="/">Saṃsāra ♻️</Link>
