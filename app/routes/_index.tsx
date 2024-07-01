@@ -8,7 +8,9 @@ import {
   HStack,
   Select,
   Button,
-  ButtonGroup,
+  Input,
+  InputGroup,
+  InputRightAddon,
 } from "@chakra-ui/react";
 import type { MetaFunction } from "@remix-run/node";
 import { json, Link, useLoaderData, useNavigate } from "@remix-run/react";
@@ -132,10 +134,27 @@ export default function Index() {
     (event) => {
       event.preventDefault();
       const slug = (
-        event.currentTarget.elements.namedItem("slug") as HTMLSelectElement
+        event.currentTarget.elements.namedItem(
+          "slug",
+        ) as HTMLSelectElement | null
       )?.value;
       if (!slug) return;
       navigate(`/path/${slug}`);
+      return;
+    },
+    [navigate],
+  );
+
+  const goToPlayer = useCallback<FormEventHandler<HTMLFormElement>>(
+    (event) => {
+      event.preventDefault();
+      const player = (
+        event.currentTarget.elements.namedItem(
+          "player",
+        ) as HTMLInputElement | null
+      )?.value;
+      if (!player) return;
+      navigate(`/player/${player}`);
       return;
     },
     [navigate],
@@ -154,14 +173,14 @@ export default function Index() {
           <Text>incarnations!</Text>
         </Stack>
       </Stack>
-      <HStack>
+      <HStack justifyContent="space-around">
         <Card>
           <CardHeader>
             <Heading size="md">Browse by path</Heading>
           </CardHeader>
           <CardBody>
             <form onSubmit={goToPath}>
-              <ButtonGroup isAttached>
+              <InputGroup>
                 <Select name="slug" borderRightRadius={0}>
                   {paths.map((path) => (
                     <option key={path.name} value={path.slug}>
@@ -169,10 +188,29 @@ export default function Index() {
                     </option>
                   ))}
                 </Select>
-                <Button type="submit" borderLeftRadius={0}>
-                  Go
-                </Button>
-              </ButtonGroup>
+                <InputRightAddon>
+                  <Button type="submit">Go</Button>
+                </InputRightAddon>
+              </InputGroup>
+            </form>
+          </CardBody>
+        </Card>
+        <Card>
+          <CardHeader>
+            <Heading size="md">Browse by player</Heading>
+          </CardHeader>
+          <CardBody>
+            <form onSubmit={goToPlayer}>
+              <InputGroup>
+                <Input
+                  name="player"
+                  type="text"
+                  placeholder="Player name or id"
+                />
+                <InputRightAddon>
+                  <Button type="submit">Go</Button>
+                </InputRightAddon>
+              </InputGroup>
             </form>
           </CardBody>
         </Card>

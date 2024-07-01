@@ -9,7 +9,7 @@ import {
   Td,
 } from "@chakra-ui/react";
 import { LoaderFunctionArgs, json, type MetaFunction } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { redirect, useLoaderData } from "@remix-run/react";
 
 import { db } from "../db.server.js";
 
@@ -20,8 +20,16 @@ import { PathLink } from "../components/PathLink.js";
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const { id } = params;
 
-  if (!id || isNaN(parseInt(id)))
-    throw json({ message: "Invalid player ID" }, { status: 400 });
+  if (id && isNaN(parseInt(id))) {
+    const found = await db.player.findFirst({
+      where: { name: { mode: "insensitive", equals: id } },
+    });
+
+    if (found) return redirect(`/player/${found.id}`);
+    throw json({ message: "Invalid player name" }, { status: 400 });
+  }
+
+  if (!id) throw json({ message: "Invalid player ID" }, { status: 400 });
 
   const player = await db.player.findUnique({
     where: { id: parseInt(id) },
