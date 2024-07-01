@@ -20,7 +20,7 @@ async function main() {
 
   const ascenders = parseRecentAscenders(recent);
 
-  await checkPlayers(players(ascenders), false);
+  await checkPlayers(players(ascenders), false, true);
 }
 
 main();

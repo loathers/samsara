@@ -19,6 +19,7 @@ export const workers = parseWorkers(process.env);
 export async function checkPlayers(
   ids: Generator<number>,
   stopOnBlank = true,
+  stopOnNoNew = false,
   ascensionUpdater?: (ascensions: Ascension[]) => Promise<number>,
 ) {
   let shouldStop = false;
@@ -28,7 +29,7 @@ export async function checkPlayers(
   );
 
   for (const id of ids) {
-    if (shouldStop && stopOnBlank) break;
+    if (shouldStop) break;
 
     // Wait for a worker to become available
     while (workers.every((w) => w.isBusy())) await wait(1);
@@ -49,7 +50,7 @@ export async function checkPlayers(
           console.log(
             `Found blank id ${id} after the last known account id${stopOnBlank ? ` - stopping` : ""}`,
           );
-          shouldStop = true;
+          shouldStop = stopOnBlank;
         }
         return;
       }
@@ -120,6 +121,10 @@ export async function checkPlayers(
       console.log(
         `Processed ${ascensions.length} (${added} new) ascensions for ${player.name} (${player.id})`,
       );
+
+      if (added === 0 && stopOnNoNew) {
+        shouldStop = true;
+      }
     });
   }
 
@@ -134,7 +139,7 @@ async function guessPathDates() {
           "None",
           "Standard",
           "Boozetafarian",
-          "Teetotaller",
+          "Teetotaler",
           "Bad Moon",
           "Oxygenarian",
         ],
