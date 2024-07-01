@@ -98,9 +98,11 @@ export const loader = async () => {
 
   const currentPathersChange = currentPathers / currentPathersPrev - 1;
 
-  const paths = await db.path.findMany({
-    orderBy: [{ id: "asc" }, { name: "asc" }],
-  });
+  const paths = (
+    await db.path.findMany({
+      orderBy: [{ id: { nulls: "last", sort: "desc" } }, { name: "asc" }],
+    })
+  ).sort((a, b) => (a.id === 999 ? 1 : b.id === 999 ? -1 : 0));
 
   return json({
     paths,
