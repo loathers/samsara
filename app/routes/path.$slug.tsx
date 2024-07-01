@@ -33,6 +33,7 @@ export const loader = defineLoader(async ({ params }) => {
 
   const daysSinceStart =
     (new Date().getTime() - (path.start?.getTime() ?? 0)) / (1000 * 3600 * 24);
+
   const stats = await db.ascension.getStats(
     undefined,
     path.name,

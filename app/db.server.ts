@@ -1,4 +1,5 @@
 import { Lifestyle, Prisma, PrismaClient } from "@prisma/client";
+import { PostgresInterval } from "./utils";
 
 type GetStatOptions = {
   numberOfAscensions?: number;
@@ -11,9 +12,9 @@ export const db = new PrismaClient().$extends({
       async getStats(
         start: Date = new Date(2005, 6, 9),
         path?: string,
-        cadence = "month",
+        cadence: PostgresInterval = "month",
       ) {
-        return await db.$queryRaw<{ date: Date; count: number }[]>`
+        const data = await db.$queryRaw<{ date: Date; count: number }[]>`
           SELECT 
             DATE_TRUNC('${Prisma.raw(cadence)}', "date") AS "date",
             COUNT(*)::integer AS "count"
@@ -24,6 +25,10 @@ export const db = new PrismaClient().$extends({
           GROUP BY DATE_TRUNC('${Prisma.raw(cadence)}', "date")
           ORDER BY DATE_TRUNC('${Prisma.raw(cadence)}', "date") ASC
         `;
+        return [data, cadence] as [
+          data: typeof data,
+          cadence: PostgresInterval,
+        ];
       },
       async getPopularity() {
         const results = await db.$queryRaw<

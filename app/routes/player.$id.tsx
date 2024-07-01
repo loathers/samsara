@@ -10,8 +10,13 @@ import {
   Button,
   ButtonGroup,
 } from "@chakra-ui/react";
-import { LoaderFunctionArgs, json, type MetaFunction } from "@remix-run/node";
-import { Link, redirect, useLoaderData } from "@remix-run/react";
+import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
+import {
+  Link,
+  MetaArgs_SingleFetch,
+  redirect,
+  useLoaderData,
+} from "@remix-run/react";
 
 import { db } from "../db.server.js";
 
@@ -19,7 +24,7 @@ import { FormattedDate } from "../components/FormattedDate.js";
 import { Path as PathType } from "@prisma/client";
 import { PathLink } from "../components/PathLink.js";
 
-export const loader = async ({ params }: LoaderFunctionArgs) => {
+export const loader = defineLoader(async ({ params }) => {
   const { id } = params;
 
   if (id && isNaN(parseInt(id))) {
@@ -27,7 +32,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
       where: { name: { mode: "insensitive", equals: id } },
     });
 
-    if (found) return redirect(`/player/${found.id}`);
+    if (found) throw redirect(`/player/${found.id}`);
     throw json({ message: "Invalid player name" }, { status: 400 });
   }
 
@@ -49,18 +54,18 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
   if (!player) throw json({ message: "Player not found" }, { status: 404 });
 
-  return json({ player, paths });
-};
+  return { player, paths };
+});
 
-export const meta: MetaFunction<typeof loader> = ({ data }) => {
+export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
   return [
-    { title: `Saṃsāra ♻️ - ${data?.player.name}` },
+    { title: `Saṃsāra ♻️ - ${data?.player.name ?? "Unknown player"}` },
     { name: "description", content: "Kingdom of Loathing ascension database" },
   ];
 };
 
 export default function Player() {
-  const { player, paths } = useLoaderData<typeof loader>();
+  const { player, paths } = useLoaderData<typeof loader>()!;
 
   return (
     <Stack spacing={10}>

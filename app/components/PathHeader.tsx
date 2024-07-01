@@ -11,7 +11,7 @@ import {
 
 import { FrequencyGraph } from "./FrequencyGraph";
 import { FormattedDate } from "./FormattedDate";
-import { formatPathName } from "../utils";
+import { formatPathName, PostgresInterval } from "../utils";
 import { Link } from "@remix-run/react";
 
 type Datum = { date: Date; count: number };
@@ -23,7 +23,7 @@ type Props = {
     end: Date | null;
     image: string | null;
   };
-  stats: Datum[];
+  stats: [data: Datum[], cadence: PostgresInterval];
 };
 
 function formatImage(image: string | null) {
@@ -60,7 +60,7 @@ export function PathHeader({ path, stats }: Props) {
       <Box height={150} width={["100%", null, "60%"]} alignSelf="center">
         <FrequencyGraph
           data={stats}
-          inSeasonTo={path.seasonal ? path.start : null}
+          inSeasonTo={path.seasonal ? path.end : null}
         />
       </Box>
     </>
