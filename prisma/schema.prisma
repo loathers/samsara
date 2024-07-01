@@ -56,5 +56,6 @@ model Path {
   end        DateTime?
   id         Int?
   image      String?
+  seasonal   Boolean     @default(true)
   ascensions Ascension[]
 }

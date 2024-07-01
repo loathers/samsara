@@ -127,8 +127,27 @@ export async function checkPlayers(
 }
 
 async function guessPathDates() {
+  await db.path.updateMany({
+    where: {
+      name: {
+        in: [
+          "None",
+          "Standard",
+          "Boozetafarian",
+          "Teetotaller",
+          "Bad Moon",
+          "Oxygenarian",
+        ],
+      },
+    },
+    data: { seasonal: false, start: null, end: null },
+  });
+
   const paths = await db.path.findMany({
-    where: { start: null, name: { notIn: ["None", "Standard"] } },
+    where: {
+      start: null,
+      seasonal: true,
+    },
     include: {
       ascensions: { select: { date: true }, orderBy: { date: "asc" }, take: 1 },
     },
