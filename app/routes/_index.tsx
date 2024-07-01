@@ -6,15 +6,20 @@ import {
   CardHeader,
   CardBody,
   HStack,
+  Select,
+  Button,
+  ButtonGroup,
 } from "@chakra-ui/react";
 import type { MetaFunction } from "@remix-run/node";
-import { json, Link, useLoaderData } from "@remix-run/react";
+import { json, Link, useLoaderData, useNavigate } from "@remix-run/react";
 import { FrequencyGraph } from "../components/FrequencyGraph.js";
 import { Counter } from "../components/Counter.js";
 import { db } from "~/db.server";
 import { PopularityGraph } from "~/components/PopularityGraph";
 import { PathLink } from "~/components/PathLink";
 import { CoolStat } from "~/components/CoolStat";
+import { FormEventHandler, useCallback } from "react";
+import { formatPathName } from "~/utils.js";
 
 export const meta: MetaFunction = () => {
   return [
@@ -87,11 +92,16 @@ export const loader = async () => {
         "Ascension"."date" >= DATE_TRUNC('day', NOW() - interval '2 week') AND
         "Ascension"."date" < DATE_TRUNC('day', NOW() - interval '1 week')
       GROUP BY "Player"."id")
-    `;
+  `;
 
   const currentPathersChange = currentPathers / currentPathersPrev - 1;
 
+  const paths = await db.path.findMany({
+    orderBy: [{ id: "asc" }, { name: "asc" }],
+  });
+
   return json({
+    paths,
     loopers,
     loopersChange,
     currentPath,
@@ -105,6 +115,7 @@ export const loader = async () => {
 
 export default function Index() {
   const {
+    paths,
     loopers,
     loopersChange,
     currentPath,
@@ -114,6 +125,22 @@ export default function Index() {
     totalTracked,
     popularity,
   } = useLoaderData<typeof loader>();
+
+  const navigate = useNavigate();
+
+  const goToPath = useCallback<FormEventHandler<HTMLFormElement>>(
+    (event) => {
+      event.preventDefault();
+      const slug = (
+        event.currentTarget.elements.namedItem("slug") as HTMLSelectElement
+      )?.value;
+      if (!slug) return;
+      navigate(`/path/${slug}`);
+      return;
+    },
+    [navigate],
+  );
+
   return (
     <Stack spacing={12} alignItems="stretch">
       <Stack spacing={8} alignItems="center">
@@ -127,6 +154,29 @@ export default function Index() {
           <Text>incarnations!</Text>
         </Stack>
       </Stack>
+      <HStack>
+        <Card>
+          <CardHeader>
+            <Heading size="md">Browse by path</Heading>
+          </CardHeader>
+          <CardBody>
+            <form onSubmit={goToPath}>
+              <ButtonGroup isAttached>
+                <Select name="slug" borderRightRadius={0}>
+                  {paths.map((path) => (
+                    <option key={path.name} value={path.slug}>
+                      {formatPathName(path.name)}
+                    </option>
+                  ))}
+                </Select>
+                <Button type="submit" borderLeftRadius={0}>
+                  Go
+                </Button>
+              </ButtonGroup>
+            </form>
+          </CardBody>
+        </Card>
+      </HStack>
       <Card height={400}>
         <CardHeader>
           <Heading size="md">Top 10 paths in the last week</Heading>

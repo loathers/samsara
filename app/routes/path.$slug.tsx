@@ -16,9 +16,16 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const isStandard = path.name === "Standard";
+  const isSeasonal = ![
+    "None",
+    "Oxygenarian",
+    "Boozetafarian",
+    "Teetotaller",
+    "Standard",
+    "Bad Moon",
+  ].includes(path.name);
 
-  if (isStandard) {
+  if (!isSeasonal) {
     path.start = new Date(new Date().getFullYear(), 0, 1);
     path.end = new Date(new Date().getFullYear() + 1, 11, 31);
   }
@@ -46,7 +53,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     path,
     stats,
     isCurrent,
-    isStandard,
+    isSeasonal,
     bestHCEver,
     bestSCEver,
     bestHCInSeason,
@@ -68,7 +75,7 @@ export default function Path() {
   const {
     path,
     isCurrent,
-    isStandard,
+    isSeasonal,
     stats,
     bestHCInSeason,
     bestHCEver,
@@ -95,7 +102,7 @@ export default function Path() {
 
   return (
     <Stack spacing={10}>
-      <PathHeader path={path} stats={stats} isStandard={isStandard} />
+      <PathHeader path={path} stats={stats} isSeasonal={isSeasonal} />
       <Accordion allowToggle>
         {scLeaderboard && hcLeaderboard && (
           <LeaderboardAccordionItem

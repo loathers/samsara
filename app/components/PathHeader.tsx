@@ -13,10 +13,10 @@ type Props = {
     image: string | null;
   };
   stats: Datum[];
-  isStandard?: boolean;
+  isSeasonal?: boolean;
 };
 
-export function PathHeader({ path, stats, isStandard = false }: Props) {
+export function PathHeader({ path, stats, isSeasonal = true }: Props) {
   return (
     <>
       <Stack alignItems="center">
@@ -38,7 +38,7 @@ export function PathHeader({ path, stats, isStandard = false }: Props) {
       <Box height={150} width={["100%", null, "60%"]} alignSelf="center">
         <FrequencyGraph
           data={stats}
-          inSeasonTo={isStandard ? path.start : path.end}
+          inSeasonTo={isSeasonal ? path.start : path.end}
         />
       </Box>
     </>
