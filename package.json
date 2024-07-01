@@ -25,8 +25,8 @@
     "create-color": "^2.0.6",
     "framer-motion": "^11.2.12",
     "isbot": "^5.1.10",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "19.0.0-rc-58af67a8f8-20240628",
+    "react-dom": "19.0.0-rc-58af67a8f8-20240628",
     "recharts": "^2.12.7",
     "remix-utils": "^7.6.0"
   },
