@@ -7,9 +7,11 @@ import {
   Tr,
   Th,
   Td,
+  Button,
+  ButtonGroup,
 } from "@chakra-ui/react";
 import { LoaderFunctionArgs, json, type MetaFunction } from "@remix-run/node";
-import { redirect, useLoaderData } from "@remix-run/react";
+import { Link, redirect, useLoaderData } from "@remix-run/react";
 
 import { db } from "../db.server.js";
 
@@ -62,7 +64,14 @@ export default function Player() {
 
   return (
     <Stack spacing={10}>
-      <Heading alignSelf="center">{player.name}</Heading>
+      <Stack spacing={4}>
+        <Heading alignSelf="center">{player.name}</Heading>
+        <ButtonGroup justifyContent="center">
+          <Button as={Link} leftIcon={<>←</>} to="/">
+            home
+          </Button>
+        </ButtonGroup>
+      </Stack>
       <Table>
         <Thead>
           <Tr>
