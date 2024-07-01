@@ -14,7 +14,7 @@ import { FormattedDate } from "./FormattedDate";
 import { Link as RemixLink } from "@remix-run/react";
 
 type Props = {
-  title: string;
+  title?: string;
   ascensions: (Player & Ascension)[];
   alternativeScore?: [
     title: string,
@@ -31,9 +31,11 @@ function awardBg(rank: number) {
 export function Leaderboard({ title, ascensions, alternativeScore }: Props) {
   return (
     <TableContainer>
-      <Heading textAlign="center" as="h3" size="sm">
-        {title}
-      </Heading>
+      {title && (
+        <Heading textAlign="center" as="h3" size="sm">
+          {title}
+        </Heading>
+      )}
       <Table size="sm">
         <Thead>
           <Tr>

@@ -41,6 +41,7 @@ export function LeaderboardAccordionItem({
           spacing={4}
           direction={["column", null, null, "row"]}
           alignItems="start"
+          justifyContent="center"
         >
           {children}
         </Stack>
