@@ -128,7 +128,7 @@ export default function Index() {
           <Text>incarnations!</Text>
         </Stack>
       </Stack>
-      <HStack justifyContent="space-around">
+      <Stack direction={["column", null, "row"]} justifyContent="space-around">
         <Card>
           <CardHeader>
             <Heading size="md">Browse by path</Heading>
@@ -169,7 +169,7 @@ export default function Index() {
             </form>
           </CardBody>
         </Card>
-      </HStack>
+      </Stack>
       <Card height={400}>
         <CardHeader>
           <Heading size="md">Top 10 paths in the last week</Heading>
