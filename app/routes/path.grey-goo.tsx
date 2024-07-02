@@ -7,22 +7,31 @@ import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem"
 import { PathHeader } from "~/components/PathHeader";
 import { db } from "~/db.server";
 import { formatPathName } from "~/utils";
-import { getLeaderboard } from "~/utils.server";
 
 export const loader = defineLoader(async () => {
   const path = await db.path.findFirst({ where: { slug: "grey-goo" } });
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const bestHCEver = await getLeaderboard(path, "HARDCORE", false, "Goo Score");
-  const bestSCEver = await getLeaderboard(path, "SOFTCORE", false, "Goo Score");
-  const bestHCInSeason = await getLeaderboard(
+  const bestHCEver = await db.ascension.getLeaderboard(
+    path,
+    "HARDCORE",
+    false,
+    "Goo Score",
+  );
+  const bestSCEver = await db.ascension.getLeaderboard(
+    path,
+    "SOFTCORE",
+    false,
+    "Goo Score",
+  );
+  const bestHCInSeason = await db.ascension.getLeaderboard(
     path,
     "HARDCORE",
     true,
     "Goo Score",
   );
-  const bestSCInSeason = await getLeaderboard(
+  const bestSCInSeason = await db.ascension.getLeaderboard(
     path,
     "SOFTCORE",
     true,

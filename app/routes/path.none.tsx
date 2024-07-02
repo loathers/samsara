@@ -5,7 +5,6 @@ import { useLoaderData } from "@remix-run/react";
 import { Leaderboard } from "~/components/Leaderboard";
 import { db } from "~/db.server";
 import { PathHeader } from "~/components/PathHeader";
-import { getLeaderboard } from "~/utils.server";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 
 export const loader = defineLoader(async () => {
@@ -13,9 +12,9 @@ export const loader = defineLoader(async () => {
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const scLeaderboard = await getLeaderboard(path, "SOFTCORE");
-  const hcLeaderboard = await getLeaderboard(path, "HARDCORE");
-  const casualLeaderboard = await getLeaderboard(path, "CASUAL");
+  const scLeaderboard = await db.ascension.getLeaderboard(path, "SOFTCORE");
+  const hcLeaderboard = await db.ascension.getLeaderboard(path, "HARDCORE");
+  const casualLeaderboard = await db.ascension.getLeaderboard(path, "CASUAL");
 
   const frequency = await db.ascension.getFrequency(path, undefined);
 

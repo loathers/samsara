@@ -6,7 +6,6 @@ import { Leaderboard } from "~/components/Leaderboard";
 import { db } from "~/db.server";
 import { formatPathName } from "~/utils";
 import { PathHeader } from "~/components/PathHeader";
-import { getLeaderboard } from "~/utils.server";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 
 export const loader = defineLoader(async ({ params }) => {
@@ -30,13 +29,13 @@ export const loader = defineLoader(async ({ params }) => {
     path.end = new Date(new Date().getFullYear(), 11, 31);
   }
 
-  const bestSCEver = await getLeaderboard(path, "SOFTCORE");
-  const bestHCEver = await getLeaderboard(path, "HARDCORE");
+  const bestSCEver = await db.ascension.getLeaderboard(path, "SOFTCORE");
+  const bestHCEver = await db.ascension.getLeaderboard(path, "HARDCORE");
 
   const [scLeaderboard, hcLeaderboard, scPyrite, hcPyrite] = hasPyrites
     ? [
-        await getLeaderboard(path, "SOFTCORE", true),
-        await getLeaderboard(path, "HARDCORE", true),
+        await db.ascension.getLeaderboard(path, "SOFTCORE", true),
+        await db.ascension.getLeaderboard(path, "HARDCORE", true),
         bestSCEver,
         bestHCEver,
       ]

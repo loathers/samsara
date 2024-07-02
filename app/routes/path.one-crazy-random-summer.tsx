@@ -4,7 +4,6 @@ import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
 import { MetaArgs_SingleFetch, useLoaderData } from "@remix-run/react";
 import { Leaderboard } from "~/components/Leaderboard";
 import { db } from "~/db.server";
-import { getLeaderboard } from "~/utils.server";
 import { formatPathName } from "~/utils";
 import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
@@ -16,15 +15,43 @@ export const loader = defineLoader(async () => {
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const bestHCEver = await getLeaderboard(path, "HARDCORE");
-  const bestSCEver = await getLeaderboard(path, "SOFTCORE");
-  const funnestHCEver = await getLeaderboard(path, "HARDCORE", false, "Fun");
-  const funnestSCEver = await getLeaderboard(path, "SOFTCORE", false, "Fun");
+  const bestHCEver = await db.ascension.getLeaderboard(path, "HARDCORE");
+  const bestSCEver = await db.ascension.getLeaderboard(path, "SOFTCORE");
+  const funnestHCEver = await db.ascension.getLeaderboard(
+    path,
+    "HARDCORE",
+    false,
+    "Fun",
+  );
+  const funnestSCEver = await db.ascension.getLeaderboard(
+    path,
+    "SOFTCORE",
+    false,
+    "Fun",
+  );
 
-  const funnestHCInSeason = await getLeaderboard(path, "HARDCORE", true, "Fun");
-  const funnestSCInSeason = await getLeaderboard(path, "SOFTCORE", true, "Fun");
-  const bestHCInSeason = await getLeaderboard(path, "HARDCORE", true);
-  const bestSCInSeason = await getLeaderboard(path, "SOFTCORE", true);
+  const funnestHCInSeason = await db.ascension.getLeaderboard(
+    path,
+    "HARDCORE",
+    true,
+    "Fun",
+  );
+  const funnestSCInSeason = await db.ascension.getLeaderboard(
+    path,
+    "SOFTCORE",
+    true,
+    "Fun",
+  );
+  const bestHCInSeason = await db.ascension.getLeaderboard(
+    path,
+    "HARDCORE",
+    true,
+  );
+  const bestSCInSeason = await db.ascension.getLeaderboard(
+    path,
+    "SOFTCORE",
+    true,
+  );
 
   const frequency = await db.ascension.getFrequency(path);
   const recordBreakers = await db.ascension.getRecordBreaking(path);
