@@ -54,7 +54,6 @@ export function RecordGraph({ data, extra }: Props) {
   const lifestyles = [...new Set(data.map((d) => d.lifestyle))];
 
   const formatRunForTooltip = (run: RecordDatum) => {
-    console.log(run);
     if (extra)
       return `${compactNumber.format(parseInt((run.extra as JsonObject)[extra] as string))} ${extra} ${run.player.name} (#${run.player.id})`;
     return `${run.days}/${run.turns} ${run.player.name} (#${run.player.id})`;
