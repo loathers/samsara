@@ -57,7 +57,7 @@ export function RecordGraph({ data, extra }: Props) {
     console.log(run);
     if (extra)
       return `${compactNumber.format(parseInt((run.extra as JsonObject)[extra] as string))} ${extra} ${run.player.name} (#${run.player.id})`;
-    `${run.days}/${run.turns} ${run.player.name} (#${run.player.id})`;
+    return `${run.days}/${run.turns} ${run.player.name} (#${run.player.id})`;
   };
 
   return (
@@ -93,7 +93,10 @@ export function RecordGraph({ data, extra }: Props) {
         ))}
         <Tooltip
           labelFormatter={(ts: number) => dateFormatter.format(new Date(ts))}
-          formatter={(value, name, { payload }) => formatRunForTooltip(payload)}
+          formatter={(value, name, { payload }) => [
+            formatRunForTooltip(payload),
+            null,
+          ]}
         />
         {lifestyles.length > 1 && (
           <Legend
