@@ -65,7 +65,7 @@ export function RecordGraph({ data, extra }: Props) {
       <LineChart
         data={graphData}
         title="Ascensions over time"
-        margin={{ top: 0, bottom: 0 }}
+        margin={{ top: 0, bottom: 0, right: 5 }}
       >
         <XAxis
           type="number"
