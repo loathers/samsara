@@ -85,11 +85,12 @@ export function PopularityGraph({ data }: Props) {
       <LineChart
         data={seriesData}
         title="Popularity of different paths over the last week"
+        margin={{ top: 0, bottom: 0 }}
       >
         <XAxis
           type="number"
           dataKey={(d: Datum) => d.date.getTime()}
-          tick={{ fontSize: 9 }}
+          tick={{ fontSize: 8 }}
           tickFormatter={(ts: number) => {
             const d = new Date(ts);
             return `${d.getDate()}/${d.getMonth() + 1}`;
@@ -97,7 +98,7 @@ export function PopularityGraph({ data }: Props) {
           tickCount={8}
           domain={["dataMin", "dataMax"]}
         />
-        <YAxis tick={{ fontSize: 9 }} domain={[0, "auto"]} width={25} />
+        <YAxis tick={{ fontSize: 8 }} domain={[0, "auto"]} width={25} />
         {seriesKeys.map((line) => (
           <Line key={line.dataKey} type="monotone" {...line} dot={false} />
         ))}

@@ -26,7 +26,8 @@ export const loader = defineLoader(async () => {
   const bestHCInSeason = await getLeaderboard(path, "HARDCORE", true);
   const bestSCInSeason = await getLeaderboard(path, "SOFTCORE", true);
 
-  const stats = await db.ascension.getStats(undefined, path.name);
+  const frequency = await db.ascension.getFrequency(path);
+  const recordBreakers = await db.ascension.getRecordBreaking(path);
 
   return {
     bestHCEver,
@@ -38,7 +39,8 @@ export const loader = defineLoader(async () => {
     funnestSCEver,
     funnestSCInSeason,
     path,
-    stats,
+    frequency,
+    recordBreakers,
   };
 });
 
@@ -71,12 +73,18 @@ export default function OCRSPath() {
     funnestSCEver,
     funnestSCInSeason,
     path,
-    stats,
+    frequency,
+    recordBreakers,
   } = useLoaderData<typeof loader>();
 
   return (
     <Stack spacing={10}>
-      <PathHeader path={path} stats={stats} />
+      <PathHeader
+        path={path}
+        frequency={frequency}
+        recordBreakers={recordBreakers}
+        extra="Fun"
+      />
       <Accordion allowToggle>
         <LeaderboardAccordionItem
           title="Leaderboards (Fun)"

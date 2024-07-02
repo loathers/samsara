@@ -17,11 +17,13 @@ export const loader = defineLoader(async () => {
   const bestSCEver = await getLeaderboard(path, "SOFTCORE");
   const bestCasualEver = await getLeaderboard(path, "CASUAL");
 
-  const stats = await db.ascension.getStats(undefined, path.name);
+  const frequency = await db.ascension.getFrequency(path);
+  const recordBreakers = await db.ascension.getRecordBreaking(path, "HARDCORE");
 
   return {
     path,
-    stats,
+    frequency,
+    recordBreakers,
     bestHCEver,
     bestSCEver,
     bestCasualEver,
@@ -39,12 +41,22 @@ export const meta = () => {
 };
 
 export default function Path() {
-  const { path, stats, bestHCEver, bestSCEver, bestCasualEver } =
-    useLoaderData<typeof loader>();
+  const {
+    path,
+    frequency,
+    bestHCEver,
+    bestSCEver,
+    bestCasualEver,
+    recordBreakers,
+  } = useLoaderData<typeof loader>();
 
   return (
     <Stack spacing={10}>
-      <PathHeader path={path} stats={stats} />
+      <PathHeader
+        path={path}
+        frequency={frequency}
+        recordBreakers={recordBreakers}
+      />
       <Accordion allowToggle>
         <LeaderboardAccordionItem
           title="Leaderboard"

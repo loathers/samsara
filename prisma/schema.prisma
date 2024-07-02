@@ -36,6 +36,7 @@ model Ascension {
   lifestyle          Lifestyle
   pathName           String
   path               Path      @relation(fields: [pathName], references: [name])
+  recordBreaking     Boolean   @default(false)
   extra              Json
 
   @@id(name: "id", [ascensionNumber, playerId])

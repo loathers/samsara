@@ -14,26 +14,29 @@ export const loader = defineLoader(async () => {
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const bestHCEver = await getLeaderboard(path, "HARDCORE", "Goo Score");
-  const bestSCEver = await getLeaderboard(path, "SOFTCORE", "Goo Score");
+  const bestHCEver = await getLeaderboard(path, "HARDCORE", false, "Goo Score");
+  const bestSCEver = await getLeaderboard(path, "SOFTCORE", false, "Goo Score");
   const bestHCInSeason = await getLeaderboard(
     path,
     "HARDCORE",
-    "Goo Score",
     true,
+    "Goo Score",
   );
   const bestSCInSeason = await getLeaderboard(
-    path.name,
+    path,
     "SOFTCORE",
-    "Goo Score",
     true,
+    "Goo Score",
   );
 
-  const stats = await db.ascension.getStats(undefined, path.name);
+  const frequency = await db.ascension.getFrequency(path);
+
+  const recordBreakers = await db.ascension.getRecordBreaking(path);
 
   return {
     path,
-    stats,
+    frequency,
+    recordBreakers,
     bestHCEver,
     bestSCEver,
     bestHCInSeason,
@@ -62,7 +65,8 @@ function getGooScore(a: { extra: JsonValue }) {
 export default function GreyGooPath() {
   const {
     path,
-    stats,
+    frequency,
+    recordBreakers,
     bestHCInSeason,
     bestHCEver,
     bestSCEver,
@@ -71,7 +75,12 @@ export default function GreyGooPath() {
 
   return (
     <Stack spacing={10}>
-      <PathHeader path={path} stats={stats} />
+      <PathHeader
+        path={path}
+        frequency={frequency}
+        recordBreakers={recordBreakers}
+        extra="Goo Score"
+      />
       <Accordion allowToggle>
         <LeaderboardAccordionItem
           title="Leaderboards (Goo)"

@@ -1,10 +1,5 @@
-import { Lifestyle, Prisma, PrismaClient } from "@prisma/client";
+import { Lifestyle, Path, Prisma, PrismaClient } from "@prisma/client";
 import { PostgresInterval } from "./utils";
-
-type GetStatOptions = {
-  numberOfAscensions?: number;
-  path?: string;
-};
 
 const prisma = new PrismaClient({
   log: [
@@ -22,9 +17,9 @@ const prisma = new PrismaClient({
 export const db = prisma.$extends({
   model: {
     ascension: {
-      async getStats(
+      async getFrequency(
+        path?: { name: string },
         start: Date = new Date(2005, 6, 9),
-        path?: string,
         cadence: PostgresInterval = "month",
       ) {
         const data = await db.$queryRaw<{ date: Date; count: number }[]>`
@@ -34,7 +29,7 @@ export const db = prisma.$extends({
           FROM "Ascension"
           WHERE "date" < DATE_TRUNC('${Prisma.raw(cadence)}', NOW())
           AND "date" >= ${start}
-          ${path ? Prisma.sql`AND "pathName" = ${path}` : Prisma.empty}
+          ${path ? Prisma.sql`AND "pathName" = ${path.name}` : Prisma.empty}
           GROUP BY DATE_TRUNC('${Prisma.raw(cadence)}', "date")
           ORDER BY DATE_TRUNC('${Prisma.raw(cadence)}', "date") ASC
         `;
@@ -74,7 +69,13 @@ export const db = prisma.$extends({
           path: { name: r.name, slug: r.slug },
         }));
       },
-      async getStat({ numberOfAscensions, path }: GetStatOptions) {
+      async getStat({
+        numberOfAscensions,
+        path,
+      }: {
+        numberOfAscensions?: number;
+        path?: { name: string };
+      }) {
         const [{ stat }] = await db.$queryRaw<[{ stat: number }]>`
           SELECT COUNT(*)::integer AS "stat" FROM (
             SELECT
@@ -82,7 +83,7 @@ export const db = prisma.$extends({
             FROM "Player"
             LEFT JOIN "Ascension" ON "Player"."id" = "Ascension"."playerId"
             WHERE
-              ${path ? Prisma.sql`"Ascension"."pathName" = ${path} AND` : Prisma.empty}
+              ${path ? Prisma.sql`"Ascension"."pathName" = ${path.name} AND` : Prisma.empty}
               "Ascension"."date" >= DATE_TRUNC('day', NOW() - interval '1 week') AND
               "Ascension"."date" < DATE_TRUNC('day', NOW())
             GROUP BY "Player"."id"
@@ -98,16 +99,31 @@ export const db = prisma.$extends({
             FROM "Player"
             LEFT JOIN "Ascension" ON "Player"."id" = "Ascension"."playerId"
             WHERE
+              ${path ? Prisma.sql`"Ascension"."pathName" = ${path.name} AND` : Prisma.empty}
               "Ascension"."date" >= DATE_TRUNC('day', NOW() - interval '2 week') AND
               "Ascension"."date" < DATE_TRUNC('day', NOW() - interval '1 week')
             GROUP BY "Player"."id"
-            HAVING COUNT("Ascension"."playerId") >= 7)
+            ${numberOfAscensions === undefined ? Prisma.empty : Prisma.sql`HAVING COUNT("Ascension"."playerId") >= ${numberOfAscensions}`})
           `;
 
         return [stat, stat / previousStat - 1] as [
           stat: number,
           change: number,
         ];
+      },
+      async getRecordBreaking(path: Path, lifestyle?: Lifestyle) {
+        return await db.ascension.findMany({
+          select: {
+            days: true,
+            turns: true,
+            date: true,
+            lifestyle: true,
+            extra: true,
+            player: { select: { name: true, id: true } },
+          },
+          where: { recordBreaking: true, path, lifestyle },
+          orderBy: [{ date: "asc" }],
+        });
       },
     },
   },

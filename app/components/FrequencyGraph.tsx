@@ -32,16 +32,20 @@ export function FrequencyGraph({ data, inSeasonTo }: Props) {
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={graphData} title="Ascensions over time">
+      <LineChart
+        data={graphData}
+        title="Progression of best runs over time"
+        margin={{ top: 0, bottom: 0 }}
+      >
         <XAxis
           type="number"
           dataKey={(d: Datum) => d.date.getTime()}
-          tick={{ fontSize: 9 }}
+          tick={{ fontSize: 8 }}
           tickFormatter={(ts: number) => formatTick(ts, cadence)}
           domain={["dataMin", "dataMax"]}
         />
         <YAxis
-          tick={{ fontSize: 9 }}
+          tick={{ fontSize: 8 }}
           domain={[0, "auto"]}
           tickFormatter={(num: number) => compactNumber.format(num)}
           width={25}

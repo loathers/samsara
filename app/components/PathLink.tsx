@@ -1,6 +1,7 @@
 import { Link, Text } from "@chakra-ui/react";
 import { Link as RemixLink } from "@remix-run/react";
 import { Lifestyle } from "@prisma/client";
+import { formatLifestyle } from "~/utils";
 
 const formatPath = (path: string) => {
   switch (path) {
@@ -8,17 +9,6 @@ const formatPath = (path: string) => {
       return "No Path";
     default:
       return path;
-  }
-};
-
-const formatLifestyle = (lifestyle: Lifestyle, shorten: boolean) => {
-  switch (lifestyle) {
-    case "HARDCORE":
-      return shorten ? "HC" : "Hardcore";
-    case "SOFTCORE":
-      return shorten ? "SC" : "Softcore";
-    case "CASUAL":
-      return shorten ? "C" : "Casual";
   }
 };
 

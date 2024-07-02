@@ -34,7 +34,7 @@ export const meta = () => {
 export const loader = defineLoader(async () => {
   const totalTracked = await db.ascension.count();
 
-  const frequency = await db.ascension.getStats();
+  const frequency = await db.ascension.getFrequency();
   const popularity = await db.ascension.getPopularity();
 
   // If we could add raw SQL, `ORDER BY id = 999, id DESC, name ASC` would do this
@@ -51,7 +51,7 @@ export const loader = defineLoader(async () => {
       : { name: "Standard", slug: "standard" };
 
   const [currentPathers, currentPathersChange] = await db.ascension.getStat({
-    path: currentPath.name,
+    path: currentPath,
   });
   const [loopers, loopersChange] = await db.ascension.getStat({
     numberOfAscensions: 7,

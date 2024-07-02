@@ -45,20 +45,23 @@ export const loader = defineLoader(async ({ params }) => {
   const daysSinceStart =
     (new Date().getTime() - (path.start?.getTime() ?? 0)) / (1000 * 3600 * 24);
 
-  const stats = await db.ascension.getStats(
+  const frequency = await db.ascension.getFrequency(
+    path,
     undefined,
-    path.name,
     daysSinceStart < 90 ? "week" : "month",
   );
 
+  const recordBreakers = await db.ascension.getRecordBreaking(path);
+
   return {
     path,
-    stats,
+    frequency,
     current,
     scLeaderboard,
     hcLeaderboard,
     scPyrite,
     hcPyrite,
+    recordBreakers,
   };
 });
 
@@ -76,7 +79,8 @@ export default function Path() {
   const {
     path,
     current,
-    stats,
+    frequency,
+    recordBreakers,
     scLeaderboard,
     hcLeaderboard,
     scPyrite,
@@ -84,7 +88,11 @@ export default function Path() {
   } = useLoaderData<typeof loader>();
   return (
     <Stack spacing={10}>
-      <PathHeader path={path} stats={stats} />
+      <PathHeader
+        path={path}
+        frequency={frequency}
+        recordBreakers={recordBreakers}
+      />
       <Accordion allowToggle>
         <LeaderboardAccordionItem
           title="Leaderboards"
