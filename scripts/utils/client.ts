@@ -210,29 +210,66 @@ export async function updatePaths() {
 async function rankPathByExtra(pathName: string, extra: string) {
   return db.$executeRaw`
     WITH "filtered_ascensions" AS (
-      SELECT "ascensionNumber", "playerId", "date", "pathName", "lifestyle", ("extra"->>${extra})::integer as "score"
-      FROM "Ascension"
-      WHERE "dropped" = false AND "abandoned" = false AND "pathName" = ${pathName}
-    ),
-    "preceding_score" AS (
-        SELECT "ascensionNumber", "playerId", "date", "score", "pathName", "lifestyle",
-              max("score") OVER (PARTITION BY "pathName", "lifestyle" ORDER BY "date" ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS "preceding_max_score"
-        FROM "filtered_ascensions"
-    ),
-    "ranked_records" AS (
-      SELECT "ascensionNumber", "playerId", "date", "score", "pathName", "lifestyle", "preceding_max_score",
-      ROW_NUMBER() OVER (PARTITION BY "pathName", "lifestyle", "date" ORDER BY "score") AS "rank_for_date"
-      FROM "preceding_score"
-      WHERE "preceding_max_score" IS NULL OR "score" > "preceding_max_score"
-    ),
-    "record_breakers" AS (
-        SELECT *
-        FROM "ranked_records"
-        WHERE "rank_for_date" = 1
-    )
-    UPDATE "Ascension"
-    SET "recordBreaking" = true
-    WHERE ("ascensionNumber", "playerId") IN (SELECT "ascensionNumber", "playerId" FROM "record_breakers");
+      SELECT
+          "ascensionNumber",
+          "playerId",
+          "date",
+          "pathName",
+          "lifestyle",
+          ("extra" ->> ${extra})::integer AS "score"
+          FROM
+              "Ascension"
+          WHERE
+              "dropped" = FALSE
+              AND "abandoned" = FALSE
+              AND "pathName" = ${pathName}),
+          "preceding_score" AS (
+              SELECT
+                  "ascensionNumber",
+                  "playerId",
+                  "date",
+                  "score",
+                  "pathName",
+                  "lifestyle",
+                  max("score") OVER (PARTITION BY "pathName",
+                      "lifestyle" ORDER BY "date" ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS "preceding_max_score"
+          FROM
+              "filtered_ascensions"),
+          "ranked_records" AS (
+              SELECT
+                  "ascensionNumber",
+                  "playerId",
+                  "date",
+                  "score",
+                  "pathName",
+                  "lifestyle",
+                  "preceding_max_score",
+                  ROW_NUMBER() OVER (PARTITION BY "pathName",
+                      "lifestyle",
+                      "date" ORDER BY "score") AS "rank_for_date"
+          FROM
+              "preceding_score"
+          WHERE
+              "preceding_max_score" IS NULL
+              OR "score" > "preceding_max_score"),
+          "record_breakers" AS (
+              SELECT
+                  *
+              FROM
+                  "ranked_records"
+              WHERE
+                  "rank_for_date" = 1)
+              UPDATE
+                  "Ascension"
+              SET
+                  "recordBreaking" = TRUE
+              WHERE ("ascensionNumber",
+                  "playerId") IN (
+                  SELECT
+                      "ascensionNumber",
+                      "playerId"
+                  FROM
+                      "record_breakers");
   `;
 }
 
@@ -248,51 +285,48 @@ export async function rankAscensions() {
 
   await db.$executeRaw`
     WITH "filtered_ascensions" AS (
-        SELECT
-            "ascensionNumber",
-            "playerId",
-            "date",
-            "days",
-            "turns",
-            "pathName",
-            "lifestyle"
-        FROM
-            "Ascension"
-        WHERE
-            "dropped" = FALSE
-            AND "abandoned" = FALSE
-            AND "pathName" NOT IN (${Prisma.join(specialRankings.map(([p]) => p))})
-    ),
+      SELECT
+        "ascensionNumber",
+        "playerId",
+        "date",
+        "days",
+        "turns",
+        "pathName",
+        "lifestyle"
+      FROM
+        "Ascension"
+      WHERE
+        "dropped" = FALSE
+        AND "abandoned" = FALSE
+        AND "pathName" NOT IN (${Prisma.join(specialRankings.map(([p]) => p))})),
     "preceding_days" AS (
+      SELECT
+        "ascensionNumber",
+        "playerId",
+        "date",
+        "days",
+        "turns",
+        "pathName",
+        "lifestyle",
+        min("days") OVER (PARTITION BY "pathName", "lifestyle" ORDER BY "date" ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS "preceding_min_days"
+      FROM
+        "filtered_ascensions"),
+      "preceding_turns" AS (
         SELECT
-            "ascensionNumber",
-            "playerId",
-            "date",
-            "days",
-            "turns",
-            "pathName",
-            "lifestyle",
-            min("days") OVER (PARTITION BY "pathName", "lifestyle" ORDER BY "date" ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS "preceding_min_days"
+          "ascensionNumber",
+          "playerId",
+          "date",
+          "days",
+          "turns",
+          "pathName",
+          "lifestyle",
+          "preceding_min_days",
+          min("turns") OVER (PARTITION BY "pathName", "lifestyle" ORDER BY "date" ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS "preceding_min_turns"
         FROM
-            "filtered_ascensions"
-    ),
-    "preceding_turns" AS (
-        SELECT
-            "ascensionNumber",
-            "playerId",
-            "date",
-            "days",
-            "turns",
-            "pathName",
-            "lifestyle",
-            "preceding_min_days",
-            min("turns") OVER (PARTITION BY "pathName", "lifestyle" ORDER BY "date" ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS "preceding_min_turns"
-        FROM
-            "preceding_days"
-        WHERE "days" <= "preceding_min_days"
-    ),
-    "ranked_records" AS (
-        SELECT
+          "preceding_days"
+        WHERE
+          "days" <= "preceding_min_days"), "ranked_records" AS (
+          SELECT
             "ascensionNumber",
             "playerId",
             "date",
@@ -303,27 +337,30 @@ export async function rankAscensions() {
             "preceding_min_days",
             "preceding_min_turns",
             ROW_NUMBER() OVER (PARTITION BY "pathName", "lifestyle", "date" ORDER BY "days", "turns") AS "rank_for_date"
-        FROM
+          FROM
             "preceding_turns"
-        WHERE
+          WHERE
             "preceding_min_days" IS NULL
             OR ("days" < "preceding_min_days")
-            OR ("days" = "preceding_min_days" AND "turns" < "preceding_min_turns")
-    ),
-    "record_breakers" AS (
-        SELECT
-            "ascensionNumber",
-            "playerId"
-        FROM
-            "ranked_records"
-        WHERE
-            "rank_for_date" = 1
-    )
-    UPDATE "Ascension"
-    SET "recordBreaking" = TRUE
-    WHERE ("ascensionNumber", "playerId") IN (
-        SELECT "ascensionNumber", "playerId"
-        FROM "record_breakers"
-    );
+            OR ("days" = "preceding_min_days"
+              AND "turns" < "preceding_min_turns")),
+          "record_breakers" AS (
+            SELECT
+              "ascensionNumber",
+              "playerId"
+            FROM
+              "ranked_records"
+            WHERE
+              "rank_for_date" = 1)
+          UPDATE
+            "Ascension"
+          SET
+            "recordBreaking" = TRUE
+          WHERE ("ascensionNumber", "playerId") IN (
+            SELECT
+              "ascensionNumber",
+              "playerId"
+            FROM
+              "record_breakers");
   `;
 }
