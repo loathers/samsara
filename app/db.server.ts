@@ -8,6 +8,8 @@ import {
 } from "@prisma/client";
 import { PostgresInterval } from "./utils";
 
+export const NS13 = '2007-06-25'
+
 const prisma = new PrismaClient({
   log: [
     {
@@ -147,6 +149,7 @@ export const db = prisma.$extends({
             AND "lifestyle"::text = ${lifestyle}
             AND "dropped" = False
             AND "abandoned" = False
+            AND "date" >= ${NS13}::date
             ${inSeason ? Prisma.sql`AND "date" >= ${path.start} AND "date" <= ${path.end}` : Prisma.empty}
             ORDER BY "playerId", ${orderByExtraKey ? Prisma.sql`("extra"->>${orderByExtraKey})::integer DESC` : Prisma.sql`"days" ASC, "turns" ASC`}, "date" ASC
           ) as "Ascension"

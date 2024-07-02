@@ -1,4 +1,4 @@
-import { db } from "~/db.server.js";
+import { db, NS13 } from "~/db.server.js";
 import {
   fetchPaths,
   parseAscensions,
@@ -222,6 +222,7 @@ async function rankPathByExtra(pathName: string, extra: string) {
           WHERE
               "dropped" = FALSE
               AND "abandoned" = FALSE
+              AND "date" >= ${NS13}::date
               AND "pathName" = ${pathName}),
           "preceding_score" AS (
               SELECT
@@ -298,6 +299,7 @@ export async function rankAscensions() {
       WHERE
         "dropped" = FALSE
         AND "abandoned" = FALSE
+        AND "date" >= ${NS13}::date
         AND "pathName" NOT IN (${Prisma.join(specialRankings.map(([p]) => p))})),
     "preceding_days" AS (
       SELECT
