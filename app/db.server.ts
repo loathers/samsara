@@ -8,7 +8,7 @@ import {
 } from "@prisma/client";
 import { PostgresInterval } from "./utils";
 
-export const NS13 = '2007-06-25'
+export const NS13 = "2007-06-25";
 
 const prisma = new PrismaClient({
   log: [

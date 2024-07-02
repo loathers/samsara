@@ -93,6 +93,7 @@ function parseAscensionRow(playerId: number, row: string): Ascension {
       lifestyle: "SOFTCORE",
       pathName: "None",
       extra: {},
+      recordBreaking: false,
     };
   }
 
@@ -113,6 +114,7 @@ function parseAscensionRow(playerId: number, row: string): Ascension {
     lifestyle: parseLifestyle(restrictions[1]),
     pathName: path[0],
     extra: path[1],
+    recordBreaking: false,
   };
 }
 
@@ -133,7 +135,7 @@ export function parsePlayer(page: string): Player | null {
 
 export function parseRecentAscenders(page: string): Player[] {
   const rows = page.matchAll(
-    /<td>\w{3}\d+&nbsp;<\/td><td>.*?who=(\d+).*?<b>(.*?)<\/b>/gs,
+    /<td>\w{3}(?:&nbsp;)?\d+&nbsp;<\/td><td>.*?who=(\d+).*?<b>(.*?)<\/b>/gs,
   );
 
   // All this to deduplicate players

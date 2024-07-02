@@ -130,6 +130,17 @@ describe("Utils", () => {
       // Though the list is of 500 ascensions, it yields 405 unique ascenders.
       expect(ascensions).toHaveLength(405);
     });
+
+    it("can parse a list of recent ascensions in the early month", async () => {
+      const page = await loadFixture("museum_recent_ascensions_broken.html");
+
+      const ascensions = parseRecentAscenders(page);
+
+      expect(ascensions).toContainEqual({ id: 892618, name: "ReveRKiller" });
+
+      // Though the list is of 500 ascensions, it yields 405 unique ascenders.
+      expect(ascensions).toHaveLength(412);
+    });
   });
 
   describe("Slugify", () => {
