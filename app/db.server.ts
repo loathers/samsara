@@ -130,7 +130,7 @@ export const db = prisma.$extends({
             extra: true,
             player: { select: { name: true, id: true } },
           },
-          where: { recordBreaking: true, path, lifestyle },
+          where: { recordBreaking: true, pathName: path.name, lifestyle },
           orderBy: [{ date: "asc" }],
         });
       },
