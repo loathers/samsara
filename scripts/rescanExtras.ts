@@ -21,7 +21,6 @@ async function main() {
   await checkPlayers(
     players(needRechecked),
     false,
-    false,
     async (ascensions) => {
       const relevant = ascensions
         .filter(

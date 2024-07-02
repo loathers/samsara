@@ -19,7 +19,6 @@ export const workers = parseWorkers(process.env);
 export async function checkPlayers(
   ids: Generator<number>,
   stopOnBlank = true,
-  stopOnNoNew = false,
   ascensionUpdater?: (ascensions: Ascension[]) => Promise<number>,
 ) {
   let shouldStop = false;
@@ -121,10 +120,6 @@ export async function checkPlayers(
       console.log(
         `Processed ${ascensions.length} (${added} new) ascensions for ${player.name} (${player.id})`,
       );
-
-      if (added === 0 && stopOnNoNew) {
-        shouldStop = true;
-      }
     });
   }
 
