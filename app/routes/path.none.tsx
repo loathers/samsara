@@ -9,47 +9,47 @@ import { getLeaderboard } from "~/utils.server";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 
 export const loader = defineLoader(async () => {
-  const path = await db.path.findFirst({ where: { slug: "bad-moon" } });
+  const path = await db.path.findFirst({ where: { slug: "none" } });
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const bestHCEver = await getLeaderboard(path, "HARDCORE");
-  const bestSCEver = await getLeaderboard(path, "SOFTCORE");
-  const bestCasualEver = await getLeaderboard(path, "CASUAL");
+  const scLeaderboard = await getLeaderboard(path, "SOFTCORE");
+  const hcLeaderboard = await getLeaderboard(path, "HARDCORE");
+  const casualLeaderboard = await getLeaderboard(path, "CASUAL");
 
-  const frequency = await db.ascension.getFrequency(path);
-  const recordBreakers = await db.ascension.getRecordBreaking(path, "HARDCORE");
+  const frequency = await db.ascension.getFrequency(path, undefined);
+
+  const recordBreakers = await db.ascension.getRecordBreaking(path);
 
   return {
     path,
     frequency,
+    scLeaderboard,
+    hcLeaderboard,
+    casualLeaderboard,
     recordBreakers,
-    bestHCEver,
-    bestSCEver,
-    bestCasualEver,
   };
 });
 
 export const meta = () => {
   return [
-    { title: `Saṃsāra ♻️ - Bad Moon` },
+    { title: `Saṃsāra ♻️ - No Path` },
     {
       name: "description",
-      content: `Ascension stats for the Bad Moon path(? sign?)`,
+      content: `Ascension stats for unrestricted ascensions`,
     },
   ];
 };
 
-export default function BadMoonPath() {
+export default function NoPath() {
   const {
     path,
     frequency,
-    bestHCEver,
-    bestSCEver,
-    bestCasualEver,
     recordBreakers,
+    scLeaderboard,
+    hcLeaderboard,
+    casualLeaderboard,
   } = useLoaderData<typeof loader>();
-
   return (
     <Stack spacing={10}>
       <PathHeader
@@ -59,19 +59,25 @@ export default function BadMoonPath() {
       />
       <Accordion allowToggle>
         <LeaderboardAccordionItem
-          title="Leaderboard"
-          description="The official leaderboard as it currently stands"
+          title="Leaderboards"
+          description="The official leaderboards as they currently stand"
         >
-          <Leaderboard ascensions={bestHCEver} />
+          <Leaderboard
+            title="Softcore Leaderboard"
+            ascensions={scLeaderboard}
+          />
+          <Leaderboard
+            title="Hardcore Leaderboard"
+            ascensions={hcLeaderboard}
+          />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
-          title="Weird leaderboards"
-          description="Some curious folks managed to run the path outside of Hardcore and we must respect their work."
+          title="Casual"
+          description="No ronin, no karma, all vibes."
         >
-          <Leaderboard title="Softcore Leaderboard?" ascensions={bestSCEver} />
           <Leaderboard
-            title="Casual? Leaderboard??"
-            ascensions={bestCasualEver}
+            title="Casual Leaderboard"
+            ascensions={casualLeaderboard}
           />
         </LeaderboardAccordionItem>
       </Accordion>

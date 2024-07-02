@@ -34,9 +34,9 @@ const compactNumber = Intl.NumberFormat("en-US", {
 const dateFormatter = new Intl.DateTimeFormat(undefined, {});
 
 const LIFESTYLE_COLOUR = {
-  HARDCORE: "#FF0000",
-  SOFTCORE: "#0000FF",
-  CASUAL: "#FFFF00",
+  HARDCORE: "#F56565", // red.400
+  SOFTCORE: "#4299e1", // blue.400
+  CASUAL: "#ECC94B", // yellow.400
 };
 
 export function RecordGraph({ data, extra }: Props) {
