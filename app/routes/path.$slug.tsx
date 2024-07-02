@@ -47,7 +47,7 @@ export const loader = defineLoader(async ({ params }) => {
   const frequency = await db.ascension.getFrequency(
     path,
     undefined,
-    daysSinceStart < 90 ? "week" : "month",
+    daysSinceStart < 140 ? "week" : "month",
   );
 
   const recordBreakers = await db.ascension.getRecordBreaking(path);
