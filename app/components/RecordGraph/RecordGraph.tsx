@@ -1,7 +1,6 @@
-import { Checkbox, Stack } from "@chakra-ui/react";
 import { Lifestyle } from "@prisma/client";
 import { JsonObject, JsonValue } from "@prisma/client/runtime/library";
-import { SetStateAction, useState } from "react";
+import { useState } from "react";
 import {
   Legend,
   Line,
@@ -11,6 +10,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { TogglableLegend } from "../TogglableLegend";
+import { DaysDot } from "./DaysDot";
 import { formatLifestyle } from "~/utils";
 
 export type RecordDatum = {
@@ -26,6 +27,17 @@ type Props = {
   data: RecordDatum[];
   extra?: string;
 };
+
+function backwardsSearchFrom<T>(
+  array: T[],
+  index: number,
+  cb: (value: T, index: number) => boolean,
+) {
+  for (let i = index; i >= 0; i--) {
+    if (cb(array[i], i)) return array[i];
+  }
+  return undefined;
+}
 
 const compactNumber = Intl.NumberFormat("en-US", {
   notation: "compact",
@@ -87,7 +99,41 @@ export function RecordGraph({ data, extra }: Props) {
             type="stepAfter"
             dataKey={lifestyle}
             stroke={LIFESTYLE_COLOUR[lifestyle]}
-            dot={true}
+            dot={
+              extra
+                ? true
+                : ({
+                    cx,
+                    cy,
+                    stroke,
+                    fill,
+                    r,
+                    strokeWidth,
+                    key,
+                    index,
+                    payload: { lifestyle, days },
+                  }) => {
+                    if (cx === null || cy === null) return <svg key={key} />;
+                    const last = backwardsSearchFrom(
+                      graphData,
+                      index - 1,
+                      (d) => d.lifestyle === lifestyle,
+                    );
+                    if (last && last.days <= days) return <svg key={key} />;
+                    return (
+                      <DaysDot
+                        days={days}
+                        r={r}
+                        fill={fill}
+                        stroke={stroke}
+                        strokeWidth={strokeWidth}
+                        cx={cx}
+                        cy={cy}
+                        key={key}
+                      />
+                    );
+                  }
+            }
           />
         ))}
         <Tooltip
@@ -104,40 +150,17 @@ export function RecordGraph({ data, extra }: Props) {
             align="right"
             verticalAlign="top"
             content={
-              <ToggleLegend value={seriesShown} onChange={setSeriesShown} />
+              <TogglableLegend
+                value={seriesShown}
+                onChange={setSeriesShown}
+                formatLabel={(value) =>
+                  formatLifestyle(value as Lifestyle, true)
+                }
+              />
             }
           />
         )}
       </LineChart>
     </ResponsiveContainer>
-  );
-}
-
-type ToggleLegendProps<T extends Record<string, boolean>> = {
-  value: T;
-  onChange: React.Dispatch<SetStateAction<T>>;
-  payload?: { value: keyof T }[];
-};
-
-function ToggleLegend<T extends Record<string, boolean>>(
-  props: ToggleLegendProps<T>,
-) {
-  const { value, onChange, payload } = props;
-  return (
-    <Stack spacing={2} direction={"row"} justifyContent="center">
-      {payload!.map((entry) => (
-        <Checkbox
-          size="sm"
-          key={entry.value as string}
-          type="checkbox"
-          defaultChecked={value[entry.value]}
-          onChange={(e) =>
-            onChange((v) => ({ ...v, [entry.value]: e.target.checked }))
-          }
-        >
-          {formatLifestyle(entry.value as Lifestyle, true)}
-        </Checkbox>
-      ))}
-    </Stack>
   );
 }

@@ -13,7 +13,7 @@ import { FrequencyGraph } from "./FrequencyGraph";
 import { FormattedDate } from "./FormattedDate";
 import { formatPathName, PostgresInterval } from "../utils";
 import { Link } from "@remix-run/react";
-import { RecordDatum, RecordGraph } from "./RecordGraph";
+import { RecordDatum, RecordGraph } from "./RecordGraph/RecordGraph";
 
 type Datum = { date: Date; count: number };
 type Props = {
