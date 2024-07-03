@@ -1,4 +1,5 @@
 import { ShortenStyle } from "~/utils";
+import { Text } from "@chakra-ui/react";
 import { PathIcon } from "./PathIcon";
 
 type Props = {
@@ -12,25 +13,29 @@ export function formatPathName(path?: { name: string }) {
   return path.name;
 }
 
+function getPathAcronym(name: string) {
+  switch (name) {
+    case "Actually Ed the Undying":
+      return "Ed";
+    case "A Shrunken Adventurer am I":
+      return "Smol";
+    case "Standard":
+      return "Std";
+  }
+
+  const acronym = name
+    .replace("-", " ")
+    .split(" ")
+    .map((word) => (parseInt(word) ? word : word[0]))
+    .join("");
+  return acronym.length === 1 ? name.slice(0, 3) : acronym;
+}
+
 export function Path({ path, shorten }: Props) {
   const name = formatPathName(path);
 
   if (shorten === "acronyms") {
-    switch (name) {
-      case "Actually Ed the Undying":
-        return "Ed";
-      case "A Shrunken Adventurer am I":
-        return "Smol";
-      case "Standard":
-        return "Std";
-    }
-
-    const acronym = name
-      .replace("-", " ")
-      .split(" ")
-      .map((word) => (parseInt(word) ? word : word[0]))
-      .join("");
-    return acronym.length === 1 ? name.slice(0, 3) : acronym;
+    return <Text title={name}>{getPathAcronym(name)}</Text>;
   }
 
   if (shorten === "symbols") {
