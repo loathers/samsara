@@ -5,6 +5,7 @@ import {
   TableContainer,
   Tbody,
   Td,
+  Text,
   Th,
   Thead,
   Tr,
@@ -50,8 +51,14 @@ export function Leaderboard({
             <Th>Player</Th>
             <Th>Date</Th>
             {alternativeScore && <Th>{alternativeScore[0]}</Th>}
-            <Th>Days / Turns</Th>
-            <Th>Level</Th>
+            <Th>
+              <Text display={["none", null, null, "block"]}>Days / Turns</Text>
+              <Text display={["block", null, null, "none"]}>D / T</Text>
+            </Th>
+            <Th>
+              <Text display={["none", null, null, "block"]}>Level</Text>
+              <Text display={["block", null, null, "none"]}>Lvl</Text>
+            </Th>
             {showClass && <Th>Class</Th>}
             <Th>Sign</Th>
           </Tr>

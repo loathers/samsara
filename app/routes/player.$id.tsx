@@ -2,6 +2,7 @@ import {
   Heading,
   Stack,
   Table,
+  Text,
   Thead,
   Tbody,
   Tr,
@@ -80,11 +81,19 @@ export default function Player() {
             <Tr>
               <Th>#</Th>
               <Th>Date</Th>
-              <Th>Level</Th>
+              <Th>
+                <Text display={["none", null, null, "block"]}>Level</Text>
+                <Text display={["block", null, null, "none"]}>Lvl</Text>
+              </Th>
               <Th>Path</Th>
               <Th>Class</Th>
               <Th>Sign</Th>
-              <Th>Days / Turns</Th>
+              <Th>
+                <Text display={["none", null, null, "block"]}>
+                  Days / Turns
+                </Text>
+                <Text display={["block", null, null, "none"]}>D / T</Text>
+              </Th>
             </Tr>
           </Thead>
           <Tbody>
