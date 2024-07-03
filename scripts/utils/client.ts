@@ -1,6 +1,5 @@
 import { db, NS13 } from "~/db.server.js";
 import {
-  fetchPaths,
   parseAscensions,
   parsePlayer,
   rolloverSafeFetch,
@@ -9,6 +8,7 @@ import {
 } from "./utils.js";
 import { parseWorkers } from "./Worker.js";
 import { Ascension, Prisma } from "@prisma/client";
+import { fetchPaths } from "./data.js";
 
 // KoL used to purge accounts from inactivity and even now, sometimes accounts are purged. This is a sufficiently late known account
 // to let us know when to stop skipping gaps. If we ever encounter a future gap, this should be updated to have a greater value.

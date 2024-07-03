@@ -32,6 +32,7 @@
     "remix-utils": "^7.6.0"
   },
   "devDependencies": {
+    "@graphql-typed-document-node/core": "^3.2.0",
     "@prisma/client": "5.16.1",
     "@remix-run/dev": "^2.10.0",
     "@types/react": "^18.3.3",
@@ -46,6 +47,8 @@
     "eslint-plugin-jsx-a11y": "^6.9.0",
     "eslint-plugin-react": "^7.34.3",
     "eslint-plugin-react-hooks": "^4.6.2",
+    "graphql": "^16.9.0",
+    "graphql-request": "^7.1.0",
     "kol.js": "^0.1.4",
     "prettier": "^3.3.2",
     "prisma": "^5.16.1",
