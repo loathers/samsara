@@ -21,6 +21,8 @@ export function Path({ path, shorten }: Props) {
         return "Ed";
       case "A Shrunken Adventurer am I":
         return "Smol";
+      case "Standard":
+        return "Std";
     }
 
     const acronym = name
