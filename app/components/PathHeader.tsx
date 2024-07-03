@@ -10,7 +10,6 @@ import {
 
 import { FrequencyGraph } from "./FrequencyGraph";
 import { FormattedDate } from "./FormattedDate";
-import { PostgresInterval } from "../utils";
 import { Link } from "@remix-run/react";
 import { RecordDatum, RecordGraph } from "./RecordGraph/RecordGraph";
 import { PathIcon } from "./PathIcon";
@@ -25,7 +24,7 @@ type Props = {
     end: Date | null;
     image: string | null;
   };
-  frequency: [data: Datum[], cadence: PostgresInterval];
+  frequency: Datum[];
   recordBreakers: RecordDatum[];
   extra?: string;
 };

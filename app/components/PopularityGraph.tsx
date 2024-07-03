@@ -12,6 +12,7 @@ import createColor from "create-color";
 import { HStack, Text } from "@chakra-ui/react";
 import { Lifestyle } from "@prisma/client";
 import { PathLink } from "./PathLink";
+import { formatTick } from "~/utils";
 
 type Datum = {
   date: Date;
@@ -91,10 +92,7 @@ export function PopularityGraph({ data }: Props) {
           type="number"
           dataKey={(d: Datum) => d.date.getTime()}
           tick={{ fontSize: 8 }}
-          tickFormatter={(ts: number) => {
-            const d = new Date(ts);
-            return `${d.getDate()}/${d.getMonth() + 1}`;
-          }}
+          tickFormatter={(ts: number) => formatTick(ts, seriesData.length)}
           tickCount={8}
           domain={["dataMin", "dataMax"]}
         />

@@ -7,6 +7,7 @@ import { db } from "~/db.server";
 import { formatPathName } from "~/components/Path";
 import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
+import { calculateRange } from "~/utils";
 
 export const loader = defineLoader(async ({ params }) => {
   const { slug } = params;
@@ -41,13 +42,10 @@ export const loader = defineLoader(async ({ params }) => {
       ]
     : [bestSCEver, bestHCEver, [], []];
 
-  const daysSinceStart =
-    (new Date().getTime() - (path.start?.getTime() ?? 0)) / (1000 * 3600 * 24);
-
   const frequency = await db.ascension.getFrequency(
     path,
     undefined,
-    daysSinceStart < 140 ? "week" : "month",
+    calculateRange(path.start ?? new Date(0), new Date()),
   );
 
   const recordBreakers = await db.ascension.getRecordBreaking(path);

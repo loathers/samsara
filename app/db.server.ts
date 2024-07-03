@@ -6,7 +6,6 @@ import {
   Prisma,
   PrismaClient,
 } from "@prisma/client";
-import { PostgresInterval } from "./utils";
 
 export const NS13 = "2007-06-25";
 
@@ -29,8 +28,9 @@ export const db = prisma.$extends({
       async getFrequency(
         path?: { name: string },
         start: Date = new Date(2005, 6, 9),
-        cadence: PostgresInterval = "month",
+        range: number = 140,
       ) {
+        const cadence = range < 140 ? "week" : "month";
         const data = await db.$queryRaw<{ date: Date; count: number }[]>`
           SELECT 
             DATE_TRUNC('${Prisma.raw(cadence)}', "date") AS "date",
@@ -42,10 +42,7 @@ export const db = prisma.$extends({
           GROUP BY DATE_TRUNC('${Prisma.raw(cadence)}', "date")
           ORDER BY DATE_TRUNC('${Prisma.raw(cadence)}', "date") ASC
         `;
-        return [data, cadence] as [
-          data: typeof data,
-          cadence: PostgresInterval,
-        ];
+        return data;
       },
       async getPopularity() {
         const results = await db.$queryRaw<

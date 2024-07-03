@@ -13,6 +13,7 @@ import {
 import { TogglableLegend } from "../TogglableLegend";
 import { DaysDot } from "./DaysDot";
 import { formatLifestyle } from "../Lifestyle";
+import { calculateRange, formatTick, fullDateFormatter } from "~/utils";
 
 export type RecordDatum = {
   days: number;
@@ -43,7 +44,6 @@ const compactNumber = Intl.NumberFormat("en-US", {
   notation: "compact",
   maximumFractionDigits: 1,
 });
-const dateFormatter = new Intl.DateTimeFormat(undefined, {});
 
 const LIFESTYLE_COLOUR = {
   HARDCORE: "#F56565", // red.400
@@ -57,6 +57,8 @@ export function RecordGraph({ data, extra }: Props) {
     SOFTCORE: true,
     CASUAL: true,
   });
+
+  const range = calculateRange(data);
 
   const graphData = data.map((d) => ({
     [d.lifestyle]: extra ? (d.extra as JsonObject)[extra] : d.turns,
@@ -81,7 +83,7 @@ export function RecordGraph({ data, extra }: Props) {
         <XAxis
           type="number"
           dataKey={(d) => d.date.getTime()}
-          tickFormatter={(ts: number) => new Date(ts).getFullYear().toString()}
+          tickFormatter={(ts: number) => formatTick(ts, range)}
           tick={{ fontSize: 8 }}
           domain={["dataMin", "dataMax"]}
         />
@@ -137,7 +139,9 @@ export function RecordGraph({ data, extra }: Props) {
           />
         ))}
         <Tooltip
-          labelFormatter={(ts: number) => dateFormatter.format(new Date(ts))}
+          labelFormatter={(ts: number) =>
+            fullDateFormatter.format(new Date(ts))
+          }
           formatter={(value, name, { payload }) => [
             formatRunForTooltip(payload),
             null,
