@@ -12,7 +12,7 @@ import {
 } from "recharts";
 import { TogglableLegend } from "../TogglableLegend";
 import { DaysDot } from "./DaysDot";
-import { formatLifestyle } from "~/utils";
+import { formatLifestyle } from "../Lifestyle";
 
 export type RecordDatum = {
   days: number;
@@ -154,7 +154,7 @@ export function RecordGraph({ data, extra }: Props) {
                 value={seriesShown}
                 onChange={setSeriesShown}
                 formatLabel={(value) =>
-                  formatLifestyle(value as Lifestyle, true)
+                  formatLifestyle(value as Lifestyle, "acronyms")
                 }
               />
             }

@@ -1,10 +1,9 @@
 import { Accordion, Stack } from "@chakra-ui/react";
 import { JsonValue } from "@prisma/client/runtime/library";
 import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
-import { MetaArgs_SingleFetch, useLoaderData } from "@remix-run/react";
+import { useLoaderData } from "@remix-run/react";
 import { Leaderboard } from "~/components/Leaderboard";
 import { db } from "~/db.server";
-import { formatPathName } from "~/utils";
 import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 
@@ -71,12 +70,12 @@ export const loader = defineLoader(async () => {
   };
 });
 
-export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
+export const meta = () => {
   return [
-    { title: `Saṃsāra ♻️ - ${formatPathName(data?.path.name ?? "Unknown")}` },
+    { title: `Saṃsāra ♻️ - One Crazy Random Summer` },
     {
       name: "description",
-      content: `Ascension stats for the ${formatPathName(data?.path.name ?? "Unknown")} path`,
+      content: `Ascension stats for the One Crazy Random Summer path`,
     },
   ];
 };

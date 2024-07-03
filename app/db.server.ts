@@ -53,6 +53,7 @@ export const db = prisma.$extends({
             date: Date;
             name: string;
             slug: string;
+            image: string | null;
             lifestyle: Lifestyle;
             count: number;
           }[]
@@ -61,6 +62,7 @@ export const db = prisma.$extends({
             DATE_TRUNC('day', "date") AS "date",
 			      "name",
             "slug",
+            "image",
 			      "lifestyle",
             COUNT(*)::integer AS "count"
           FROM "Ascension"
@@ -75,7 +77,7 @@ export const db = prisma.$extends({
           ...r,
           name: undefined,
           slug: undefined,
-          path: { name: r.name, slug: r.slug },
+          path: { name: r.name, slug: r.slug, image: r.image },
         }));
       },
       async getStat({

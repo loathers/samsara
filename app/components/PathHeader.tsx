@@ -2,7 +2,6 @@ import {
   HStack,
   Stack,
   Heading,
-  Image,
   Text,
   Box,
   ButtonGroup,
@@ -11,9 +10,11 @@ import {
 
 import { FrequencyGraph } from "./FrequencyGraph";
 import { FormattedDate } from "./FormattedDate";
-import { formatPathName, PostgresInterval } from "../utils";
+import { PostgresInterval } from "../utils";
 import { Link } from "@remix-run/react";
 import { RecordDatum, RecordGraph } from "./RecordGraph/RecordGraph";
+import { PathIcon } from "./PathIcon";
+import { Path } from "./Path";
 
 type Datum = { date: Date; count: number };
 type Props = {
@@ -29,23 +30,14 @@ type Props = {
   extra?: string;
 };
 
-function formatImage(image: string | null) {
-  if (image === "oxy") return "smalloxy";
-  return image;
-}
-
 export function PathHeader({ path, frequency, recordBreakers, extra }: Props) {
-  const image = formatImage(path.image);
-
   return (
     <Stack alignItems="center">
       <HStack>
-        <Heading>{formatPathName(path.name)}</Heading>
-        {image && (
-          <Image
-            src={`https://s3.amazonaws.com/images.kingdomofloathing.com/itemimages/${image}.gif`}
-          />
-        )}
+        <Heading>
+          <Path path={path} />
+        </Heading>
+        <PathIcon path={path} />
       </HStack>
       {path.start && path.end && (
         <Text size="md">

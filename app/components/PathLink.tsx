@@ -1,32 +1,28 @@
-import { Link, Text } from "@chakra-ui/react";
+import { Link, Stack } from "@chakra-ui/react";
 import { Link as RemixLink } from "@remix-run/react";
-import { Lifestyle } from "@prisma/client";
-import { formatLifestyle } from "~/utils";
-
-const formatPath = (path: string) => {
-  switch (path) {
-    case "None":
-      return "No Path";
-    default:
-      return path;
-  }
-};
+import { Lifestyle as LifestyleEnum } from "@prisma/client";
+import { ShortenStyle } from "~/utils";
+import { formatLifestyle, Lifestyle } from "./Lifestyle";
+import { formatPathName, Path } from "./Path";
 
 type Props = {
-  lifestyle?: Lifestyle;
-  path: { slug: string; name: string };
-  shorten?: boolean;
+  lifestyle?: LifestyleEnum;
+  path: { slug: string; name: string; image: string | null };
+  shorten?: ShortenStyle;
 };
 
-export function PathLink({ lifestyle, path, shorten = false }: Props) {
-  if (lifestyle === "CASUAL")
-    return <Text>{formatLifestyle(lifestyle, shorten)}</Text>;
-
-  const text = `${lifestyle ? `${formatLifestyle(lifestyle, shorten)} ` : ""} ${formatPath(path.name)}`;
+export function PathLink({ lifestyle, path, shorten }: Props) {
+  const title = `${lifestyle ? `${formatLifestyle(lifestyle)} ` : ""}${formatPathName(path)}`;
 
   return (
-    <Link as={RemixLink} to={`/path/${path.slug}`}>
-      {text}
+    <Link as={RemixLink} to={`/path/${path.slug}`} title={title}>
+      <Stack
+        spacing={shorten ? 0 : 1}
+        direction={lifestyle === "CASUAL" ? "row-reverse" : "row"}
+      >
+        {lifestyle && <Lifestyle lifestyle={lifestyle} shorten={shorten} />}
+        <Path path={path} shorten={shorten} />
+      </Stack>
     </Link>
   );
 }

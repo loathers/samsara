@@ -116,6 +116,7 @@ export default function Player() {
                     <PathLink
                       lifestyle={ascension.lifestyle}
                       path={paths[ascension.pathName]}
+                      shorten="symbols"
                     />
                   </Td>
                   <Td>{ascension.class}</Td>

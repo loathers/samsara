@@ -22,7 +22,7 @@ import { PopularityGraph } from "~/components/PopularityGraph";
 import { PathLink } from "~/components/PathLink";
 import { CoolStat } from "~/components/CoolStat";
 import { FormEventHandler, useCallback } from "react";
-import { formatPathName } from "~/utils.js";
+import { formatPathName } from "~/components/Path";
 
 export const meta = () => {
   return [
@@ -48,7 +48,7 @@ export const loader = defineLoader(async () => {
   const currentPath =
     paths[0].end && paths[0].end > new Date()
       ? paths[0]
-      : { name: "Standard", slug: "standard" };
+      : { name: "Standard", slug: "standard", image: "standard11" };
 
   const [currentPathers, currentPathersChange] = await db.ascension.getStat({
     path: currentPath,
@@ -139,7 +139,7 @@ export default function Index() {
                 <Select name="slug" borderRightRadius={0}>
                   {paths.map((path) => (
                     <option key={path.name} value={path.slug}>
-                      {formatPathName(path.name)}
+                      {formatPathName(path)}
                     </option>
                   ))}
                 </Select>

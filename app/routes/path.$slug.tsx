@@ -4,7 +4,7 @@ import { MetaArgs_SingleFetch, useLoaderData } from "@remix-run/react";
 
 import { Leaderboard } from "~/components/Leaderboard";
 import { db } from "~/db.server";
-import { formatPathName } from "~/utils";
+import { formatPathName } from "~/components/Path";
 import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 
@@ -66,10 +66,10 @@ export const loader = defineLoader(async ({ params }) => {
 
 export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
   return [
-    { title: `Saṃsāra ♻️ - ${formatPathName(data?.path.name ?? "Unknown")}` },
+    { title: `Saṃsāra ♻️ - ${formatPathName(data?.path)}` },
     {
       name: "description",
-      content: `Ascension stats for the ${data?.path.name ?? "Unknown"} path`,
+      content: `Ascension stats for the ${formatPathName(data?.path)} path`,
     },
   ];
 };

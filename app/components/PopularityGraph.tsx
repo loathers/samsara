@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { Fragment, useMemo } from "react";
+import { useMemo } from "react";
 import {
   Legend,
   Line,
@@ -9,13 +9,13 @@ import {
   YAxis,
 } from "recharts";
 import createColor from "create-color";
-import { Text } from "@chakra-ui/react";
+import { HStack, Text } from "@chakra-ui/react";
 import { Lifestyle } from "@prisma/client";
 import { PathLink } from "./PathLink";
 
 type Datum = {
   date: Date;
-  path: { slug: string; name: string };
+  path: { slug: string; name: string; image: string | null };
   lifestyle: Lifestyle;
   count: number;
 };
@@ -45,7 +45,7 @@ export function PopularityGraph({ data }: Props) {
         {
           key: string;
           lifestyle: Lifestyle;
-          path: { name: string; slug: string };
+          path: { name: string; slug: string; image: string | null };
           total: number;
         }
       >,
@@ -106,21 +106,25 @@ export function PopularityGraph({ data }: Props) {
           iconType="circle"
           layout="vertical"
           content={({ payload }) => (
-            <Text fontSize="xs" textAlign="center">
-              {payload?.map((entry, i) => (
-                <Fragment key={entry.value}>
-                  {i > 0 && ", "}{" "}
+            <HStack
+              spacing={2}
+              fontSize="xs"
+              textAlign="center"
+              flexWrap="wrap"
+            >
+              {payload?.map((entry) => (
+                <HStack spacing={1} key={entry.value}>
                   <Text as="span" color={entry.color}>
                     &#x25CF;
                   </Text>{" "}
                   <PathLink
                     path={paths[entry.value].path}
                     lifestyle={paths[entry.value].lifestyle}
-                    shorten
+                    shorten="acronyms"
                   />
-                </Fragment>
+                </HStack>
               ))}
-            </Text>
+            </HStack>
           )}
         />
       </LineChart>

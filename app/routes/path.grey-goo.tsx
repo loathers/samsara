@@ -1,12 +1,11 @@
 import { Accordion, Stack } from "@chakra-ui/react";
 import { JsonValue } from "@prisma/client/runtime/library";
 import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
-import { MetaArgs_SingleFetch, useLoaderData } from "@remix-run/react";
+import { useLoaderData } from "@remix-run/react";
 import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
 import { db } from "~/db.server";
-import { formatPathName } from "~/utils";
 
 export const loader = defineLoader(async () => {
   const path = await db.path.findFirst({ where: { slug: "grey-goo" } });
@@ -53,12 +52,12 @@ export const loader = defineLoader(async () => {
   };
 });
 
-export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
+export const meta = () => {
   return [
-    { title: `Saṃsāra ♻️ - ${formatPathName(data?.path.name ?? "Unknown")}` },
+    { title: `Saṃsāra ♻️ - Grey Goo` },
     {
       name: "description",
-      content: `Ascension stats for the ${formatPathName(data?.path.name ?? "Unknown")} path`,
+      content: `Ascension stats for the Grey Goo path`,
     },
   ];
 };
