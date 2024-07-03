@@ -9,6 +9,7 @@ import {
   Td,
   Button,
   ButtonGroup,
+  TableContainer,
 } from "@chakra-ui/react";
 import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
 import {
@@ -77,55 +78,57 @@ export default function Player() {
           </Button>
         </ButtonGroup>
       </Stack>
-      <Table>
-        <Thead>
-          <Tr>
-            <Th>#</Th>
-            <Th>Date</Th>
-            <Th>Level</Th>
-            <Th>Path</Th>
-            <Th>Class</Th>
-            <Th>Sign</Th>
-            <Th>Days / Turns</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          {player.ascensions.map((ascension) => {
-            if (ascension.abandoned)
+      <TableContainer>
+        <Table>
+          <Thead>
+            <Tr>
+              <Th>#</Th>
+              <Th>Date</Th>
+              <Th>Level</Th>
+              <Th>Path</Th>
+              <Th>Class</Th>
+              <Th>Sign</Th>
+              <Th>Days / Turns</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {player.ascensions.map((ascension) => {
+              if (ascension.abandoned)
+                return (
+                  <Tr key={ascension.ascensionNumber}>
+                    <Td>{ascension.ascensionNumber}</Td>
+                    <Td>
+                      <FormattedDate date={ascension.date} />
+                    </Td>
+                    <Td colSpan={5} fontSize="sm" color="grey">
+                      Run abandoned
+                    </Td>
+                  </Tr>
+                );
               return (
                 <Tr key={ascension.ascensionNumber}>
                   <Td>{ascension.ascensionNumber}</Td>
                   <Td>
                     <FormattedDate date={ascension.date} />
                   </Td>
-                  <Td colSpan={5} fontSize="sm" color="grey">
-                    Run abandoned
+                  <Td>{ascension.level}</Td>
+                  <Td>
+                    <PathLink
+                      lifestyle={ascension.lifestyle}
+                      path={paths[ascension.pathName]}
+                    />
+                  </Td>
+                  <Td>{ascension.class}</Td>
+                  <Td>{ascension.sign}</Td>
+                  <Td>
+                    {ascension.days} / {ascension.turns}
                   </Td>
                 </Tr>
               );
-            return (
-              <Tr key={ascension.ascensionNumber}>
-                <Td>{ascension.ascensionNumber}</Td>
-                <Td>
-                  <FormattedDate date={ascension.date} />
-                </Td>
-                <Td>{ascension.level}</Td>
-                <Td>
-                  <PathLink
-                    lifestyle={ascension.lifestyle}
-                    path={paths[ascension.pathName]}
-                  />
-                </Td>
-                <Td>{ascension.class}</Td>
-                <Td>{ascension.sign}</Td>
-                <Td>
-                  {ascension.days} / {ascension.turns}
-                </Td>
-              </Tr>
-            );
-          })}
-        </Tbody>
-      </Table>
+            })}
+          </Tbody>
+        </Table>
+      </TableContainer>
     </Stack>
   );
 }
