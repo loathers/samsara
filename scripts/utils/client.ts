@@ -8,7 +8,7 @@ import {
 } from "./utils.js";
 import { parseWorkers } from "./Worker.js";
 import { Ascension, Prisma } from "@prisma/client";
-import { fetchPaths } from "./data.js";
+import { fetchClasses, fetchPaths } from "./data.js";
 
 // KoL used to purge accounts from inactivity and even now, sometimes accounts are purged. This is a sufficiently late known account
 // to let us know when to stop skipping gaps. If we ever encounter a future gap, this should be updated to have a greater value.
@@ -25,6 +25,10 @@ export async function checkPlayers(
 
   const paths = (await db.path.findMany({ select: { name: true } })).map(
     (p) => p.name,
+  );
+
+  const classes = (await db.class.findMany({ select: { name: true } })).map(
+    (c) => c.name,
   );
 
   for (const id of ids) {
@@ -103,6 +107,27 @@ export async function checkPlayers(
         paths.push(...newPaths.map((a) => a.pathName));
       }
 
+      const newClasses = ascensions.filter((a) => !classes.includes(a.class));
+      if (newClasses.length > 0) {
+        const firstPerNewPerClass = Object.values(
+          newClasses.reduce(
+            (acc, a) => {
+              if (a.class in acc) return acc;
+              return { ...acc, [a.class]: a };
+            },
+            {} as Record<string, Ascension>,
+          ),
+        );
+
+        await db.class.createMany({
+          data: firstPerNewPerClass.map((a) => ({
+            name: a.class,
+          })),
+          skipDuplicates: true,
+        });
+        classes.push(...newClasses.map((a) => a.class));
+      }
+
       let added = 0;
 
       if (ascensionUpdater) {
@@ -123,7 +148,7 @@ export async function checkPlayers(
     });
   }
 
-  await Promise.all([updatePaths(), rankAscensions()]);
+  await Promise.all([updatePaths(), updateClasses(), rankAscensions()]);
 }
 
 async function guessPathDates() {
@@ -205,6 +230,38 @@ export async function updatePaths() {
   // Add start and end dates to paths
   await guessPathDates();
   await fetchExtraPathData();
+}
+
+export async function updateClasses() {
+  const knownClasses = await fetchClasses();
+  if (!knownClasses) return;
+  const classMap = new Map(knownClasses.map((p) => [p.name, p]));
+
+  // DoL's name doesn't match up on some things
+  classMap.set("Actually Ed the Undying", classMap.get("Ed the Undying")!);
+  classMap.set("Grey You", classMap.get("Grey Goo")!);
+
+  await db.$transaction(async (tx) => {
+    const classes = await tx.class.findMany({ where: { image: null } });
+
+    for (const clazz of classes) {
+      const knownClass = classMap.get(clazz.name);
+      if (!knownClass) continue;
+
+      // Abandoned runs
+      if (knownClass.name === "None") continue;
+
+      await tx.class.update({
+        where: { name: clazz.name },
+        // Path 0 is also null
+        data: {
+          image: knownClass.image,
+          id: knownClass.id,
+          pathId: knownClass.path || null,
+        },
+      });
+    }
+  });
 }
 
 async function rankPathByExtra(pathName: string, extra: string) {

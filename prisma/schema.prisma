@@ -55,8 +55,17 @@ model Path {
   slug       String      @unique
   start      DateTime?
   end        DateTime?
-  id         Int?
+  id         Int?        @unique
   image      String?
   seasonal   Boolean     @default(true)
   ascensions Ascension[]
+  class      Class[]
+}
+
+model Class {
+  name   String  @id
+  id     Int?
+  image  String?
+  path   Path?   @relation(fields: [pathId], references: [id])
+  pathId Int?
 }
