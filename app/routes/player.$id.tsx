@@ -22,8 +22,8 @@ import {
 import { db } from "../db.server.js";
 
 import { FormattedDate } from "../components/FormattedDate.js";
-import { Path as PathType } from "@prisma/client";
-import { PathLink } from "../components/PathLink.js";
+import { PathLink } from "../components/PathLink";
+import { Class } from "~/components/Class";
 
 export const loader = defineLoader(async ({ params }) => {
   const { id } = params;
@@ -43,19 +43,15 @@ export const loader = defineLoader(async ({ params }) => {
     where: { id: parseInt(id) },
     include: {
       ascensions: {
+        include: { path: true, class: true },
         orderBy: { ascensionNumber: "asc" },
       },
     },
   });
 
-  const paths = (await db.path.findMany({})).reduce(
-    (acc, path) => ({ ...acc, [path.name]: path }),
-    {} as Record<string, PathType>,
-  );
-
   if (!player) throw json({ message: "Player not found" }, { status: 404 });
 
-  return { player, paths };
+  return { player };
 });
 
 export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
@@ -66,7 +62,7 @@ export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
 };
 
 export default function Player() {
-  const { player, paths } = useLoaderData<typeof loader>()!;
+  const { player } = useLoaderData<typeof loader>()!;
 
   return (
     <Stack spacing={10}>
@@ -115,11 +111,13 @@ export default function Player() {
                   <Td>
                     <PathLink
                       lifestyle={ascension.lifestyle}
-                      path={paths[ascension.pathName]}
+                      path={ascension.path}
                       shorten="symbols"
                     />
                   </Td>
-                  <Td>{ascension.class}</Td>
+                  <Td>
+                    <Class class={ascension.class} shorten="symbols" />
+                  </Td>
                   <Td>{ascension.sign}</Td>
                   <Td>
                     {ascension.days} / {ascension.turns}

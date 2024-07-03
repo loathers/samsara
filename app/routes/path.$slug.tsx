@@ -11,7 +11,10 @@ import { calculateRange } from "~/utils";
 
 export const loader = defineLoader(async ({ params }) => {
   const { slug } = params;
-  const path = await db.path.findFirst({ where: { slug } });
+  const path = await db.path.findFirst({
+    where: { slug },
+    include: { class: true },
+  });
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
@@ -83,6 +86,9 @@ export default function Path() {
     scPyrite,
     hcPyrite,
   } = useLoaderData<typeof loader>();
+
+  const showClass = path.class.length !== 1;
+
   return (
     <Stack spacing={10}>
       <PathHeader
@@ -102,16 +108,26 @@ export default function Path() {
           <Leaderboard
             title="Softcore Leaderboard"
             ascensions={scLeaderboard}
+            showClass={showClass}
           />
           <Leaderboard
             title="Hardcore Leaderboard"
             ascensions={hcLeaderboard}
+            showClass={showClass}
           />
         </LeaderboardAccordionItem>
         {scPyrite.length + hcPyrite.length > 0 && (
           <LeaderboardAccordionItem title="Pyrites" description="{PYRITE}">
-            <Leaderboard title="Softcore Pyrites" ascensions={scPyrite} />
-            <Leaderboard title="Hardcore Pyrites" ascensions={hcPyrite} />
+            <Leaderboard
+              title="Softcore Pyrites"
+              ascensions={scPyrite}
+              showClass={showClass}
+            />
+            <Leaderboard
+              title="Hardcore Pyrites"
+              ascensions={hcPyrite}
+              showClass={showClass}
+            />
           </LeaderboardAccordionItem>
         )}
       </Accordion>

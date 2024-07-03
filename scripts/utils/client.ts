@@ -107,13 +107,15 @@ export async function checkPlayers(
         paths.push(...newPaths.map((a) => a.pathName));
       }
 
-      const newClasses = ascensions.filter((a) => !classes.includes(a.class));
+      const newClasses = ascensions.filter(
+        (a) => !classes.includes(a.className),
+      );
       if (newClasses.length > 0) {
         const firstPerNewPerClass = Object.values(
           newClasses.reduce(
             (acc, a) => {
-              if (a.class in acc) return acc;
-              return { ...acc, [a.class]: a };
+              if (a.className in acc) return acc;
+              return { ...acc, [a.className]: a };
             },
             {} as Record<string, Ascension>,
           ),
@@ -121,11 +123,11 @@ export async function checkPlayers(
 
         await db.class.createMany({
           data: firstPerNewPerClass.map((a) => ({
-            name: a.class,
+            name: a.className,
           })),
           skipDuplicates: true,
         });
-        classes.push(...newClasses.map((a) => a.class));
+        classes.push(...newClasses.map((a) => a.className));
       }
 
       let added = 0;
@@ -248,7 +250,7 @@ export async function updateClasses() {
       const knownClass = classMap.get(clazz.name);
       if (!knownClass) continue;
 
-      // Abandoned runs
+      // Abandoned runs get a None class
       if (knownClass.name === "None") continue;
 
       await tx.class.update({

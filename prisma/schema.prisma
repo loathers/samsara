@@ -27,7 +27,8 @@ model Ascension {
   dropped            Boolean
   abandoned          Boolean
   level              Int
-  class              String
+  className          String
+  class              Class     @relation(fields: [className], references: [name])
   sign               String
   turns              Int
   days               Int
@@ -63,9 +64,10 @@ model Path {
 }
 
 model Class {
-  name   String  @id
-  id     Int?
-  image  String?
-  path   Path?   @relation(fields: [pathId], references: [id])
-  pathId Int?
+  name      String      @id
+  id        Int?
+  image     String?
+  path      Path?       @relation(fields: [pathId], references: [id])
+  pathId    Int?
+  Ascension Ascension[]
 }

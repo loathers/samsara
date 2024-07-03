@@ -1,5 +1,6 @@
 import {
   Ascension,
+  Class,
   Lifestyle,
   Path,
   Player,
@@ -18,9 +19,13 @@ const prisma = new PrismaClient({
   ],
 });
 
-// prisma.$on("query", async (e) => {
-//   console.log(`${e.query} ${e.params}`)
-// })
+prisma.$on("query", async (e) => {
+  console.log(`${e.query} ${e.params}`);
+});
+
+export type LeaderboardEntry = Ascension & { player: Player } & {
+  class: Class;
+};
 
 export const db = prisma.$extends({
   model: {
@@ -140,20 +145,32 @@ export const db = prisma.$extends({
         orderByExtraKey?: string,
       ) {
         if (inSeason && (!path.start || !path.end)) return [];
-        return db.$queryRaw<(Player & Ascension)[]>`
-          SELECT * FROM (
-            SELECT DISTINCT ON ("playerId") * 
-            FROM "Ascension"
-            WHERE "pathName" = ${path.name}
-            AND "lifestyle"::text = ${lifestyle}
-            AND "dropped" = False
-            AND "abandoned" = False
-            AND "date" >= ${NS13}::date
-            ${inSeason ? Prisma.sql`AND "date" >= ${path.start} AND "date" <= ${path.end}` : Prisma.empty}
-            ORDER BY "playerId", ${orderByExtraKey ? Prisma.sql`("extra"->>${orderByExtraKey})::integer DESC` : Prisma.sql`"days" ASC, "turns" ASC`}, "date" ASC
-          ) as "Ascension"
-          LEFT JOIN "Player" ON "Ascension"."playerId" = "Player"."id"
-          ORDER BY ${orderByExtraKey ? Prisma.sql`("extra"->>${orderByExtraKey})::integer DESC` : Prisma.sql`"days" ASC, "turns" ASC`}, "date" ASC
+        return db.$queryRaw<LeaderboardEntry[]>`
+          SELECT
+            "Ascension".*,
+            TO_JSON("Player") as "player",
+            TO_JSON("Class") as "class"
+          FROM (
+            SELECT DISTINCT ON ("playerId")
+              * 
+            FROM
+              "Ascension"
+            WHERE
+              "pathName" = ${path.name}
+              AND "lifestyle"::text = ${lifestyle}
+              AND "dropped" = False
+              AND "abandoned" = False
+              AND "date" >= ${NS13}::date
+              ${inSeason ? Prisma.sql`AND "date" >= ${path.start} AND "date" <= ${path.end}` : Prisma.empty}
+            ORDER BY
+              "playerId",
+              ${orderByExtraKey ? Prisma.sql`("extra"->>${orderByExtraKey})::integer DESC` : Prisma.sql`"days" ASC, "turns" ASC`},
+              "date" ASC) as "Ascension"
+            LEFT JOIN "Player" ON "Ascension"."playerId" = "Player"."id"
+            LEFT JOIN "Class" ON "Ascension"."className" = "Class"."name"
+          ORDER BY
+            ${orderByExtraKey ? Prisma.sql`("extra"->>${orderByExtraKey})::integer DESC` : Prisma.sql`"days" ASC, "turns" ASC`},
+            "date" ASC
           LIMIT 35
         `;
       },

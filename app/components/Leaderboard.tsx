@@ -9,16 +9,18 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { Ascension, Player } from "@prisma/client";
 import { FormattedDate } from "./FormattedDate";
 import { Link as RemixLink } from "@remix-run/react";
+import { LeaderboardEntry } from "~/db.server";
+import { Class } from "./Class";
 
 type Props = {
   title?: string;
-  ascensions: (Player & Ascension)[];
+  ascensions: LeaderboardEntry[];
+  showClass?: boolean;
   alternativeScore?: [
     title: string,
-    renderer: (ascension: Player & Ascension) => React.ReactNode,
+    renderer: (ascension: LeaderboardEntry) => React.ReactNode,
   ];
 };
 
@@ -28,7 +30,12 @@ function awardBg(rank: number) {
   return "transparent";
 }
 
-export function Leaderboard({ title, ascensions, alternativeScore }: Props) {
+export function Leaderboard({
+  title,
+  ascensions,
+  showClass = true,
+  alternativeScore,
+}: Props) {
   return (
     <TableContainer>
       {title && (
@@ -45,7 +52,7 @@ export function Leaderboard({ title, ascensions, alternativeScore }: Props) {
             {alternativeScore && <Th>{alternativeScore[0]}</Th>}
             <Th>Days / Turns</Th>
             <Th>Level</Th>
-            <Th>Class</Th>
+            {showClass && <Th>Class</Th>}
             <Th>Sign</Th>
           </Tr>
         </Thead>
@@ -54,8 +61,8 @@ export function Leaderboard({ title, ascensions, alternativeScore }: Props) {
             <Tr key={`${a.playerId}/${a.ascensionNumber}`} bg={awardBg(i + 1)}>
               <Td>{i + 1}</Td>
               <Td>
-                <Link as={RemixLink} to={`/player/${a.playerId}`}>
-                  {a.name} (#{a.playerId})
+                <Link as={RemixLink} to={`/player/${a.player.id}`}>
+                  {a.player.name} (#{a.player.id})
                 </Link>
               </Td>
               <Td>
@@ -66,7 +73,11 @@ export function Leaderboard({ title, ascensions, alternativeScore }: Props) {
                 {a.days} / {a.turns}
               </Td>
               <Td>{a.level}</Td>
-              <Td>{a.class}</Td>
+              {showClass && (
+                <Td>
+                  <Class class={a.class} shorten="acronyms" />
+                </Td>
+              )}
               <Td>{a.sign}</Td>
             </Tr>
           ))}

@@ -3,14 +3,13 @@ import { db } from "~/db.server";
 
 await db.$transaction(async (tx) => {
   const paths = await tx.ascension.findMany({
-    select: { class: true },
-    where: { abandoned: false },
-    distinct: ["class"],
+    select: { className: true },
+    distinct: ["className"],
   });
 
   await tx.class.createMany({
     data: paths.map((a) => ({
-      name: a.class,
+      name: a.className,
     })),
     skipDuplicates: true,
   });
