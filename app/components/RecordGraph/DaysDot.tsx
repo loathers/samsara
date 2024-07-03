@@ -9,12 +9,11 @@ type Props = {
 };
 
 function polygon([cx, cy]: [number, number], sides: number, radius: number) {
-  const slice = (2 * Math.PI) / sides;
-  return Array(sides)
-    .fill(slice / 2)
-    .map((offset, i) => [
-      cx + radius * Math.cos(offset + slice * i + Math.PI / 2),
-      cy + radius * Math.sin(offset + slice * i + Math.PI / 2),
+  const angle = (2 * Math.PI) / sides;
+  return [...Array(sides).keys()]
+    .map((i) => [
+      cx + radius * Math.sin(angle * i),
+      cy + radius * -Math.cos(angle * i),
     ])
     .join(" ");
 }
