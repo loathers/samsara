@@ -16,19 +16,12 @@ type Props = {
 };
 
 export function FrequencyGraph({ data, inSeasonTo, untilNow }: Props) {
-  const dataWithTrailingZero = untilNow
-    ? [
-        ...data,
-        { date: data[data.length - 1].date, count: 0 },
-        { date: new Date(), count: 0 },
-      ]
-    : data;
-  const range = calculateRange(dataWithTrailingZero);
+  const range = calculateRange(data);
 
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart
-        data={dataWithTrailingZero}
+        data={data}
         title="Ascensions over time"
         margin={{ top: 0, bottom: 0 }}
       >
@@ -37,7 +30,7 @@ export function FrequencyGraph({ data, inSeasonTo, untilNow }: Props) {
           dataKey={(d: Datum) => d.date.getTime()}
           tick={{ fontSize: 8 }}
           tickFormatter={(ts: number) => formatTick(ts, range)}
-          domain={["dataMin", "dataMax"]}
+          domain={["dataMin", untilNow ? Date.now() : "dataMax"]}
         />
         <YAxis
           tick={{ fontSize: 8 }}
