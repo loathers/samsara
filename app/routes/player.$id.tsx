@@ -185,6 +185,7 @@ export default function Player() {
                   <Th
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
+                    cursor={header.column.getCanSort() ? "pointer" : "default"}
                     title={
                       header.column.getCanSort()
                         ? {
