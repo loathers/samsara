@@ -39,7 +39,7 @@ import {
 import { Ascension, Class as ClassType, Path } from "@prisma/client";
 import { useState } from "react";
 import { Pagination } from "~/components/Pagination";
-import { formatTurncount } from "~/utils.js";
+import { formatTurncount, numberFormatter } from "~/utils.js";
 import { FrequencyGraph } from "~/components/FrequencyGraph";
 
 export const loader = defineLoader(async ({ params }) => {
@@ -75,8 +75,13 @@ export const loader = defineLoader(async ({ params }) => {
 
 export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
   return [
-    { title: `Saṃsāra ♻️ - ${data?.player.name ?? "Unknown player"}` },
-    { name: "description", content: "Kingdom of Loathing ascension database" },
+    { title: data && `Saṃsāra ♻️ - ${data.player.name} (#${data.player.id})` },
+    {
+      name: "description",
+      content:
+        data &&
+        `Ascension stats for ${data.player.name}'s ${numberFormatter.format(data.player.ascensions.length)} runs`,
+    },
   ];
 };
 
@@ -159,7 +164,9 @@ export default function Player() {
   return (
     <Stack spacing={10}>
       <Stack spacing={4}>
-        <Heading alignSelf="center">{player.name}</Heading>
+        <Heading alignSelf="center">
+          {player.name} (#{player.id})
+        </Heading>
         <ButtonGroup justifyContent="center">
           <Button as={Link} leftIcon={<span>←</span>} to="/">
             home
