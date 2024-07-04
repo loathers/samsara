@@ -13,7 +13,12 @@ import {
 import { TogglableLegend } from "../TogglableLegend";
 import { DaysDot } from "./DaysDot";
 import { formatLifestyle } from "../Lifestyle";
-import { calculateRange, formatTick, fullDateFormatter } from "~/utils";
+import {
+  calculateRange,
+  compactNumberFormatter,
+  formatTick,
+  fullDateFormatter,
+} from "~/utils";
 
 export type RecordDatum = {
   days: number;
@@ -40,11 +45,6 @@ function backwardsSearchFrom<T>(
   return undefined;
 }
 
-const compactNumber = Intl.NumberFormat("en-US", {
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
-
 const LIFESTYLE_COLOUR = {
   HARDCORE: "#F56565", // red.400
   SOFTCORE: "#4299e1", // blue.400
@@ -69,7 +69,7 @@ export function RecordGraph({ data, extra }: Props) {
 
   const formatRunForTooltip = (run: RecordDatum) => {
     if (extra)
-      return `${compactNumber.format(parseInt((run.extra as JsonObject)[extra] as string))} ${extra} ${run.player.name} (#${run.player.id})`;
+      return `${compactNumberFormatter.format(parseInt((run.extra as JsonObject)[extra] as string))} ${extra} ${run.player.name} (#${run.player.id})`;
     return `${run.days}/${run.turns} ${run.player.name} (#${run.player.id})`;
   };
 
@@ -91,7 +91,7 @@ export function RecordGraph({ data, extra }: Props) {
           tick={{ fontSize: 8 }}
           domain={[0, "auto"]}
           width={25}
-          tickFormatter={(num: number) => compactNumber.format(num)}
+          tickFormatter={(num: number) => compactNumberFormatter.format(num)}
         />
         {lifestyles.map((lifestyle) => (
           <Line

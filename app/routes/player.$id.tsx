@@ -25,6 +25,18 @@ import { db } from "../db.server.js";
 import { FormattedDate } from "../components/FormattedDate.js";
 import { PathLink } from "../components/PathLink";
 import { Class } from "~/components/Class";
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  PaginationState,
+  useReactTable,
+} from "@tanstack/react-table";
+import { Ascension, Class as ClassType, Path } from "@prisma/client";
+import { useState } from "react";
+import { Pagination } from "~/components/Pagination";
+import { formatTurncount } from "~/utils.js";
 
 export const loader = defineLoader(async ({ params }) => {
   const { id } = params;
@@ -62,8 +74,68 @@ export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
   ];
 };
 
+const columnHelper = createColumnHelper<
+  Ascension & { path: Path } & { class: ClassType }
+>();
+
+const columns = [
+  columnHelper.accessor("ascensionNumber", { header: "#" }),
+  columnHelper.accessor("date", {
+    header: "Date",
+    cell: (info) => <FormattedDate date={info.getValue()} />,
+  }),
+  columnHelper.accessor("level", {
+    header: () => (
+      <>
+        <Text display={["none", null, null, "block"]}>Level</Text>
+        <Text display={["block", null, null, "none"]}>Lvl</Text>
+      </>
+    ),
+  }),
+  columnHelper.accessor("path", {
+    header: "Path",
+    cell: (info) => (
+      <PathLink
+        lifestyle={info.row.original.lifestyle}
+        path={info.getValue()}
+        shorten="symbols"
+      />
+    ),
+  }),
+  columnHelper.accessor("class", {
+    header: "Class",
+    cell: (info) => <Class class={info.getValue()} shorten="symbols" />,
+  }),
+  columnHelper.accessor("sign", { header: "Sign" }),
+  columnHelper.accessor("days", {
+    header: () => (
+      <>
+        <Text display={["none", null, null, "block"]}>Days / Turns</Text>
+        <Text display={["block", null, null, "none"]}>D / T</Text>
+      </>
+    ),
+    cell: (info) => formatTurncount(info.getValue(), info.row.original.turns),
+  }),
+];
+
 export default function Player() {
   const { player } = useLoaderData<typeof loader>()!;
+
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 50,
+  });
+
+  const table = useReactTable({
+    columns,
+    data: player.ascensions,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onPaginationChange: setPagination,
+    state: {
+      pagination,
+    },
+  });
 
   return (
     <Stack spacing={10}>
@@ -75,68 +147,65 @@ export default function Player() {
           </Button>
         </ButtonGroup>
       </Stack>
+      <Pagination table={table} />
       <TableContainer>
         <Table>
           <Thead>
-            <Tr>
-              <Th>#</Th>
-              <Th>Date</Th>
-              <Th>
-                <Text display={["none", null, null, "block"]}>Level</Text>
-                <Text display={["block", null, null, "none"]}>Lvl</Text>
-              </Th>
-              <Th>Path</Th>
-              <Th>Class</Th>
-              <Th>Sign</Th>
-              <Th>
-                <Text display={["none", null, null, "block"]}>
-                  Days / Turns
-                </Text>
-                <Text display={["block", null, null, "none"]}>D / T</Text>
-              </Th>
-            </Tr>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <Tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <Th key={header.id}>
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )}
+                  </Th>
+                ))}
+              </Tr>
+            ))}
           </Thead>
           <Tbody>
-            {player.ascensions.map((ascension) => {
-              if (ascension.abandoned)
+            {table.getRowModel().rows.map((row) => {
+              if (row.original.abandoned) {
+                const cells = row.getVisibleCells();
                 return (
-                  <Tr key={ascension.ascensionNumber}>
-                    <Td>{ascension.ascensionNumber}</Td>
+                  <Tr key={row.id}>
                     <Td>
-                      <FormattedDate date={ascension.date} />
+                      {flexRender(
+                        cells[0].column.columnDef.cell,
+                        cells[0].getContext(),
+                      )}
                     </Td>
-                    <Td colSpan={5} fontSize="sm" color="grey">
+                    <Td>
+                      {flexRender(
+                        cells[1].column.columnDef.cell,
+                        cells[1].getContext(),
+                      )}
+                    </Td>
+                    <Td colSpan={cells.length - 2} fontSize="sm" color="grey">
                       Run abandoned
                     </Td>
                   </Tr>
                 );
+              }
+
               return (
-                <Tr key={ascension.ascensionNumber}>
-                  <Td>{ascension.ascensionNumber}</Td>
-                  <Td>
-                    <FormattedDate date={ascension.date} />
-                  </Td>
-                  <Td>{ascension.level}</Td>
-                  <Td>
-                    <PathLink
-                      lifestyle={ascension.lifestyle}
-                      path={ascension.path}
-                      shorten="symbols"
-                    />
-                  </Td>
-                  <Td>
-                    <Class class={ascension.class} shorten="symbols" />
-                  </Td>
-                  <Td>{ascension.sign}</Td>
-                  <Td>
-                    {ascension.days} / {ascension.turns}
-                  </Td>
+                <Tr key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <Td key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </Td>
+                  ))}
                 </Tr>
               );
             })}
           </Tbody>
         </Table>
       </TableContainer>
+      <Pagination table={table} />
     </Stack>
   );
 }

@@ -6,18 +6,13 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { formatTick, calculateRange } from "~/utils";
+import { formatTick, calculateRange, compactNumberFormatter } from "~/utils";
 
 type Datum = { date: Date; count: number };
 type Props = {
   data: Datum[];
   inSeasonTo?: Date | null;
 };
-
-const compactNumber = Intl.NumberFormat("en-US", {
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
 
 export function FrequencyGraph({ data, inSeasonTo }: Props) {
   const range = calculateRange(data);
@@ -39,7 +34,7 @@ export function FrequencyGraph({ data, inSeasonTo }: Props) {
         <YAxis
           tick={{ fontSize: 8 }}
           domain={[0, "auto"]}
-          tickFormatter={(num: number) => compactNumber.format(num)}
+          tickFormatter={(num: number) => compactNumberFormatter.format(num)}
           width={25}
         />
         <Line type="monotone" dataKey="count" dot={false} />

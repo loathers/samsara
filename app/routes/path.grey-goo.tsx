@@ -1,11 +1,11 @@
 import { Accordion, Stack } from "@chakra-ui/react";
-import { JsonValue } from "@prisma/client/runtime/library";
 import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
 import { db } from "~/db.server";
+import { getExtra } from "~/utils";
 
 export const loader = defineLoader(async () => {
   const path = await db.path.findFirst({ where: { slug: "grey-goo" } });
@@ -62,13 +62,7 @@ export const meta = () => {
   ];
 };
 
-const numberFormat = new Intl.NumberFormat("en-GB");
-
-function getGooScore(a: { extra: JsonValue }) {
-  if (typeof a.extra !== "object" || a.extra === null || Array.isArray(a.extra))
-    return 0;
-  return numberFormat.format(Number(a.extra["Goo Score"] ?? 0));
-}
+const getGooScore = getExtra("Goo Score");
 
 export default function GreyGooPath() {
   const {

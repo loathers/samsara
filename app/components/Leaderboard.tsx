@@ -14,6 +14,7 @@ import { FormattedDate } from "./FormattedDate";
 import { Link as RemixLink } from "@remix-run/react";
 import { LeaderboardEntry } from "~/db.server";
 import { Class } from "./Class";
+import { formatTurncount } from "~/utils";
 
 type Props = {
   title?: string;
@@ -76,9 +77,7 @@ export function Leaderboard({
                 <FormattedDate date={a.date} />
               </Td>
               {alternativeScore && <Td>{alternativeScore[1](a)}</Td>}
-              <Td>
-                {a.days} / {a.turns}
-              </Td>
+              <Td>{formatTurncount(a.days, a.turns)}</Td>
               <Td>{a.level}</Td>
               {showClass && (
                 <Td>

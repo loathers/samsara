@@ -1,3 +1,5 @@
+import { JsonValue } from "@prisma/client/runtime/library";
+
 export type ShortenStyle = null | "acronyms" | "symbols";
 
 export const yearFormatter = new Intl.DateTimeFormat(undefined, {
@@ -16,6 +18,12 @@ export const fullDateFormatter = new Intl.DateTimeFormat(undefined, {
 export const compactDateFormatter = new Intl.DateTimeFormat(undefined, {
   month: "short",
   day: "numeric",
+});
+
+export const numberFormatter = new Intl.NumberFormat(undefined);
+export const compactNumberFormatter = new Intl.NumberFormat(undefined, {
+  notation: "compact",
+  maximumFractionDigits: 1,
 });
 
 export const formatTick = (ts: number, range: number) => {
@@ -46,3 +54,13 @@ export function calculateRange(a: Date | { date: Date }[], b?: Date): number {
     : [a, b!];
   return differenceInDays(end, start);
 }
+
+export const formatTurncount = (days: number, turns: number) => {
+  return `${numberFormatter.format(days)} / ${numberFormatter.format(turns)}`;
+};
+
+export const getExtra = (key: string) => (a: { extra: JsonValue }) => {
+  if (typeof a.extra !== "object" || a.extra === null || Array.isArray(a.extra))
+    return 0;
+  return numberFormatter.format(Number(a.extra[key] ?? 0));
+};

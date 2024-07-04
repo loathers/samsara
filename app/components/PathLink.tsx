@@ -18,6 +18,7 @@ export function PathLink({ lifestyle, path, shorten }: Props) {
     <Link as={RemixLink} to={`/path/${path.slug}`} title={title}>
       <Stack
         spacing={shorten ? 0 : 1}
+        justifyContent="end"
         direction={lifestyle === "CASUAL" ? "row-reverse" : "row"}
       >
         {lifestyle && <Lifestyle lifestyle={lifestyle} shorten={shorten} />}

@@ -2971,6 +2971,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tanstack/react-table@npm:^8.19.2":
+  version: 8.19.2
+  resolution: "@tanstack/react-table@npm:8.19.2"
+  dependencies:
+    "@tanstack/table-core": "npm:8.19.2"
+  peerDependencies:
+    react: ">=16.8"
+    react-dom: ">=16.8"
+  checksum: 10c0/6941e12cdb907709d6a2b919efb2daae01348eb3cc964fb437a7725461fc306375604ac83e09ea4dc793e34075b8b69a89b7bfd182b4762b711db2a721c21139
+  languageName: node
+  linkType: hard
+
+"@tanstack/table-core@npm:8.19.2":
+  version: 8.19.2
+  resolution: "@tanstack/table-core@npm:8.19.2"
+  checksum: 10c0/f09f1b4860899466f106fd5b89faf465f0d5210416505d0d6a6641025da05dec7f8eb193ca98d204288f05eb2b617497e0cd9e274ead3f504391749696cfcd3f
+  languageName: node
+  linkType: hard
+
 "@types/acorn@npm:^4.0.0":
   version: 4.0.6
   resolution: "@types/acorn@npm:4.0.6"
@@ -10139,6 +10158,7 @@ __metadata:
     "@remix-run/react": "npm:^2.10.1"
     "@remix-run/serve": "npm:^2.10.1"
     "@remix-run/web-fetch": "npm:^4.4.2"
+    "@tanstack/react-table": "npm:^8.19.2"
     "@types/react": "npm:^18.3.3"
     "@types/react-dom": "npm:^18.3.0"
     "@typescript-eslint/eslint-plugin": "npm:^7.15.0"
