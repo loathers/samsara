@@ -32,7 +32,7 @@ export const loader = defineLoader(async () => {
 
 export const meta = () => {
   return [
-    { title: `Saṃsāra ♻️ - No Path` },
+    { title: `Saṃsāra - No Path` },
     {
       name: "description",
       content: `Ascension stats for unrestricted ascensions`,

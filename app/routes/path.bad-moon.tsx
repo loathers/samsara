@@ -31,7 +31,7 @@ export const loader = defineLoader(async () => {
 
 export const meta = () => {
   return [
-    { title: `Saṃsāra ♻️ - Bad Moon` },
+    { title: `Saṃsāra - Bad Moon` },
     {
       name: "description",
       content: `Ascension stats for the Bad Moon path(? sign?)`,

@@ -72,7 +72,7 @@ export const loader = defineLoader(async () => {
 
 export const meta = () => {
   return [
-    { title: `Saṃsāra ♻️ - One Crazy Random Summer` },
+    { title: `Saṃsāra - One Crazy Random Summer` },
     {
       name: "description",
       content: `Ascension stats for the One Crazy Random Summer path`,

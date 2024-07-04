@@ -66,7 +66,7 @@ export const loader = defineLoader(async ({ params }) => {
 
 export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
   return [
-    { title: `Saṃsāra ♻️ - ${formatPathName(data?.path)}` },
+    { title: `Saṃsāra - ${formatPathName(data?.path)}` },
     {
       name: "description",
       content: `Ascension stats for the ${formatPathName(data?.path)} path`,

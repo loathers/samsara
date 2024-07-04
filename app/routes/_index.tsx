@@ -26,7 +26,7 @@ import { formatPathName } from "~/components/Path";
 
 export const meta = () => {
   return [
-    { title: "Saṃsāra ♻️" },
+    { title: "Saṃsāra" },
     { name: "description", content: "Kingdom of Loathing ascension database" },
   ];
 };

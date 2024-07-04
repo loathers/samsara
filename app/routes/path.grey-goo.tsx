@@ -54,7 +54,7 @@ export const loader = defineLoader(async () => {
 
 export const meta = () => {
   return [
-    { title: `Saṃsāra ♻️ - Grey Goo` },
+    { title: `Saṃsāra - Grey Goo` },
     {
       name: "description",
       content: `Ascension stats for the Grey Goo path`,

@@ -75,7 +75,7 @@ export const loader = defineLoader(async ({ params }) => {
 
 export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
   return [
-    { title: data && `Saṃsāra ♻️ - ${data.player.name} (#${data.player.id})` },
+    { title: data && `Saṃsāra - ${data.player.name} (#${data.player.id})` },
     {
       name: "description",
       content:
