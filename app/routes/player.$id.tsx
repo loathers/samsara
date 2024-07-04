@@ -173,7 +173,7 @@ export default function Player() {
         width="100%"
         alignSelf="center"
       >
-        <FrequencyGraph data={frequency} />
+        <FrequencyGraph data={frequency} untilNow />
       </Box>
       <Pagination table={table} />
       <TableContainer>

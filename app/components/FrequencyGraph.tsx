@@ -11,16 +11,24 @@ import { formatTick, calculateRange, compactNumberFormatter } from "~/utils";
 type Datum = { date: Date; count: number };
 type Props = {
   data: Datum[];
+  untilNow?: boolean;
   inSeasonTo?: Date | null;
 };
 
-export function FrequencyGraph({ data, inSeasonTo }: Props) {
-  const range = calculateRange(data);
+export function FrequencyGraph({ data, inSeasonTo, untilNow }: Props) {
+  const dataWithTrailingZero = untilNow
+    ? [
+        ...data,
+        { date: data[data.length - 1].date, count: 0 },
+        { date: new Date(), count: 0 },
+      ]
+    : data;
+  const range = calculateRange(dataWithTrailingZero);
 
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart
-        data={data}
+        data={dataWithTrailingZero}
         title="Ascensions over time"
         margin={{ top: 0, bottom: 0 }}
       >
