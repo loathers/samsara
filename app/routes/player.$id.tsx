@@ -30,7 +30,9 @@ import {
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
   PaginationState,
+  SortingState,
   useReactTable,
 } from "@tanstack/react-table";
 import { Ascension, Class as ClassType, Path } from "@prisma/client";
@@ -87,8 +89,8 @@ const columns = [
   columnHelper.accessor("level", {
     header: () => (
       <>
-        <Text display={["none", null, null, "block"]}>Level</Text>
-        <Text display={["block", null, null, "none"]}>Lvl</Text>
+        <Text display={["none", null, null, "inline"]}>Level</Text>
+        <Text display={["inline", null, null, "none"]}>Lvl</Text>
       </>
     ),
   }),
@@ -101,20 +103,28 @@ const columns = [
         shorten="symbols"
       />
     ),
+    sortingFn: (a, b) =>
+      a.original.path.name.localeCompare(b.original.path.name),
   }),
   columnHelper.accessor("class", {
     header: "Class",
     cell: (info) => <Class class={info.getValue()} shorten="symbols" />,
+    sortingFn: (a, b) =>
+      a.original.class.name.localeCompare(b.original.class.name),
   }),
   columnHelper.accessor("sign", { header: "Sign" }),
   columnHelper.accessor("days", {
     header: () => (
       <>
-        <Text display={["none", null, null, "block"]}>Days / Turns</Text>
-        <Text display={["block", null, null, "none"]}>D / T</Text>
+        <Text display={["none", null, null, "inline"]}>Days / Turns</Text>
+        <Text display={["inline", null, null, "none"]}>D / T</Text>
       </>
     ),
     cell: (info) => formatTurncount(info.getValue(), info.row.original.turns),
+    sortingFn: (a, b) => {
+      const dayComp = a.original.days - b.original.days;
+      return dayComp !== 0 ? dayComp : a.original.turns - b.original.turns;
+    },
   }),
 ];
 
@@ -126,13 +136,18 @@ export default function Player() {
     pageSize: 50,
   });
 
+  const [sorting, setSorting] = useState<SortingState>([]);
+
   const table = useReactTable({
     columns,
     data: player.ascensions,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: setPagination,
+    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setSorting,
     state: {
+      sorting,
       pagination,
     },
   });
@@ -154,11 +169,27 @@ export default function Player() {
             {table.getHeaderGroups().map((headerGroup) => (
               <Tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <Th key={header.id}>
+                  <Th
+                    key={header.id}
+                    onClick={header.column.getToggleSortingHandler()}
+                    title={
+                      header.column.getCanSort()
+                        ? {
+                            asc: "Sort ascending",
+                            desc: "Sort descending",
+                            clear: "Clear Sort",
+                          }[header.column.getNextSortingOrder() || "clear"]
+                        : undefined
+                    }
+                  >
                     {flexRender(
                       header.column.columnDef.header,
                       header.getContext(),
                     )}
+                    {{
+                      asc: " 🔼",
+                      desc: " 🔽",
+                    }[header.column.getIsSorted() as string] ?? null}
                   </Th>
                 ))}
               </Tr>
