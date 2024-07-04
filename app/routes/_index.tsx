@@ -7,6 +7,7 @@ import {
   CardBody,
   Select,
   Button,
+  Image,
   Input,
   InputGroup,
   InputRightAddon,
@@ -117,9 +118,14 @@ export default function Index() {
   return (
     <Stack spacing={12} alignItems="stretch">
       <Stack spacing={8} alignItems="center">
-        <Heading alignSelf="center">
-          <Link to="/">Saṃsāra ♻️</Link>
-        </Heading>
+        <Link to="/">
+          <Heading alignSelf="center">
+            <Stack direction="row">
+              <Text>Saṃsāra</Text>
+              <Image height="1lh" src="/gash.webp" />
+            </Stack>
+          </Heading>
+        </Link>
 
         <Stack direction="row" justifyContent="center" alignItems="center">
           <Text>Now tracking</Text>
