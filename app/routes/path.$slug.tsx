@@ -45,11 +45,10 @@ export const loader = defineLoader(async ({ params }) => {
       ]
     : [bestSCEver, bestHCEver, [], []];
 
-  const frequency = await db.ascension.getFrequency(
+  const frequency = await db.ascension.getFrequency({
     path,
-    undefined,
-    calculateRange(path.start ?? new Date(0), new Date()),
-  );
+    range: calculateRange(path.start ?? new Date(0), new Date()),
+  });
 
   const recordBreakers = await db.ascension.getRecordBreaking(path);
 

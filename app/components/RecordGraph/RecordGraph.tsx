@@ -77,7 +77,7 @@ export function RecordGraph({ data, extra }: Props) {
     <ResponsiveContainer width="100%" height="100%">
       <LineChart
         data={graphData}
-        title="Ascensions over time"
+        title="Progression of best runs over time"
         margin={{ top: 0, bottom: 0, right: 5 }}
       >
         <XAxis

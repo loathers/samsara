@@ -30,11 +30,17 @@ export type LeaderboardEntry = Ascension & { player: Player } & {
 export const db = prisma.$extends({
   model: {
     ascension: {
-      async getFrequency(
-        path?: { name: string },
-        start: Date = new Date(2005, 6, 9),
-        range: number = 140,
-      ) {
+      async getFrequency({
+        path,
+        player,
+        start = new Date(2005, 6, 9),
+        range = 140,
+      }: {
+        path?: { name: string };
+        player?: { id: number };
+        start?: Date;
+        range?: number;
+      } = {}) {
         const cadence = range < 140 ? "week" : "month";
         const data = await db.$queryRaw<{ date: Date; count: number }[]>`
           SELECT 
@@ -44,6 +50,7 @@ export const db = prisma.$extends({
           WHERE "date" < DATE_TRUNC('${Prisma.raw(cadence)}', NOW())
           AND "date" >= ${start}
           ${path ? Prisma.sql`AND "pathName" = ${path.name}` : Prisma.empty}
+          ${player ? Prisma.sql`AND "playerId" = ${player.id}` : Prisma.empty}
           GROUP BY DATE_TRUNC('${Prisma.raw(cadence)}', "date")
           ORDER BY DATE_TRUNC('${Prisma.raw(cadence)}', "date") ASC
         `;

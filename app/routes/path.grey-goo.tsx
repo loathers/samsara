@@ -37,7 +37,7 @@ export const loader = defineLoader(async () => {
     "Goo Score",
   );
 
-  const frequency = await db.ascension.getFrequency(path);
+  const frequency = await db.ascension.getFrequency({ path });
 
   const recordBreakers = await db.ascension.getRecordBreaking(path);
 

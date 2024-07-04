@@ -16,7 +16,7 @@ export const loader = defineLoader(async () => {
   const hcLeaderboard = await db.ascension.getLeaderboard(path, "HARDCORE");
   const casualLeaderboard = await db.ascension.getLeaderboard(path, "CASUAL");
 
-  const frequency = await db.ascension.getFrequency(path, undefined);
+  const frequency = await db.ascension.getFrequency({ path });
 
   const recordBreakers = await db.ascension.getRecordBreaking(path);
 

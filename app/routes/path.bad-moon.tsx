@@ -16,7 +16,7 @@ export const loader = defineLoader(async () => {
   const bestSCEver = await db.ascension.getLeaderboard(path, "SOFTCORE");
   const bestCasualEver = await db.ascension.getLeaderboard(path, "CASUAL");
 
-  const frequency = await db.ascension.getFrequency(path);
+  const frequency = await db.ascension.getFrequency({ path });
   const recordBreakers = await db.ascension.getRecordBreaking(path, "HARDCORE");
 
   return {

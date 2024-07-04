@@ -21,7 +21,7 @@ export function FrequencyGraph({ data, inSeasonTo }: Props) {
     <ResponsiveContainer width="100%" height="100%">
       <LineChart
         data={data}
-        title="Progression of best runs over time"
+        title="Ascensions over time"
         margin={{ top: 0, bottom: 0 }}
       >
         <XAxis

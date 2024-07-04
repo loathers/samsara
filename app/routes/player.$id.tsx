@@ -11,6 +11,7 @@ import {
   Button,
   ButtonGroup,
   TableContainer,
+  Box,
 } from "@chakra-ui/react";
 import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
 import {
@@ -39,6 +40,7 @@ import { Ascension, Class as ClassType, Path } from "@prisma/client";
 import { useState } from "react";
 import { Pagination } from "~/components/Pagination";
 import { formatTurncount } from "~/utils.js";
+import { FrequencyGraph } from "~/components/FrequencyGraph";
 
 export const loader = defineLoader(async ({ params }) => {
   const { id } = params;
@@ -66,7 +68,9 @@ export const loader = defineLoader(async ({ params }) => {
 
   if (!player) throw json({ message: "Player not found" }, { status: 404 });
 
-  return { player };
+  const frequency = await db.ascension.getFrequency({ player });
+
+  return { player, frequency };
 });
 
 export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
@@ -129,7 +133,7 @@ const columns = [
 ];
 
 export default function Player() {
-  const { player } = useLoaderData<typeof loader>()!;
+  const { player, frequency } = useLoaderData<typeof loader>()!;
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -162,6 +166,15 @@ export default function Player() {
           </Button>
         </ButtonGroup>
       </Stack>
+      <Box
+        textAlign="center"
+        mt={8}
+        height={150}
+        width="100%"
+        alignSelf="center"
+      >
+        <FrequencyGraph data={frequency} />
+      </Box>
       <Pagination table={table} />
       <TableContainer>
         <Table>
