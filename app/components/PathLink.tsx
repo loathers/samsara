@@ -14,16 +14,26 @@ type Props = {
 export function PathLink({ lifestyle, path, shorten }: Props) {
   const title = `${lifestyle ? `${formatLifestyle(lifestyle)} ` : ""}${formatPathName(path)}`;
 
+  const child = (
+    <>
+      {lifestyle && <Lifestyle lifestyle={lifestyle} shorten={shorten} />}
+      <Path path={path} shorten={shorten} />
+    </>
+  );
+
   return (
     <Link as={RemixLink} to={`/path/${path.slug}`} title={title}>
-      <Stack
-        spacing={shorten ? 0 : 1}
-        justifyContent="end"
-        direction={lifestyle === "CASUAL" ? "row-reverse" : "row"}
-      >
-        {lifestyle && <Lifestyle lifestyle={lifestyle} shorten={shorten} />}
-        <Path path={path} shorten={shorten} />
-      </Stack>
+      {shorten === "symbols" ? (
+        <Stack
+          spacing={shorten ? 0 : 1}
+          justifyContent="end"
+          direction={lifestyle === "CASUAL" ? "row-reverse" : "row"}
+        >
+          {child}
+        </Stack>
+      ) : (
+        child
+      )}
     </Link>
   );
 }

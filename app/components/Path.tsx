@@ -35,7 +35,11 @@ export function Path({ path, shorten }: Props) {
   const name = formatPathName(path);
 
   if (shorten === "acronyms") {
-    return <Text title={name}>{getPathAcronym(name)}</Text>;
+    return (
+      <Text as="span" title={name}>
+        {getPathAcronym(name)}
+      </Text>
+    );
   }
 
   if (shorten === "symbols") {
