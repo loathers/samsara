@@ -182,7 +182,7 @@ export default function Player() {
       >
         <FrequencyGraph data={frequency} untilNow />
       </Box>
-      <Pagination table={table} />
+      <Pagination table={table} value={pagination} onChange={setPagination} />
       <TableContainer>
         <Table>
           <Thead>
@@ -257,7 +257,7 @@ export default function Player() {
           </Tbody>
         </Table>
       </TableContainer>
-      <Pagination table={table} />
+      <Pagination table={table} value={pagination} onChange={setPagination} />
     </Stack>
   );
 }

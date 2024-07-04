@@ -1,82 +1,81 @@
-import { Button, ButtonGroup, Flex, Input, Text } from "@chakra-ui/react";
-import { Table } from "@tanstack/react-table";
-import { useEffect, useMemo, useState } from "react";
+import {
+  Button,
+  ButtonGroup,
+  Flex,
+  HStack,
+  Select,
+  Text,
+} from "@chakra-ui/react";
+import { PaginationState, Table } from "@tanstack/react-table";
+import { Dispatch, SetStateAction, useMemo } from "react";
 
 type Props<T> = {
   table: Table<T>;
+  value: PaginationState;
+  onChange: Dispatch<SetStateAction<PaginationState>>;
 };
 
-export function Pagination<T>({ table }: Props<T>) {
+export function Pagination<T>({ table, value, onChange }: Props<T>) {
   const count = table.getPageCount();
 
-  const [currentPage, setCurrentPage] = useState(
-    table.getState().pagination.pageIndex,
+  const options = useMemo(
+    () =>
+      [...Array(count).keys()].map((i) => (
+        <option key={i} value={i}>
+          {i + 1}
+        </option>
+      )),
+    [count],
   );
-  const correctValue = useMemo(
-    () => (currentPage + 1).toString(),
-    [currentPage],
-  );
-
-  const [inputValue, setInputValue] = useState(correctValue);
-  useEffect(() => {
-    table.setPageIndex(currentPage);
-    setInputValue(correctValue);
-  }, [currentPage, correctValue, table]);
 
   return (
     <Flex justifyContent="space-between">
       <ButtonGroup isAttached>
         <Button
           isDisabled={!table.getCanPreviousPage()}
-          onClick={() => setCurrentPage(0)}
+          onClick={() => onChange((v) => ({ ...v, pageIndex: 0 }))}
           title="First Page"
         >
           {"<<"}
         </Button>
         <Button
           isDisabled={!table.getCanPreviousPage()}
-          onClick={() => setCurrentPage((c) => c - 1)}
+          onClick={() =>
+            onChange((v) => ({ ...v, pageIndex: v.pageIndex - 1 }))
+          }
           title="Previous Page"
         >
           {"<"}
         </Button>
       </ButtonGroup>
-      <Text>
-        Page{" "}
-        <Input
-          padding={2}
-          type="number"
+      <HStack>
+        <Text>Page</Text>
+        <Select
           title="Current page"
-          width="3em"
           textAlign="center"
-          value={inputValue}
-          min={1}
-          max={count}
+          value={value.pageIndex}
           onChange={(e) => {
-            const value = e.currentTarget.value;
-            setInputValue(value);
-            if (!e.currentTarget.validity.valid) return;
-            if (!value) return;
-            const page = Number(value);
-            if (Number.isNaN(page)) return;
-            table.setPageIndex(page - 1);
-            setCurrentPage(page - 1);
+            onChange((v) => ({ ...v, pageIndex: Number(e.target.value) }));
           }}
-          onBlur={() => setInputValue(correctValue)}
-        />{" "}
-        of {count}
-      </Text>
+          width="auto"
+        >
+          {options}
+        </Select>{" "}
+        <Text>of {count}</Text>
+      </HStack>
       <ButtonGroup isAttached>
         <Button
           isDisabled={!table.getCanNextPage()}
-          onClick={() => setCurrentPage((c) => c + 1)}
+          onClick={() =>
+            onChange((v) => ({ ...v, pageIndex: v.pageIndex + 1 }))
+          }
           title="Next Page"
         >
           {">"}
         </Button>
         <Button
           isDisabled={!table.getCanNextPage()}
-          onClick={() => setCurrentPage(count - 1)}
+          onClick={() => onChange((v) => ({ ...v, pageIndex: count - 1 }))}
           title="Last Page"
         >
           {">>"}
