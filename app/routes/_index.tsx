@@ -5,7 +5,6 @@ import {
   Card,
   CardHeader,
   CardBody,
-  HStack,
   Select,
   Button,
   Input,
@@ -186,14 +185,14 @@ export default function Index() {
           <FrequencyGraph data={frequency} />
         </CardBody>
       </Card>
-      <HStack justifyContent="space-around">
+      <Stack direction={["column", "row"]} justifyContent="space-around">
         <CoolStat current={currentPathers} change={currentPathersChange}>
           Accounts that ascended <PathLink path={currentPath} /> this week
         </CoolStat>
         <CoolStat current={loopers} change={loopersChange}>
           Accounts that ascended every day in the last week
         </CoolStat>
-      </HStack>
+      </Stack>
     </Stack>
   );
 }
