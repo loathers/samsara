@@ -18,7 +18,7 @@ export const loader = defineLoader(async () => {
 
   const frequency = await db.ascension.getFrequency({ path });
 
-  const recordBreakers = await db.ascension.getRecordBreaking(path);
+  const recordBreaking = await db.ascension.getRecordBreaking(path);
 
   return {
     path,
@@ -26,7 +26,7 @@ export const loader = defineLoader(async () => {
     scLeaderboard,
     hcLeaderboard,
     casualLeaderboard,
-    recordBreakers,
+    recordBreaking,
   };
 });
 
@@ -44,7 +44,7 @@ export default function NoPath() {
   const {
     path,
     frequency,
-    recordBreakers,
+    recordBreaking,
     scLeaderboard,
     hcLeaderboard,
     casualLeaderboard,
@@ -54,7 +54,7 @@ export default function NoPath() {
       <PathHeader
         path={path}
         frequency={frequency}
-        recordBreakers={recordBreakers}
+        recordBreaking={recordBreaking}
       />
       <Accordion allowToggle>
         <LeaderboardAccordionItem

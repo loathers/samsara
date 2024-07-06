@@ -17,12 +17,12 @@ export const loader = defineLoader(async () => {
   const bestCasualEver = await db.ascension.getLeaderboard(path, "CASUAL");
 
   const frequency = await db.ascension.getFrequency({ path });
-  const recordBreakers = await db.ascension.getRecordBreaking(path, "HARDCORE");
+  const recordBreaking = await db.ascension.getRecordBreaking(path, "HARDCORE");
 
   return {
     path,
     frequency,
-    recordBreakers,
+    recordBreaking,
     bestHCEver,
     bestSCEver,
     bestCasualEver,
@@ -46,7 +46,7 @@ export default function BadMoonPath() {
     bestHCEver,
     bestSCEver,
     bestCasualEver,
-    recordBreakers,
+    recordBreaking,
   } = useLoaderData<typeof loader>();
 
   return (
@@ -54,7 +54,7 @@ export default function BadMoonPath() {
       <PathHeader
         path={path}
         frequency={frequency}
-        recordBreakers={recordBreakers}
+        recordBreaking={recordBreaking}
       />
       <Accordion allowToggle>
         <LeaderboardAccordionItem

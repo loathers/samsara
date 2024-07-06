@@ -39,12 +39,12 @@ export const loader = defineLoader(async () => {
 
   const frequency = await db.ascension.getFrequency({ path });
 
-  const recordBreakers = await db.ascension.getRecordBreaking(path);
+  const recordBreaking = await db.ascension.getRecordBreaking(path);
 
   return {
     path,
     frequency,
-    recordBreakers,
+    recordBreaking,
     bestHCEver,
     bestSCEver,
     bestHCInSeason,
@@ -68,7 +68,7 @@ export default function GreyGooPath() {
   const {
     path,
     frequency,
-    recordBreakers,
+    recordBreaking,
     bestHCInSeason,
     bestHCEver,
     bestSCEver,
@@ -80,7 +80,7 @@ export default function GreyGooPath() {
       <PathHeader
         path={path}
         frequency={frequency}
-        recordBreakers={recordBreakers}
+        recordBreaking={recordBreaking}
         extra="Goo Score"
       />
       <Accordion allowToggle>

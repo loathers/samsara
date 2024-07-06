@@ -50,7 +50,7 @@ export const loader = defineLoader(async ({ params }) => {
     range: calculateRange(path.start ?? new Date(0), new Date()),
   });
 
-  const recordBreakers = await db.ascension.getRecordBreaking(path);
+  const recordBreaking = await db.ascension.getRecordBreaking(path);
 
   return {
     path,
@@ -60,7 +60,7 @@ export const loader = defineLoader(async ({ params }) => {
     hcLeaderboard,
     scPyrite,
     hcPyrite,
-    recordBreakers,
+    recordBreaking,
   };
 });
 
@@ -79,7 +79,7 @@ export default function Path() {
     path,
     current,
     frequency,
-    recordBreakers,
+    recordBreaking,
     scLeaderboard,
     hcLeaderboard,
     scPyrite,
@@ -93,7 +93,7 @@ export default function Path() {
       <PathHeader
         path={path}
         frequency={frequency}
-        recordBreakers={recordBreakers}
+        recordBreaking={recordBreaking}
       />
       <Accordion allowToggle>
         <LeaderboardAccordionItem

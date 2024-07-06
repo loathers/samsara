@@ -53,7 +53,7 @@ export const loader = defineLoader(async () => {
   );
 
   const frequency = await db.ascension.getFrequency({ path });
-  const recordBreakers = await db.ascension.getRecordBreaking(path);
+  const recordBreaking = await db.ascension.getRecordBreaking(path);
 
   return {
     bestHCEver,
@@ -66,7 +66,7 @@ export const loader = defineLoader(async () => {
     funnestSCInSeason,
     path,
     frequency,
-    recordBreakers,
+    recordBreaking,
   };
 });
 
@@ -94,7 +94,7 @@ export default function OCRSPath() {
     funnestSCInSeason,
     path,
     frequency,
-    recordBreakers,
+    recordBreaking,
   } = useLoaderData<typeof loader>();
 
   return (
@@ -102,7 +102,7 @@ export default function OCRSPath() {
       <PathHeader
         path={path}
         frequency={frequency}
-        recordBreakers={recordBreakers}
+        recordBreaking={recordBreaking}
         extra="Fun"
       />
       <Accordion allowToggle>

@@ -25,11 +25,11 @@ type Props = {
     image: string | null;
   };
   frequency: Datum[];
-  recordBreakers: RecordDatum[];
+  recordBreaking: RecordDatum[];
   extra?: string;
 };
 
-export function PathHeader({ path, frequency, recordBreakers, extra }: Props) {
+export function PathHeader({ path, frequency, recordBreaking, extra }: Props) {
   return (
     <Stack alignItems="center">
       <HStack>
@@ -70,7 +70,7 @@ export function PathHeader({ path, frequency, recordBreakers, extra }: Props) {
           width="100%"
           alignSelf="center"
         >
-          <RecordGraph data={recordBreakers} extra={extra} />
+          <RecordGraph data={recordBreaking} extra={extra} />
           <Text fontSize="2xs">Progression of best runs over time</Text>
         </Box>
       </Stack>
