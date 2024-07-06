@@ -156,7 +156,7 @@ async function tagRecordBreaking() {
     },
     {
       maxWait: 10000,
-      timeout: 10000,
+      timeout: 30000,
     },
   );
 }
@@ -238,7 +238,7 @@ async function tagPersonalBest() {
     },
     {
       maxWait: 10000,
-      timeout: 10000,
+      timeout: 30000,
     },
   );
 }
