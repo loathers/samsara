@@ -37,8 +37,8 @@ model Ascension {
   lifestyle          Lifestyle
   pathName           String
   path               Path      @relation(fields: [pathName], references: [name])
-  recordBreaking     Boolean   @default(false)
   extra              Json
+  tags               Tag[]
 
   @@id(name: "id", [ascensionNumber, playerId])
   @@index([pathName], type: Hash)
@@ -70,4 +70,21 @@ model Class {
   path      Path?       @relation(fields: [pathId], references: [id])
   pathId    Int?
   Ascension Ascension[]
+}
+
+enum TagType {
+  RECORD_BREAKING
+  PERSONAL_BEST
+  LEADERBOARD
+  PYRITE
+}
+
+model Tag {
+  type            TagType
+  value           Int?
+  ascension       Ascension @relation(fields: [ascensionNumber, playerId], references: [ascensionNumber, playerId])
+  ascensionNumber Int
+  playerId        Int
+
+  @@id([type, ascensionNumber, playerId])
 }

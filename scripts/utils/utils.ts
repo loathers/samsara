@@ -93,7 +93,6 @@ function parseAscensionRow(playerId: number, row: string): Ascension {
       lifestyle: "SOFTCORE",
       pathName: "None",
       extra: {},
-      recordBreaking: false,
     };
   }
 
@@ -114,7 +113,6 @@ function parseAscensionRow(playerId: number, row: string): Ascension {
     lifestyle: parseLifestyle(restrictions[1]),
     pathName: path[0],
     extra: path[1],
-    recordBreaking: false,
   };
 }
 
