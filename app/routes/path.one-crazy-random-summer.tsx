@@ -14,43 +14,47 @@ export const loader = defineLoader(async () => {
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const bestHCEver = await db.ascension.getLeaderboard(path, "HARDCORE");
-  const bestSCEver = await db.ascension.getLeaderboard(path, "SOFTCORE");
-  const funnestHCEver = await db.ascension.getLeaderboard(
+  const bestHCEver = await db.ascension.getLeaderboard({
     path,
-    "HARDCORE",
-    false,
-    "Fun",
-  );
-  const funnestSCEver = await db.ascension.getLeaderboard(
+    lifestyle: "HARDCORE",
+  });
+  const bestSCEver = await db.ascension.getLeaderboard({
     path,
-    "SOFTCORE",
-    false,
-    "Fun",
-  );
+    lifestyle: "SOFTCORE",
+  });
+  const funnestHCEver = await db.ascension.getLeaderboard({
+    path,
+    lifestyle: "HARDCORE",
+    special: true,
+  });
+  const funnestSCEver = await db.ascension.getLeaderboard({
+    path,
+    lifestyle: "SOFTCORE",
+    special: true,
+  });
 
-  const funnestHCInSeason = await db.ascension.getLeaderboard(
+  const funnestHCInSeason = await db.ascension.getLeaderboard({
     path,
-    "HARDCORE",
-    true,
-    "Fun",
-  );
-  const funnestSCInSeason = await db.ascension.getLeaderboard(
+    lifestyle: "HARDCORE",
+    inSeason: true,
+    special: true,
+  });
+  const funnestSCInSeason = await db.ascension.getLeaderboard({
     path,
-    "SOFTCORE",
-    true,
-    "Fun",
-  );
-  const bestHCInSeason = await db.ascension.getLeaderboard(
+    lifestyle: "SOFTCORE",
+    inSeason: true,
+    special: true,
+  });
+  const bestHCInSeason = await db.ascension.getLeaderboard({
     path,
-    "HARDCORE",
-    true,
-  );
-  const bestSCInSeason = await db.ascension.getLeaderboard(
+    lifestyle: "HARDCORE",
+    inSeason: true,
+  });
+  const bestSCInSeason = await db.ascension.getLeaderboard({
     path,
-    "SOFTCORE",
-    true,
-  );
+    lifestyle: "SOFTCORE",
+    inSeason: true,
+  });
 
   const frequency = await db.ascension.getFrequency({ path });
   const recordBreaking = await db.ascension.getRecordBreaking(path);

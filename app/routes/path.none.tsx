@@ -12,9 +12,18 @@ export const loader = defineLoader(async () => {
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const scLeaderboard = await db.ascension.getLeaderboard(path, "SOFTCORE");
-  const hcLeaderboard = await db.ascension.getLeaderboard(path, "HARDCORE");
-  const casualLeaderboard = await db.ascension.getLeaderboard(path, "CASUAL");
+  const scLeaderboard = await db.ascension.getLeaderboard({
+    path,
+    lifestyle: "SOFTCORE",
+  });
+  const hcLeaderboard = await db.ascension.getLeaderboard({
+    path,
+    lifestyle: "HARDCORE",
+  });
+  const casualLeaderboard = await db.ascension.getLeaderboard({
+    path,
+    lifestyle: "CASUAL",
+  });
 
   const frequency = await db.ascension.getFrequency({ path });
 

@@ -6,6 +6,7 @@ import {
   Player,
   Prisma,
   PrismaClient,
+  TagType,
 } from "@prisma/client";
 
 export const NS13 = "2007-06-25";
@@ -149,41 +150,42 @@ export const db = prisma.$extends({
           orderBy: [{ date: "asc" }],
         });
       },
-      async getLeaderboard(
-        path: { name: string; start: Date | null; end: Date | null },
-        lifestyle: Lifestyle,
-        inSeason = false,
-        orderByExtraKey?: string,
-      ) {
+      async getLeaderboard({
+        path,
+        lifestyle,
+        inSeason,
+        special,
+      }: {
+        path: { name: string; start: Date | null; end: Date | null };
+        lifestyle: Lifestyle;
+        inSeason?: boolean;
+        special?: boolean;
+      }) {
         if (inSeason && (!path.start || !path.end)) return [];
-        return db.$queryRaw<LeaderboardEntry[]>`
-          SELECT
-            "Ascension".*,
-            TO_JSON("Player") as "player",
-            TO_JSON("Class") as "class"
-          FROM (
-            SELECT DISTINCT ON ("playerId")
-              * 
-            FROM
-              "Ascension"
-            WHERE
-              "pathName" = ${path.name}
-              AND "lifestyle"::text = ${lifestyle}
-              AND "dropped" = False
-              AND "abandoned" = False
-              AND "date" >= ${NS13}::date
-              ${inSeason ? Prisma.sql`AND "date" >= ${path.start} AND "date" <= ${path.end}` : Prisma.empty}
-            ORDER BY
-              "playerId",
-              ${orderByExtraKey ? Prisma.sql`("extra"->>${orderByExtraKey})::integer DESC` : Prisma.sql`"days" ASC, "turns" ASC`},
-              "date" ASC) as "Ascension"
-            LEFT JOIN "Player" ON "Ascension"."playerId" = "Player"."id"
-            LEFT JOIN "Class" ON "Ascension"."className" = "Class"."name"
-          ORDER BY
-            ${orderByExtraKey ? Prisma.sql`("extra"->>${orderByExtraKey})::integer DESC` : Prisma.sql`"days" ASC, "turns" ASC`},
-            "date" ASC
-          LIMIT 35
-        `;
+        const type = ((inSeason ? "LEADERBOARD" : "PYRITE") +
+          (special ? "_SPECIAL" : "")) as TagType;
+        const board = await db.ascension.findMany({
+          include: {
+            player: true,
+            class: true,
+            tags: true,
+          },
+          where: {
+            path: { name: path.name },
+            lifestyle,
+            tags: {
+              some: {
+                type,
+              },
+            },
+          },
+        });
+
+        return board.sort(
+          (a, b) =>
+            (a.tags.find((t) => t.type === type)?.value ?? 35) -
+            (b.tags.find((t) => t.type === type)?.value ?? 35),
+        );
       },
     },
   },

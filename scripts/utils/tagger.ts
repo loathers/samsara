@@ -1,14 +1,24 @@
 import { Prisma, TagType } from "@prisma/client";
 import { db, NS13 } from "~/db.server";
 
+/**
+ * These paths have a special score for which a leaderboard should be generated. This score exists as metadata in the "extra" field.
+ */
 const SPECIAL_RANKINGS: [path: string, extra: string][] = [
   ["Grey Goo", "Goo Score"],
   ["One Crazy Random Summer", "Fun"],
 ];
 
+/**
+ * These paths should never be ranked by Days / Turns, only by their special ranking.
+ */
+const NEVER_RANK_BY_TURNCOUNT = ["Grey Goo"];
+
 export async function tagAscensions() {
   await tagRecordBreaking();
   await tagPersonalBest();
+  await tagPyrites();
+  await tagLeaderboard();
 }
 
 function getRecordBreakingByExtraQuery(pathName: string, extra: string) {
@@ -235,6 +245,138 @@ async function tagPersonalBest() {
       WHERE
         "rank" = 1;
     `;
+    },
+    {
+      maxWait: 10000,
+      timeout: 30000,
+    },
+  );
+}
+
+function getLeaderboardQuery(
+  tagType: TagType,
+  {
+    path,
+    inSeason,
+    excludePaths,
+    extra,
+  }: {
+    path?: string;
+    excludePaths?: string[];
+    inSeason?: boolean;
+    extra?: string;
+  } = {},
+) {
+  const order = extra
+    ? Prisma.sql`("extra"->>${extra})::integer DESC`
+    : Prisma.sql`"days" ASC, "turns" ASC`;
+  return Prisma.sql`
+    WITH "ranked" AS (
+      SELECT 
+        "pathName",
+        "lifestyle",
+        "playerId",
+        "days",
+        "turns",
+        "ascensionNumber",
+        "extra",
+        ROW_NUMBER() OVER (PARTITION BY "pathName", "lifestyle", "playerId" ORDER BY ${order}) AS "rankPerPlayer"
+      FROM 
+        "Ascension"
+      LEFT JOIN "Path" on "Ascension"."pathName" = "Path"."name"
+      WHERE
+      "dropped" IS FALSE
+      AND "abandoned" IS FALSE
+      AND "date" >= ${NS13}::date
+      ${inSeason ? Prisma.sql`AND "date" >= "Path"."start" AND "date" <= "Path"."end"` : Prisma.empty}
+      ${excludePaths ? Prisma.sql`AND "pathName" NOT IN (${Prisma.join(excludePaths)})` : Prisma.empty}
+      ${path ? Prisma.sql`AND "pathName" = ${path}` : Prisma.empty}),
+    "best" AS (
+      SELECT 
+        "pathName",
+        "lifestyle",
+        "playerId",
+        "days",
+        "turns",
+        "ascensionNumber",
+        "extra"
+      FROM 
+        "ranked"
+      WHERE 
+        "rankPerPlayer" = 1),
+    "leaderboard" AS (
+      SELECT
+        "pathName",
+        "lifestyle",
+        "playerId",
+        "days",
+        "turns",
+        "ascensionNumber",
+        ROW_NUMBER() OVER (PARTITION BY "pathName", "lifestyle" ORDER BY ${order}) AS "rank"
+      FROM
+        "best")
+    INSERT INTO "Tag" ("type", "value", "ascensionNumber", "playerId")
+    SELECT
+      ${tagType}::"TagType" as "type",
+      "rank" as "value",
+      "ascensionNumber",
+      "playerId"
+    FROM
+      "leaderboard"
+    WHERE
+      "rank" <= 35;
+  `;
+}
+
+async function tagPyrites() {
+  await db.$transaction(
+    async (tx) => {
+      await tx.$executeRaw`
+        DELETE FROM "Tag" WHERE "type" IN (${TagType.PYRITE}::"TagType", ${TagType.PYRITE_SPECIAL}::"TagType");
+      `;
+
+      for (const [path, extra] of SPECIAL_RANKINGS) {
+        await tx.$executeRaw(
+          getLeaderboardQuery(TagType.PYRITE_SPECIAL, { path, extra }),
+        );
+      }
+
+      await tx.$executeRaw(
+        getLeaderboardQuery(TagType.PYRITE, {
+          excludePaths: NEVER_RANK_BY_TURNCOUNT,
+        }),
+      );
+    },
+    {
+      maxWait: 10000,
+      timeout: 30000,
+    },
+  );
+}
+
+async function tagLeaderboard() {
+  await db.$transaction(
+    async (tx) => {
+      await tx.$executeRaw`
+        DELETE FROM "Tag" WHERE "type" IN (${TagType.LEADERBOARD}::"TagType", ${TagType.LEADERBOARD_SPECIAL}::"TagType");
+      `;
+
+      for (const [path, extra] of SPECIAL_RANKINGS) {
+        await tx.$executeRaw(
+          getLeaderboardQuery(TagType.LEADERBOARD_SPECIAL, {
+            path,
+            inSeason: true,
+            extra,
+          }),
+        );
+      }
+
+      await tx.$executeRaw(
+        getLeaderboardQuery(TagType.LEADERBOARD, {
+          inSeason: true,
+          excludePaths: NEVER_RANK_BY_TURNCOUNT,
+        }),
+      );
     },
     {
       maxWait: 10000,

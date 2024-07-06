@@ -33,13 +33,27 @@ export const loader = defineLoader(async ({ params }) => {
     path.end = new Date(new Date().getFullYear(), 11, 31);
   }
 
-  const bestSCEver = await db.ascension.getLeaderboard(path, "SOFTCORE");
-  const bestHCEver = await db.ascension.getLeaderboard(path, "HARDCORE");
+  const bestSCEver = await db.ascension.getLeaderboard({
+    path,
+    lifestyle: "SOFTCORE",
+  });
+  const bestHCEver = await db.ascension.getLeaderboard({
+    path,
+    lifestyle: "HARDCORE",
+  });
 
   const [scLeaderboard, hcLeaderboard, scPyrite, hcPyrite] = hasPyrites
     ? [
-        await db.ascension.getLeaderboard(path, "SOFTCORE", true),
-        await db.ascension.getLeaderboard(path, "HARDCORE", true),
+        await db.ascension.getLeaderboard({
+          path,
+          lifestyle: "SOFTCORE",
+          inSeason: true,
+        }),
+        await db.ascension.getLeaderboard({
+          path,
+          lifestyle: "HARDCORE",
+          inSeason: true,
+        }),
         bestSCEver,
         bestHCEver,
       ]
