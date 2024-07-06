@@ -1,13 +1,4 @@
-import {
-  Ascension,
-  Class,
-  Lifestyle,
-  Path,
-  Player,
-  Prisma,
-  PrismaClient,
-  TagType,
-} from "@prisma/client";
+import { Lifestyle, Path, Prisma, PrismaClient, TagType } from "@prisma/client";
 
 export const NS13 = "2007-06-25";
 
@@ -23,10 +14,6 @@ const prisma = new PrismaClient({
 // prisma.$on("query", async (e) => {
 //   console.log(`${e.query} ${e.params}`);
 // });
-
-export type LeaderboardEntry = Ascension & { player: Player } & {
-  class: Class;
-};
 
 export const db = prisma.$extends({
   model: {
@@ -190,3 +177,7 @@ export const db = prisma.$extends({
     },
   },
 });
+
+export type LeaderboardEntry = Awaited<
+  ReturnType<typeof db.ascension.getLeaderboard>
+>[number];
