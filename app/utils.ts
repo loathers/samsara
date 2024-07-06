@@ -49,6 +49,7 @@ export const differenceInDays = (a: Date, b: Date) => {
 export function calculateRange(list: { date: Date }[]): number;
 export function calculateRange(start: Date, end: Date): number;
 export function calculateRange(a: Date | { date: Date }[], b?: Date): number {
+  if (Array.isArray(a) && a.length === 0) return 0;
   const [start, end] = Array.isArray(a)
     ? [a[0].date, a[a.length - 1].date]
     : [a, b!];
