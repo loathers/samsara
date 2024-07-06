@@ -5,6 +5,7 @@ export function KoLImage({ src, alt }: { src: string; alt?: string }) {
     <Image
       src={`https://s3.amazonaws.com/images.kingdomofloathing.com/${src}`}
       alt={alt}
+      title={alt}
     />
   );
 }

@@ -141,7 +141,11 @@ export const db = prisma.$extends({
             extra: true,
             player: { select: { name: true, id: true } },
           },
-          where: { tags: { some: { type: "RECORD_BREAKING" } }, pathName: path.name, lifestyle },
+          where: {
+            tags: { some: { type: "RECORD_BREAKING" } },
+            pathName: path.name,
+            lifestyle,
+          },
           orderBy: [{ date: "asc" }],
         });
       },

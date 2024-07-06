@@ -8,7 +8,7 @@ const SPECIAL_RANKINGS: [path: string, extra: string][] = [
 
 export async function tagAscensions() {
   await tagRecordBreaking();
-  await tagPersonalBest();  
+  await tagPersonalBest();
 }
 
 function getRecordBreakingByExtraQuery(pathName: string, extra: string) {
@@ -71,14 +71,15 @@ function getRecordBreakingByExtraQuery(pathName: string, extra: string) {
 }
 
 async function tagRecordBreaking() {
-  await db.$transaction(async (tx) => {
-    await tx.$executeRaw`DELETE FROM "Tag" WHERE "type" = ${TagType.RECORD_BREAKING}::"TagType";`
+  await db.$transaction(
+    async (tx) => {
+      await tx.$executeRaw`DELETE FROM "Tag" WHERE "type" = ${TagType.RECORD_BREAKING}::"TagType";`;
 
-    for (const [path, extra] of SPECIAL_RANKINGS) {
-      await tx.$executeRaw(getRecordBreakingByExtraQuery(path, extra));
-    }
+      for (const [path, extra] of SPECIAL_RANKINGS) {
+        await tx.$executeRaw(getRecordBreakingByExtraQuery(path, extra));
+      }
 
-    await tx.$executeRaw`
+      await tx.$executeRaw`
       WITH "filtered_ascensions" AS (
         SELECT
           "ascensionNumber",
@@ -151,12 +152,13 @@ async function tagRecordBreaking() {
         "ranked_records"
       WHERE
         "rank_for_date" = 1;
-    `
-  },
-  {
-    maxWait: 10000,
-    timeout: 10000,
-  });
+    `;
+    },
+    {
+      maxWait: 10000,
+      timeout: 10000,
+    },
+  );
 }
 
 function getPersonalBestByExtraQuery(pathName: string, extra: string) {
@@ -189,20 +191,21 @@ function getPersonalBestByExtraQuery(pathName: string, extra: string) {
       "ranked"
     WHERE
       "rank" = 1;
-  `; 
+  `;
 }
 
 async function tagPersonalBest() {
-  await db.$transaction(async (tx) => {
-    await tx.$executeRaw`
+  await db.$transaction(
+    async (tx) => {
+      await tx.$executeRaw`
       DELETE FROM "Tag" WHERE "type" = ${TagType.PERSONAL_BEST}::"TagType";
     `;
 
-    for (const [path, extra] of SPECIAL_RANKINGS) {
-      await tx.$executeRaw(getPersonalBestByExtraQuery(path, extra));
-    }
+      for (const [path, extra] of SPECIAL_RANKINGS) {
+        await tx.$executeRaw(getPersonalBestByExtraQuery(path, extra));
+      }
 
-    await tx.$executeRaw`
+      await tx.$executeRaw`
       WITH "ranked" AS (
         SELECT
           "ascensionNumber",
@@ -231,10 +234,11 @@ async function tagPersonalBest() {
         "ranked"
       WHERE
         "rank" = 1;
-    `;  
-  },
-  {
-    maxWait: 10000,
-    timeout: 10000,
-  });
+    `;
+    },
+    {
+      maxWait: 10000,
+      timeout: 10000,
+    },
+  );
 }

@@ -36,11 +36,11 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { Ascension, Class as ClassType, Path } from "@prisma/client";
 import { useState } from "react";
 import { Pagination } from "~/components/Pagination";
 import { formatTurncount, numberFormatter } from "~/utils.js";
 import { FrequencyGraph } from "~/components/FrequencyGraph";
+import { TagMedal } from "~/components/TagMedal";
 
 export const loader = defineLoader(async ({ params }) => {
   const { id } = params;
@@ -60,7 +60,7 @@ export const loader = defineLoader(async ({ params }) => {
     where: { id: parseInt(id) },
     include: {
       ascensions: {
-        include: { path: true, class: true },
+        include: { path: true, class: true, tags: true },
         orderBy: { ascensionNumber: "asc" },
       },
     },
@@ -85,9 +85,10 @@ export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
   ];
 };
 
-const columnHelper = createColumnHelper<
-  Ascension & { path: Path } & { class: ClassType }
->();
+const columnHelper =
+  createColumnHelper<
+    Awaited<ReturnType<typeof loader>>["player"]["ascensions"][number]
+  >();
 
 const columns = [
   columnHelper.accessor("ascensionNumber", { header: "#" }),
@@ -129,7 +130,14 @@ const columns = [
         <Text display={["inline", null, null, "none"]}>D / T</Text>
       </>
     ),
-    cell: (info) => formatTurncount(info.getValue(), info.row.original.turns),
+    cell: (info) => (
+      <Stack direction="row">
+        <Text>{formatTurncount(info.getValue(), info.row.original.turns)}</Text>
+        {info.row.original.tags.map((t) => (
+          <TagMedal key={t.type} tag={t} />
+        ))}
+      </Stack>
+    ),
     sortingFn: (a, b) => {
       const dayComp = a.original.days - b.original.days;
       return dayComp !== 0 ? dayComp : a.original.turns - b.original.turns;
