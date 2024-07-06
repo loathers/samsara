@@ -22,7 +22,7 @@ export async function checkPlayers(
   stopOnBlank = true,
   ascensionUpdater?: (ascensions: Ascension[]) => Promise<number>,
 ) {
-  let shouldStop = true;
+  let shouldStop = false;
 
   const paths = (await db.path.findMany({ select: { name: true } })).map(
     (p) => p.name,
