@@ -11,7 +11,7 @@ import {
 } from "@chakra-ui/react";
 import { Link as RemixLink } from "@remix-run/react";
 import { DedicationEntry } from "~/db.server";
-import { awardBg } from "~/utils";
+import { awardBg, numberFormatter } from "~/utils";
 
 type Props = {
   title?: string;
@@ -43,7 +43,7 @@ export function Dedication({ title, dedication }: Props) {
                   {p.name} (#{p.id})
                 </Link>
               </Td>
-              <Td>{p.runs}</Td>
+              <Td>{numberFormatter(p.runs)}</Td>
             </Tr>
           ))}
         </Tbody>
