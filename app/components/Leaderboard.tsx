@@ -14,7 +14,7 @@ import { FormattedDate } from "./FormattedDate";
 import { Link as RemixLink } from "@remix-run/react";
 import { LeaderboardEntry } from "~/db.server";
 import { Class } from "./Class";
-import { formatTurncount } from "~/utils";
+import { awardBg, formatTurncount } from "~/utils";
 
 type Props = {
   title?: string;
@@ -25,12 +25,6 @@ type Props = {
     renderer: (ascension: LeaderboardEntry) => React.ReactNode,
   ];
 };
-
-function awardBg(rank: number) {
-  if (rank === 1) return "#fad25a";
-  if (rank < 12) return "silver";
-  return "transparent";
-}
 
 export function Leaderboard({
   title,

@@ -6,36 +6,32 @@ import { Leaderboard } from "~/components/Leaderboard";
 import { db } from "~/db.server";
 import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
+import { Dedication } from "~/components/Dedication";
 
 export const loader = defineLoader(async () => {
   const path = await db.path.findFirst({ where: { slug: "none" } });
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const scLeaderboard = await db.ascension.getLeaderboard({
-    path,
-    lifestyle: "SOFTCORE",
-  });
-  const hcLeaderboard = await db.ascension.getLeaderboard({
-    path,
-    lifestyle: "HARDCORE",
-  });
-  const casualLeaderboard = await db.ascension.getLeaderboard({
-    path,
-    lifestyle: "CASUAL",
-  });
-
-  const frequency = await db.ascension.getFrequency({ path });
-
-  const recordBreaking = await db.ascension.getRecordBreaking(path);
-
   return {
     path,
-    frequency,
-    scLeaderboard,
-    hcLeaderboard,
-    casualLeaderboard,
-    recordBreaking,
+    frequency: await db.ascension.getFrequency({ path }),
+    scLeaderboard: await db.ascension.getLeaderboard({
+      path,
+      lifestyle: "SOFTCORE",
+    }),
+    hcLeaderboard: await db.ascension.getLeaderboard({
+      path,
+      lifestyle: "HARDCORE",
+    }),
+    casualLeaderboard: await db.ascension.getLeaderboard({
+      path,
+      lifestyle: "CASUAL",
+    }),
+    recordBreaking: await db.ascension.getRecordBreaking(path),
+    scDedication: await db.player.getDedication(path, "SOFTCORE"),
+    hcDedication: await db.player.getDedication(path, "HARDCORE"),
+    casualDedication: await db.player.getDedication(path, "CASUAL"),
   };
 });
 
@@ -57,6 +53,9 @@ export default function NoPath() {
     scLeaderboard,
     hcLeaderboard,
     casualLeaderboard,
+    scDedication,
+    hcDedication,
+    casualDedication,
   } = useLoaderData<typeof loader>();
   return (
     <Stack spacing={10}>
@@ -87,6 +86,14 @@ export default function NoPath() {
             title="Casual Leaderboard"
             ascensions={casualLeaderboard}
           />
+          <Dedication title="Casual Dedication" dedication={casualDedication} />
+        </LeaderboardAccordionItem>
+        <LeaderboardAccordionItem
+          title="Dedication"
+          description="Players who have completed the most ascensions for this path"
+        >
+          <Dedication title="Softcore Dedication" dedication={scDedication} />
+          <Dedication title="Hardcore Dedication" dedication={hcDedication} />
         </LeaderboardAccordionItem>
       </Accordion>
     </Stack>

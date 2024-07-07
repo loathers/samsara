@@ -8,6 +8,7 @@ import { formatPathName } from "~/components/Path";
 import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { calculateRange } from "~/utils";
+import { Dedication } from "~/components/Dedication";
 
 export const loader = defineLoader(async ({ params }) => {
   const { slug } = params;
@@ -66,15 +67,20 @@ export const loader = defineLoader(async ({ params }) => {
 
   const recordBreaking = await db.ascension.getRecordBreaking(path);
 
+  const hcDedication = await db.player.getDedication(path, "HARDCORE");
+  const scDedication = await db.player.getDedication(path, "SOFTCORE");
+
   return {
-    path,
-    frequency,
     current,
-    scLeaderboard,
+    frequency,
+    hcDedication,
     hcLeaderboard,
-    scPyrite,
     hcPyrite,
+    path,
     recordBreaking,
+    scDedication,
+    scLeaderboard,
+    scPyrite,
   };
 });
 
@@ -90,14 +96,16 @@ export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
 
 export default function Path() {
   const {
-    path,
     current,
     frequency,
-    recordBreaking,
-    scLeaderboard,
+    hcDedication,
     hcLeaderboard,
-    scPyrite,
     hcPyrite,
+    path,
+    recordBreaking,
+    scDedication,
+    scLeaderboard,
+    scPyrite,
   } = useLoaderData<typeof loader>();
 
   const showClass = path.class.length !== 1;
@@ -143,6 +151,13 @@ export default function Path() {
             />
           </LeaderboardAccordionItem>
         )}
+        <LeaderboardAccordionItem
+          title="Dedication"
+          description="Players who have completed the most ascensions for this path"
+        >
+          <Dedication title="Softcore Dedication" dedication={scDedication} />
+          <Dedication title="Hardcore Dedication" dedication={hcDedication} />
+        </LeaderboardAccordionItem>
       </Accordion>
     </Stack>
   );

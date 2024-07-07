@@ -65,3 +65,9 @@ export const getExtra = (key: string) => (a: { extra: JsonValue }) => {
     return 0;
   return numberFormatter.format(Number(a.extra[key] ?? 0));
 };
+
+export function awardBg(rank: number) {
+  if (rank === 1) return "#fad25a";
+  if (rank < 12) return "silver";
+  return "transparent";
+}

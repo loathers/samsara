@@ -12,41 +12,34 @@ export const loader = defineLoader(async () => {
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const bestHCEver = await db.ascension.getLeaderboard({
-    path,
-    lifestyle: "HARDCORE",
-    special: true,
-  });
-  const bestSCEver = await db.ascension.getLeaderboard({
-    path,
-    lifestyle: "SOFTCORE",
-    special: true,
-  });
-  const bestHCInSeason = await db.ascension.getLeaderboard({
-    path,
-    lifestyle: "HARDCORE",
-    inSeason: true,
-    special: true,
-  });
-  const bestSCInSeason = await db.ascension.getLeaderboard({
-    path,
-    lifestyle: "SOFTCORE",
-    inSeason: true,
-    special: true,
-  });
-
-  const frequency = await db.ascension.getFrequency({ path });
-
-  const recordBreaking = await db.ascension.getRecordBreaking(path);
-
   return {
     path,
-    frequency,
-    recordBreaking,
-    bestHCEver,
-    bestSCEver,
-    bestHCInSeason,
-    bestSCInSeason,
+    frequency: await db.ascension.getFrequency({ path }),
+    recordBreaking: await db.ascension.getRecordBreaking(path),
+    bestHCEver: await db.ascension.getLeaderboard({
+      path,
+      lifestyle: "HARDCORE",
+      special: true,
+    }),
+    bestSCEver: await db.ascension.getLeaderboard({
+      path,
+      lifestyle: "SOFTCORE",
+      special: true,
+    }),
+    bestHCInSeason: await db.ascension.getLeaderboard({
+      path,
+      lifestyle: "HARDCORE",
+      inSeason: true,
+      special: true,
+    }),
+    bestSCInSeason: await db.ascension.getLeaderboard({
+      path,
+      lifestyle: "SOFTCORE",
+      inSeason: true,
+      special: true,
+    }),
+    hcDedication: await db.player.getDedication(path, "HARDCORE"),
+    scDedication: await db.player.getDedication(path, "SOFTCORE"),
   };
 });
 

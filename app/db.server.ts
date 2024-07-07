@@ -1,4 +1,11 @@
-import { Lifestyle, Path, Prisma, PrismaClient, TagType } from "@prisma/client";
+import {
+  Lifestyle,
+  Path,
+  Player,
+  Prisma,
+  PrismaClient,
+  TagType,
+} from "@prisma/client";
 
 export const NS13 = "2007-06-25";
 
@@ -175,8 +182,35 @@ export const db = prisma.$extends({
         );
       },
     },
+    player: {
+      async getDedication(path: { name: string }, lifestyle: Lifestyle) {
+        return await prisma.$queryRaw<(Player & { runs: number })[]>`
+          SELECT
+            "Player".*,
+            COUNT("Player"."id") AS "runs"
+          FROM
+            "Ascension"
+          JOIN
+            "Player" ON "Ascension"."playerId" = "Player"."id"
+          WHERE
+            "Ascension"."pathName" = ${path.name} AND
+            "Ascension"."lifestyle" = ${lifestyle}::"Lifestyle" AND
+            "Ascension"."abandoned" = false AND
+            "Ascension"."dropped" = false
+          GROUP BY
+            "Player"."id"
+          ORDER BY
+            "runs" DESC
+          LIMIT 11;
+        `;
+      },
+    },
   },
 });
+
+export type DedicationEntry = Awaited<
+  ReturnType<typeof db.player.getDedication>
+>[number];
 
 export type LeaderboardEntry = Awaited<
   ReturnType<typeof db.ascension.getLeaderboard>

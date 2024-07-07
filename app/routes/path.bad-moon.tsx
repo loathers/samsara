@@ -6,35 +6,30 @@ import { Leaderboard } from "~/components/Leaderboard";
 import { db } from "~/db.server";
 import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
+import { Dedication } from "~/components/Dedication";
 
 export const loader = defineLoader(async () => {
   const path = await db.path.findFirst({ where: { slug: "bad-moon" } });
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const bestHCEver = await db.ascension.getLeaderboard({
-    path,
-    lifestyle: "HARDCORE",
-  });
-  const bestSCEver = await db.ascension.getLeaderboard({
-    path,
-    lifestyle: "SOFTCORE",
-  });
-  const bestCasualEver = await db.ascension.getLeaderboard({
-    path,
-    lifestyle: "CASUAL",
-  });
-
-  const frequency = await db.ascension.getFrequency({ path });
-  const recordBreaking = await db.ascension.getRecordBreaking(path, "HARDCORE");
-
   return {
+    bestCasualEver: await db.ascension.getLeaderboard({
+      path,
+      lifestyle: "CASUAL",
+    }),
+    bestHCEver: await db.ascension.getLeaderboard({
+      path,
+      lifestyle: "HARDCORE",
+    }),
+    bestSCEver: await db.ascension.getLeaderboard({
+      path,
+      lifestyle: "SOFTCORE",
+    }),
+    dedication: await db.player.getDedication(path, "HARDCORE"),
+    frequency: await db.ascension.getFrequency({ path }),
     path,
-    frequency,
-    recordBreaking,
-    bestHCEver,
-    bestSCEver,
-    bestCasualEver,
+    recordBreaking: await db.ascension.getRecordBreaking(path, "HARDCORE"),
   };
 });
 
@@ -50,11 +45,12 @@ export const meta = () => {
 
 export default function BadMoonPath() {
   const {
-    path,
-    frequency,
+    bestCasualEver,
     bestHCEver,
     bestSCEver,
-    bestCasualEver,
+    dedication,
+    frequency,
+    path,
     recordBreaking,
   } = useLoaderData<typeof loader>();
 
@@ -81,6 +77,12 @@ export default function BadMoonPath() {
             title="Casual? Leaderboard??"
             ascensions={bestCasualEver}
           />
+        </LeaderboardAccordionItem>
+        <LeaderboardAccordionItem
+          title="Dedication"
+          description="Players who have completed the most ascensions for this path"
+        >
+          <Dedication title="Dedication" dedication={dedication} />
         </LeaderboardAccordionItem>
       </Accordion>
     </Stack>
