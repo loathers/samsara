@@ -43,7 +43,7 @@ export function Dedication({ title, dedication }: Props) {
                   {p.name} (#{p.id})
                 </Link>
               </Td>
-              <Td>{numberFormatter(p.runs)}</Td>
+              <Td>{numberFormatter.format(p.runs)}</Td>
             </Tr>
           ))}
         </Tbody>
