@@ -245,6 +245,7 @@ export default function Player() {
                         <>
                           {columns
                             .map((c) => c.getFilterValue()?.toString())
+                            .filter(c => c !== "")
                             .join(", ")}{" "}
                           <Link
                             title="Clear"
