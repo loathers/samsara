@@ -36,7 +36,7 @@ export function Dedication({ title, dedication }: Props) {
         </Thead>
         <Tbody>
           {dedication.map((p, i) => (
-            <Tr key={p.id} bg={awardBg(i + 1)}>
+            <Tr key={p.id} bg={awardBg(i + 1, [1, 1, 1])}>
               <Td>{i + 1}</Td>
               <Td>
                 <Link as={RemixLink} to={`/player/${p.id}`}>
