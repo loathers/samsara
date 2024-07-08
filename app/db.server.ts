@@ -196,7 +196,8 @@ export const db = prisma.$extends({
             "Ascension"."pathName" = ${path.name} AND
             "Ascension"."lifestyle" = ${lifestyle}::"Lifestyle" AND
             "Ascension"."abandoned" = false AND
-            "Ascension"."dropped" = false
+            "Ascension"."dropped" = false AND
+            "Ascension"."date" > ${NS13}::date
           GROUP BY
             "Player"."id"
           ORDER BY

@@ -260,11 +260,13 @@ function getLeaderboardQuery(
     inSeason,
     excludePaths,
     extra,
+    limit = 35,
   }: {
     path?: string;
     excludePaths?: string[];
     inSeason?: boolean;
     extra?: string;
+    limit?: number;
   } = {},
 ) {
   const order = extra
@@ -323,8 +325,7 @@ function getLeaderboardQuery(
       "playerId"
     FROM
       "leaderboard"
-    WHERE
-      "rank" <= 35;
+    ${limit ? Prisma.sql`WHERE "rank" <= ${limit}` : Prisma.empty}
   `;
 }
 
