@@ -3,12 +3,11 @@ import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
 import { MetaArgs_SingleFetch, useLoaderData } from "@remix-run/react";
 
 import { Leaderboard } from "~/components/Leaderboard";
-import { db } from "~/db.server";
 import { formatPathName } from "~/components/Path";
 import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
-import { calculateRange } from "~/utils";
 import { Dedication } from "~/components/Dedication";
+import { db, getPathData } from "~/db.server";
 
 export const loader = defineLoader(async ({ params }) => {
   const { slug } = params;
@@ -19,69 +18,7 @@ export const loader = defineLoader(async ({ params }) => {
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  const standard = path.name === "Standard";
-
-  const current =
-    (path.start &&
-      path.end &&
-      new Date() > path.start &&
-      new Date() < path.end) ??
-    true;
-  const hasPyrites = path.seasonal && (!current || standard);
-
-  if (standard) {
-    path.start = new Date(new Date().getFullYear(), 0, 1);
-    path.end = new Date(new Date().getFullYear(), 11, 31);
-  }
-
-  const bestSCEver = await db.ascension.getLeaderboard({
-    path,
-    lifestyle: "SOFTCORE",
-  });
-  const bestHCEver = await db.ascension.getLeaderboard({
-    path,
-    lifestyle: "HARDCORE",
-  });
-
-  const [scLeaderboard, hcLeaderboard, scPyrite, hcPyrite] = hasPyrites
-    ? [
-        await db.ascension.getLeaderboard({
-          path,
-          lifestyle: "SOFTCORE",
-          inSeason: true,
-        }),
-        await db.ascension.getLeaderboard({
-          path,
-          lifestyle: "HARDCORE",
-          inSeason: true,
-        }),
-        bestSCEver,
-        bestHCEver,
-      ]
-    : [bestSCEver, bestHCEver, [], []];
-
-  const frequency = await db.ascension.getFrequency({
-    path,
-    range: calculateRange(path.start ?? new Date(0), new Date()),
-  });
-
-  const recordBreaking = await db.ascension.getRecordBreaking(path);
-
-  const hcDedication = await db.player.getDedication(path, "HARDCORE");
-  const scDedication = await db.player.getDedication(path, "SOFTCORE");
-
-  return {
-    current,
-    frequency,
-    hcDedication,
-    hcLeaderboard,
-    hcPyrite,
-    path,
-    recordBreaking,
-    scDedication,
-    scLeaderboard,
-    scPyrite,
-  };
+  return await getPathData(path);
 });
 
 export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
@@ -94,7 +31,7 @@ export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
   ];
 };
 
-export default function Path() {
+export default function PathPage() {
   const {
     current,
     frequency,

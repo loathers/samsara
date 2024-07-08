@@ -1,4 +1,4 @@
-import { Link, Stack } from "@chakra-ui/react";
+import { HStack, Link } from "@chakra-ui/react";
 import { Link as RemixLink } from "@remix-run/react";
 import { Lifestyle as LifestyleEnum } from "@prisma/client";
 import { ShortenStyle } from "~/utils";
@@ -24,13 +24,7 @@ export function PathLink({ lifestyle, path, shorten }: Props) {
   return (
     <Link as={RemixLink} to={`/path/${path.slug}`} title={title}>
       {shorten === "symbols" ? (
-        <Stack
-          spacing={shorten ? 0 : 1}
-          justifyContent="end"
-          direction={lifestyle === "CASUAL" ? "row-reverse" : "row"}
-        >
-          {child}
-        </Stack>
+        <HStack spacing={shorten ? 0 : 1}>{child}</HStack>
       ) : (
         child
       )}

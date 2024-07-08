@@ -1,4 +1,5 @@
 import {
+  Class,
   Lifestyle,
   Path,
   Player,
@@ -6,6 +7,7 @@ import {
   PrismaClient,
   TagType,
 } from "@prisma/client";
+import { calculateRange } from "./utils";
 
 export const NS13 = "2007-06-25";
 
@@ -216,3 +218,89 @@ export type DedicationEntry = Awaited<
 export type LeaderboardEntry = Awaited<
   ReturnType<typeof db.ascension.getLeaderboard>
 >[number];
+
+export async function getPathData(
+  path: Path & { class: Class[] },
+  special?: boolean,
+) {
+  const standard = path.name === "Standard";
+
+  const current =
+    (path.start &&
+      path.end &&
+      new Date() > path.start &&
+      new Date() < path.end) ??
+    true;
+  const hasPyrites = path.seasonal && (!current || standard);
+
+  if (standard) {
+    path.start = new Date(new Date().getFullYear(), 0, 1);
+    path.end = new Date(new Date().getFullYear(), 11, 31);
+  }
+
+  const bestSC = db.ascension.getLeaderboard({
+    path,
+    lifestyle: "SOFTCORE",
+  });
+  const bestSCInSeason = db.ascension.getLeaderboard({
+    path,
+    lifestyle: "SOFTCORE",
+    inSeason: true,
+  });
+  const bestSCSpecial = db.ascension.getLeaderboard({
+    path,
+    lifestyle: "SOFTCORE",
+    special: true,
+  });
+  const bestSCSpecialInSeason = db.ascension.getLeaderboard({
+    path,
+    lifestyle: "SOFTCORE",
+    special: true,
+    inSeason: true,
+  });
+
+  const bestHC = db.ascension.getLeaderboard({
+    path,
+    lifestyle: "HARDCORE",
+  });
+  const bestHCInSeason = db.ascension.getLeaderboard({
+    path,
+    lifestyle: "HARDCORE",
+    inSeason: true,
+  });
+  const bestHCSpecial = db.ascension.getLeaderboard({
+    path,
+    lifestyle: "HARDCORE",
+    special: true,
+  });
+  const bestHCSpecialInSeason = db.ascension.getLeaderboard({
+    path,
+    lifestyle: "HARDCORE",
+    special: true,
+    inSeason: true,
+  });
+
+  return {
+    current,
+    frequency: await db.ascension.getFrequency({
+      path,
+      range: calculateRange(path.start ?? new Date(0), new Date()),
+    }),
+    hcDedication: await db.player.getDedication(path, "HARDCORE"),
+    hcLeaderboard: await (hasPyrites ? bestHCInSeason : bestHC),
+    hcPyrite: hasPyrites ? await bestHC : [],
+    hcSpecialLeaderboard: special
+      ? await (hasPyrites ? bestHCSpecialInSeason : bestHCSpecial)
+      : [],
+    hcSpecialPyrite: special && hasPyrites ? await bestHCSpecial : [],
+    path,
+    recordBreaking: await db.ascension.getRecordBreaking(path),
+    scDedication: await db.player.getDedication(path, "SOFTCORE"),
+    scLeaderboard: await (hasPyrites ? bestSCInSeason : bestSC),
+    scPyrite: hasPyrites ? await bestSC : [],
+    scSpecialLeaderboard: special
+      ? await (hasPyrites ? bestSCSpecialInSeason : bestSCSpecial)
+      : [],
+    scSpecialPyrite: special && hasPyrites ? await bestSCSpecial : [],
+  };
+}

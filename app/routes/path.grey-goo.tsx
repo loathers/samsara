@@ -4,43 +4,18 @@ import { useLoaderData } from "@remix-run/react";
 import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
-import { db } from "~/db.server";
+import { db, getPathData } from "~/db.server";
 import { getExtra } from "~/utils";
 
 export const loader = defineLoader(async () => {
-  const path = await db.path.findFirst({ where: { slug: "grey-goo" } });
+  const path = await db.path.findFirst({
+    where: { slug: "grey-goo" },
+    include: { class: true },
+  });
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  return {
-    path,
-    frequency: await db.ascension.getFrequency({ path }),
-    recordBreaking: await db.ascension.getRecordBreaking(path),
-    bestHCEver: await db.ascension.getLeaderboard({
-      path,
-      lifestyle: "HARDCORE",
-      special: true,
-    }),
-    bestSCEver: await db.ascension.getLeaderboard({
-      path,
-      lifestyle: "SOFTCORE",
-      special: true,
-    }),
-    bestHCInSeason: await db.ascension.getLeaderboard({
-      path,
-      lifestyle: "HARDCORE",
-      inSeason: true,
-      special: true,
-    }),
-    bestSCInSeason: await db.ascension.getLeaderboard({
-      path,
-      lifestyle: "SOFTCORE",
-      inSeason: true,
-      special: true,
-    }),
-    hcDedication: await db.player.getDedication(path, "HARDCORE"),
-    scDedication: await db.player.getDedication(path, "SOFTCORE"),
-  };
+  return await getPathData(path, true);
 });
 
 export const meta = () => {
@@ -57,13 +32,13 @@ const getGooScore = getExtra("Goo Score");
 
 export default function GreyGooPath() {
   const {
-    path,
     frequency,
+    hcSpecialLeaderboard,
+    hcSpecialPyrite,
+    path,
     recordBreaking,
-    bestHCInSeason,
-    bestHCEver,
-    bestSCEver,
-    bestSCInSeason,
+    scSpecialLeaderboard,
+    scSpecialPyrite,
   } = useLoaderData<typeof loader>();
 
   return (
@@ -81,24 +56,24 @@ export default function GreyGooPath() {
         >
           <Leaderboard
             title="Softcore Leaderboard"
-            ascensions={bestSCInSeason}
+            ascensions={scSpecialLeaderboard}
             alternativeScore={["Goo", getGooScore]}
           />
           <Leaderboard
             title="Hardcore Leaderboard"
-            ascensions={bestHCInSeason}
+            ascensions={hcSpecialLeaderboard}
             alternativeScore={["Goo", getGooScore]}
           />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem title="Pyrites (Goo)" description="{PYRITE}">
           <Leaderboard
             title="Softcore Leaderboard"
-            ascensions={bestSCEver}
+            ascensions={scSpecialPyrite}
             alternativeScore={["Goo", getGooScore]}
           />
           <Leaderboard
             title="Hardcore Leaderboard"
-            ascensions={bestHCEver}
+            ascensions={hcSpecialPyrite}
             alternativeScore={["Goo", getGooScore]}
           />
         </LeaderboardAccordionItem>

@@ -2,7 +2,7 @@ import { Accordion, Stack } from "@chakra-ui/react";
 import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { Leaderboard } from "~/components/Leaderboard";
-import { db } from "~/db.server";
+import { db, getPathData } from "~/db.server";
 import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { getExtra } from "~/utils";
@@ -11,57 +11,14 @@ import { Dedication } from "~/components/Dedication";
 export const loader = defineLoader(async () => {
   const slug = "one-crazy-random-summer";
 
-  const path = await db.path.findFirst({ where: { slug } });
+  const path = await db.path.findFirst({
+    where: { slug },
+    include: { class: true },
+  });
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  return {
-    bestHCEver: await db.ascension.getLeaderboard({
-      path,
-      lifestyle: "HARDCORE",
-    }),
-    bestHCInSeason: await db.ascension.getLeaderboard({
-      path,
-      lifestyle: "HARDCORE",
-      inSeason: true,
-    }),
-    bestSCEver: await db.ascension.getLeaderboard({
-      path,
-      lifestyle: "SOFTCORE",
-    }),
-    bestSCInSeason: await db.ascension.getLeaderboard({
-      path,
-      lifestyle: "SOFTCORE",
-      inSeason: true,
-      special: true,
-    }),
-    funnestHCEver: await db.ascension.getLeaderboard({
-      path,
-      lifestyle: "HARDCORE",
-      special: true,
-    }),
-    funnestHCInSeason: await db.ascension.getLeaderboard({
-      path,
-      lifestyle: "HARDCORE",
-      inSeason: true,
-      special: true,
-    }),
-    funnestSCEver: await db.ascension.getLeaderboard({
-      path,
-      lifestyle: "SOFTCORE",
-      special: true,
-    }),
-    funnestSCInSeason: await db.ascension.getLeaderboard({
-      path,
-      lifestyle: "SOFTCORE",
-      inSeason: true,
-    }),
-    path,
-    frequency: await db.ascension.getFrequency({ path }),
-    recordBreaking: await db.ascension.getRecordBreaking(path),
-    hcDedication: await db.player.getDedication(path, "HARDCORE"),
-    scDedication: await db.player.getDedication(path, "SOFTCORE"),
-  };
+  return await getPathData(path, true);
 });
 
 export const meta = () => {
@@ -78,19 +35,19 @@ const getFunScore = getExtra("Fun");
 
 export default function OCRSPath() {
   const {
-    bestHCEver,
-    bestHCInSeason,
-    bestSCEver,
-    bestSCInSeason,
-    funnestHCEver,
-    funnestHCInSeason,
-    funnestSCEver,
-    funnestSCInSeason,
-    path,
     frequency,
+    hcDedication,
+    hcLeaderboard,
+    hcPyrite,
+    hcSpecialLeaderboard,
+    hcSpecialPyrite,
+    path,
     recordBreaking,
     scDedication,
-    hcDedication,
+    scLeaderboard,
+    scPyrite,
+    scSpecialLeaderboard,
+    scSpecialPyrite,
   } = useLoaderData<typeof loader>();
 
   return (
@@ -113,12 +70,12 @@ export default function OCRSPath() {
         >
           <Leaderboard
             title="Softcore Leaderboard"
-            ascensions={funnestSCInSeason}
+            ascensions={scSpecialLeaderboard}
             alternativeScore={["Fun", getFunScore]}
           />
           <Leaderboard
             title="Hardcore Leaderboard"
-            ascensions={funnestHCInSeason}
+            ascensions={hcSpecialLeaderboard}
             alternativeScore={["Fun", getFunScore]}
           />
         </LeaderboardAccordionItem>
@@ -128,24 +85,24 @@ export default function OCRSPath() {
         >
           <Leaderboard
             title="Softcore Leaderboard"
-            ascensions={bestSCInSeason}
+            ascensions={scLeaderboard}
             alternativeScore={["Fun", getFunScore]}
           />
           <Leaderboard
             title="Hardcore Leaderboard"
-            ascensions={bestHCInSeason}
+            ascensions={hcLeaderboard}
             alternativeScore={["Fun", getFunScore]}
           />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem title="Pyrites (Fun)" description="{PYRITE}">
           <Leaderboard
             title="Softcore Pyrites"
-            ascensions={funnestSCEver}
+            ascensions={scSpecialPyrite}
             alternativeScore={["Fun", getFunScore]}
           />
           <Leaderboard
             title="Hardcore Pyrites"
-            ascensions={funnestHCEver}
+            ascensions={hcSpecialPyrite}
             alternativeScore={["Fun", getFunScore]}
           />
         </LeaderboardAccordionItem>
@@ -155,12 +112,12 @@ export default function OCRSPath() {
         >
           <Leaderboard
             title="Softcore Pyrites"
-            ascensions={bestSCEver}
+            ascensions={scPyrite}
             alternativeScore={["Fun", getFunScore]}
           />
           <Leaderboard
             title="Hardcore Pyrites"
-            ascensions={bestHCEver}
+            ascensions={hcPyrite}
             alternativeScore={["Fun", getFunScore]}
           />
         </LeaderboardAccordionItem>

@@ -3,34 +3,25 @@ import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 
 import { Leaderboard } from "~/components/Leaderboard";
-import { db } from "~/db.server";
+import { db, getPathData } from "~/db.server";
 import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { Dedication } from "~/components/Dedication";
 
 export const loader = defineLoader(async () => {
-  const path = await db.path.findFirst({ where: { slug: "none" } });
+  const path = await db.path.findFirst({
+    where: { slug: "none" },
+    include: { class: true },
+  });
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
   return {
-    path,
-    frequency: await db.ascension.getFrequency({ path }),
-    scLeaderboard: await db.ascension.getLeaderboard({
-      path,
-      lifestyle: "SOFTCORE",
-    }),
-    hcLeaderboard: await db.ascension.getLeaderboard({
-      path,
-      lifestyle: "HARDCORE",
-    }),
+    ...(await getPathData(path)),
     casualLeaderboard: await db.ascension.getLeaderboard({
       path,
       lifestyle: "CASUAL",
     }),
-    recordBreaking: await db.ascension.getRecordBreaking(path),
-    scDedication: await db.player.getDedication(path, "SOFTCORE"),
-    hcDedication: await db.player.getDedication(path, "HARDCORE"),
     casualDedication: await db.player.getDedication(path, "CASUAL"),
   };
 });

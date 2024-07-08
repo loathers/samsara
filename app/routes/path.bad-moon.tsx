@@ -3,33 +3,25 @@ import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 
 import { Leaderboard } from "~/components/Leaderboard";
-import { db } from "~/db.server";
+import { db, getPathData } from "~/db.server";
 import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { Dedication } from "~/components/Dedication";
 
 export const loader = defineLoader(async () => {
-  const path = await db.path.findFirst({ where: { slug: "bad-moon" } });
+  const path = await db.path.findFirst({
+    where: { slug: "bad-moon" },
+    include: { class: true },
+  });
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
   return {
-    bestCasualEver: await db.ascension.getLeaderboard({
+    ...(await getPathData(path)),
+    casualLeaderboard: await db.ascension.getLeaderboard({
       path,
       lifestyle: "CASUAL",
     }),
-    bestHCEver: await db.ascension.getLeaderboard({
-      path,
-      lifestyle: "HARDCORE",
-    }),
-    bestSCEver: await db.ascension.getLeaderboard({
-      path,
-      lifestyle: "SOFTCORE",
-    }),
-    dedication: await db.player.getDedication(path, "HARDCORE"),
-    frequency: await db.ascension.getFrequency({ path }),
-    path,
-    recordBreaking: await db.ascension.getRecordBreaking(path, "HARDCORE"),
   };
 });
 
@@ -45,10 +37,10 @@ export const meta = () => {
 
 export default function BadMoonPath() {
   const {
-    bestCasualEver,
-    bestHCEver,
-    bestSCEver,
-    dedication,
+    casualLeaderboard,
+    hcLeaderboard,
+    scLeaderboard,
+    hcDedication,
     frequency,
     path,
     recordBreaking,
@@ -66,23 +58,26 @@ export default function BadMoonPath() {
           title="Leaderboard"
           description="The official leaderboard as it currently stands"
         >
-          <Leaderboard ascensions={bestHCEver} />
+          <Leaderboard ascensions={hcLeaderboard} />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
           title="Weird leaderboards"
           description="Some curious folks managed to run the path outside of Hardcore and we must respect their work."
         >
-          <Leaderboard title="Softcore Leaderboard?" ascensions={bestSCEver} />
+          <Leaderboard
+            title="Softcore Leaderboard?"
+            ascensions={scLeaderboard}
+          />
           <Leaderboard
             title="Casual? Leaderboard??"
-            ascensions={bestCasualEver}
+            ascensions={casualLeaderboard}
           />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
           title="Dedication"
           description="Players who have completed the most ascensions for this path"
         >
-          <Dedication title="Dedication" dedication={dedication} />
+          <Dedication title="Dedication" dedication={hcDedication} />
         </LeaderboardAccordionItem>
       </Accordion>
     </Stack>
