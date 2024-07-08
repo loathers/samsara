@@ -5,7 +5,6 @@ import {
   TableContainer,
   Tbody,
   Td,
-  Text,
   Th,
   Thead,
   Tr,
@@ -15,6 +14,7 @@ import { Link as RemixLink } from "@remix-run/react";
 import { LeaderboardEntry } from "~/db.server";
 import { Class } from "./Class";
 import { awardBg, formatTurncount } from "~/utils";
+import { ResponsiveContent } from "./ResponsiveContent";
 
 type Props = {
   title?: string;
@@ -47,12 +47,10 @@ export function Leaderboard({
             <Th>Date</Th>
             {alternativeScore && <Th>{alternativeScore[0]}</Th>}
             <Th>
-              <Text display={["none", null, null, "block"]}>Days / Turns</Text>
-              <Text display={["block", null, null, "none"]}>D / T</Text>
+              <ResponsiveContent narrow="D / T" wide="Days / Turns" />
             </Th>
             <Th>
-              <Text display={["none", null, null, "block"]}>Level</Text>
-              <Text display={["block", null, null, "none"]}>Lvl</Text>
+              <ResponsiveContent narrow="Lvl" wide="Level" />
             </Th>
             {showClass && <Th>Class</Th>}
             <Th>Sign</Th>
