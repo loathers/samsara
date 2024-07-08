@@ -49,6 +49,7 @@ import { TagMedal } from "~/components/TagMedal";
 import { ResponsiveContent } from "~/components/ResponsiveContent";
 import { ArrowDownIcon, ArrowUpIcon, CloseIcon } from "@chakra-ui/icons";
 import { TableFilter } from "~/components/TableFilter";
+import { formatLifestyle } from "~/components/Lifestyle";
 
 export const loader = defineLoader(async ({ params }) => {
   const { id } = params;
@@ -97,6 +98,14 @@ type RowData = Awaited<
   ReturnType<typeof loader>
 >["player"]["ascensions"][number];
 
+declare module "@tanstack/react-table" {
+  // @ts-expect-error TS wants the generics to match but they don't actually need to
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData extends RowData, TValue> {
+    hide: true;
+  }
+}
+
 const columnHelper = createColumnHelper<RowData>();
 
 const columns = [
@@ -113,20 +122,32 @@ const columns = [
     header: () => <ResponsiveContent narrow="Lvl" wide="Level" />,
     enableColumnFilter: false,
   }),
-  columnHelper.accessor("path", {
+  columnHelper.group({
     header: "Path",
-    cell: (info) => (
-      <PathLink
-        lifestyle={info.row.original.lifestyle}
-        path={info.getValue()}
-        shorten="symbols"
-      />
-    ),
-    sortingFn: (a, b) =>
-      a.original.path.name.localeCompare(b.original.path.name),
-    getUniqueValues: (a) => [a.path.name],
-    filterFn: (row, columnId, filterValue) =>
-      row.original.path.name === filterValue,
+    columns: [
+      columnHelper.accessor("path", {
+        header: "Path",
+        cell: (info) => (
+          <PathLink
+            lifestyle={info.row.original.lifestyle}
+            path={info.getValue()}
+            shorten="symbols"
+          />
+        ),
+        sortingFn: (a, b) =>
+          a.original.path.name.localeCompare(b.original.path.name),
+        getUniqueValues: (a) => [a.path.name],
+        filterFn: (row, columnId, filterValue) =>
+          row.original.path.name === filterValue,
+      }),
+      columnHelper.accessor("lifestyle", {
+        cell: () => null,
+        getUniqueValues: (a) => [formatLifestyle(a.lifestyle)],
+        meta: {
+          hide: true,
+        },
+      }),
+    ],
   }),
   columnHelper.accessor("class", {
     header: "Class",
@@ -183,6 +204,9 @@ export default function Player() {
     },
   });
 
+  const headerGroups = table.getHeaderGroups();
+  const headerGroup = headerGroups[headerGroups.length - 1];
+
   return (
     <Stack spacing={10}>
       <Stack spacing={4}>
@@ -208,19 +232,27 @@ export default function Player() {
       <TableContainer>
         <Table>
           <Thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <Tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
+            <Tr key={headerGroup.id}>
+              {headerGroup.headers.map((header) => {
+                if (header.column.columnDef.meta?.hide) return null;
+                const columns = header.column.parent?.columns ?? [
+                  header.column,
+                ];
+                return (
                   <Th key={header.id}>
                     <HStack>
-                      {header.column.getIsFiltered() ? (
+                      {columns.some((c) => c.getIsFiltered()) ? (
                         <>
-                          {header.column.getFilterValue()?.toString()}{" "}
+                          {columns
+                            .map((c) => c.getFilterValue()?.toString())
+                            .join(", ")}{" "}
                           <Link
                             title="Clear"
-                            onClick={() =>
-                              header.column.setFilterValue(undefined)
-                            }
+                            onClick={() => {
+                              columns.forEach((c) =>
+                                c.setFilterValue(undefined),
+                              );
+                            }}
                           >
                             <CloseIcon p="2px" />
                           </Link>
@@ -260,9 +292,9 @@ export default function Player() {
                           null)}
                     </HStack>
                   </Th>
-                ))}
-              </Tr>
-            ))}
+                );
+              })}
+            </Tr>
           </Thead>
           <Tbody>
             {table.getRowModel().rows.map((row) => {
@@ -291,14 +323,19 @@ export default function Player() {
 
               return (
                 <Tr key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <Td key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </Td>
-                  ))}
+                  {row
+                    .getVisibleCells()
+                    .map(
+                      (cell) =>
+                        !cell.column.columnDef.meta?.hide && (
+                          <Td key={cell.id}>
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )}
+                          </Td>
+                        ),
+                    )}
                 </Tr>
               );
             })}

@@ -14,13 +14,42 @@ import { Column } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { FilterIcon } from "./FilterIcon";
 
-export function TableFilter<RowData>({ column }: { column: Column<RowData> }) {
+function FacetedSelect<RowData>({
+  column,
+  onChange,
+}: {
+  column: Column<RowData>;
+  onChange: () => void;
+}) {
   const uniqueValues = column.getFacetedUniqueValues();
   const columnFilterValue = column.getFilterValue();
   const sortedUniqueValues = useMemo(
     () => Array.from(uniqueValues.keys()).sort(),
     [uniqueValues],
   );
+
+  return (
+    <Select
+      value={columnFilterValue?.toString() ?? ""}
+      onChange={(e) => {
+        column.setFilterValue(e.target.value);
+        onChange();
+      }}
+    >
+      <option value="">Select a {column.id}</option>
+      {sortedUniqueValues.map((value) => (
+        <option key={value} value={value}>
+          {value}
+        </option>
+      ))}
+    </Select>
+  );
+}
+
+export function TableFilter<RowData>({ column }: { column: Column<RowData> }) {
+  const extraColumns =
+    column.parent?.columns.filter((c) => c.id !== column.id) ?? [];
+
   return (
     <Popover>
       {({ onClose }) => (
@@ -35,20 +64,10 @@ export function TableFilter<RowData>({ column }: { column: Column<RowData> }) {
             <PopoverHeader>Filter {column.id}</PopoverHeader>
             <PopoverBody>
               <Stack>
-                <Select
-                  value={columnFilterValue?.toString() ?? ""}
-                  onChange={(e) => {
-                    column.setFilterValue(e.target.value);
-                    onClose();
-                  }}
-                >
-                  <option value="">Select a {column.id}</option>
-                  {sortedUniqueValues.map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </Select>
+                <FacetedSelect column={column} onChange={onClose} />
+                {extraColumns.map((c) => (
+                  <FacetedSelect key={c.id} column={c} onChange={onClose} />
+                ))}
                 <Button
                   onClick={() => {
                     column.setFilterValue(undefined);
