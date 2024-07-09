@@ -71,7 +71,7 @@ export default function NoPath() {
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
           title="Casual"
-          description="No ronin, no karma, all vibes."
+          description="No ronin, no karma, all vibes"
         >
           <Leaderboard
             title="Casual Leaderboard"

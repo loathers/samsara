@@ -304,3 +304,36 @@ export async function getPathData(
     scSpecialPyrite: special && hasPyrites ? await bestSCSpecial : [],
   };
 }
+
+export async function getKittycoreLeaderboard() {
+  return db.$queryRaw<LeaderboardEntry[]>`
+    SELECT
+      "Ascension".*,
+      TO_JSON("Player") as "player",
+      TO_JSON("Class") as "class"
+    FROM (
+      SELECT DISTINCT ON ("playerId")
+        * 
+      FROM
+        "Ascension"
+      WHERE
+        "pathName" = 'Bad Moon'
+        AND "lifestyle" = 'HARDCORE'
+        AND "familiar" = 'Black Cat'
+        AND "familiarPercentage" = 100
+        AND "dropped" = False
+        AND "abandoned" = False
+      ORDER BY
+        "playerId",
+        "days" ASC,
+        "turns" ASC,
+        "date" ASC) as "Ascension"
+      LEFT JOIN "Player" ON "Ascension"."playerId" = "Player"."id"
+      LEFT JOIN "Class" ON "Ascension"."className" = "Class"."name"
+    ORDER BY
+      "days" ASC,
+      "turns" ASC,
+      "date" ASC
+    LIMIT 35
+  `;
+}

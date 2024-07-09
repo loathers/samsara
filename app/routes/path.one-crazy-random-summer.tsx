@@ -81,7 +81,7 @@ export default function OCRSPath() {
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
           title="Leaderboards (Days/Turns)"
-          description="Essentially a special pyrite; in-season leaderboards had this had been a normally ranked path."
+          description="Essentially a special pyrite; in-season leaderboards had this had been a normally ranked path"
         >
           <Leaderboard
             title="Softcore Leaderboard"
@@ -108,7 +108,7 @@ export default function OCRSPath() {
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
           title="Pyrites (Days/Turns)"
-          description="A doubly hypothetical leaderboard for all-time; invented, respected, and dominated by turbo-fools."
+          description="A doubly hypothetical leaderboard for all-time; invented, respected, and dominated by turbo-fools"
         >
           <Leaderboard
             title="Softcore Pyrites"

@@ -52,7 +52,7 @@ export default function GreyGooPath() {
       <Accordion allowToggle>
         <LeaderboardAccordionItem
           title="Leaderboards (Goo)"
-          description="The official leaderboards frozen once the path went out-of-season. This season was ranked by Goo score, rather than days and turns."
+          description="The official leaderboards frozen once the path went out-of-season. This season was ranked by Goo score, rather than days and turns"
         >
           <Leaderboard
             title="Softcore Leaderboard"

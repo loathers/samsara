@@ -3,7 +3,7 @@ import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 
 import { Leaderboard } from "~/components/Leaderboard";
-import { db, getPathData } from "~/db.server";
+import { db, getKittycoreLeaderboard, getPathData } from "~/db.server";
 import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { Dedication } from "~/components/Dedication";
@@ -22,6 +22,7 @@ export const loader = defineLoader(async () => {
       path,
       lifestyle: "CASUAL",
     }),
+    kittycoreLeaderboard: await getKittycoreLeaderboard(),
   };
 });
 
@@ -38,12 +39,13 @@ export const meta = () => {
 export default function BadMoonPath() {
   const {
     casualLeaderboard,
-    hcLeaderboard,
-    scLeaderboard,
-    hcDedication,
     frequency,
+    hcDedication,
+    hcLeaderboard,
+    kittycoreLeaderboard,
     path,
     recordBreaking,
+    scLeaderboard,
   } = useLoaderData<typeof loader>();
 
   return (
@@ -61,8 +63,14 @@ export default function BadMoonPath() {
           <Leaderboard ascensions={hcLeaderboard} />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
+          title="Kittycore"
+          description="Who has managed to condense the worst experience in the game into the smallest amount of time"
+        >
+          <Leaderboard ascensions={kittycoreLeaderboard} />
+        </LeaderboardAccordionItem>
+        <LeaderboardAccordionItem
           title="Weird leaderboards"
-          description="Some curious folks managed to run the path outside of Hardcore and we must respect their work."
+          description="Some curious folks managed to run the path outside of Hardcore and we must respect their work"
         >
           <Leaderboard
             title="Softcore Leaderboard?"

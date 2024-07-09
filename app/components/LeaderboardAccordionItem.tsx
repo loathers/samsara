@@ -24,7 +24,7 @@ export function LeaderboardAccordionItem({
   switch (description) {
     case "{PYRITE}":
       description =
-        "A hypothetical leaderboard for all-time; invented, respected, and dominated by fools.";
+        "A hypothetical leaderboard for all-time; invented, respected, and dominated by fools";
       break;
   }
 
