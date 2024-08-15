@@ -282,7 +282,7 @@ function getLeaderboardQuery(
         "turns",
         "ascensionNumber",
         "extra",
-        ROW_NUMBER() OVER (PARTITION BY "pathName", "lifestyle", "playerId" ORDER BY ${order}) AS "rankPerPlayer"
+        ROW_NUMBER() OVER (PARTITION BY "pathName", "lifestyle", "playerId" ORDER BY ${order}, "date" ASC) AS "rankPerPlayer"
       FROM 
         "Ascension"
       LEFT JOIN "Path" on "Ascension"."pathName" = "Path"."name"
