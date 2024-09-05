@@ -5,6 +5,7 @@ import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
 import { db, getPathData } from "~/db.server";
+import { useAccordionNavigation } from "~/useAccordionNavigation";
 import { getExtra } from "~/utils";
 
 export const loader = defineLoader(async () => {
@@ -30,6 +31,8 @@ export const meta = () => {
 
 const getGooScore = getExtra("Goo Score");
 
+const ACCORDION_ITEMS = ["leaderboards", "pyrites"];
+
 export default function GreyGooPath() {
   const {
     frequency,
@@ -41,6 +44,8 @@ export default function GreyGooPath() {
     scSpecialPyrite,
   } = useLoaderData<typeof loader>();
 
+  const accordionProps = useAccordionNavigation(ACCORDION_ITEMS);
+
   return (
     <Stack spacing={10}>
       <PathHeader
@@ -49,7 +54,7 @@ export default function GreyGooPath() {
         recordBreaking={recordBreaking}
         extra="Goo Score"
       />
-      <Accordion allowToggle>
+      <Accordion allowToggle {...accordionProps}>
         <LeaderboardAccordionItem
           title="Leaderboards (Goo)"
           description="The official leaderboards frozen once the path went out-of-season. This season was ranked by Goo score, rather than days and turns"

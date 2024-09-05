@@ -7,6 +7,7 @@ import { db, getKittycoreLeaderboard, getPathData } from "~/db.server";
 import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { Dedication } from "~/components/Dedication";
+import { useAccordionNavigation } from "~/useAccordionNavigation";
 
 export const loader = defineLoader(async () => {
   const path = await db.path.findFirst({
@@ -36,6 +37,8 @@ export const meta = () => {
   ];
 };
 
+const ACCORDION_ITEMS = ["leaderboard", "kittycore", "weird", "dedication"];
+
 export default function BadMoonPath() {
   const {
     casualLeaderboard,
@@ -48,6 +51,8 @@ export default function BadMoonPath() {
     scLeaderboard,
   } = useLoaderData<typeof loader>();
 
+  const accordionProps = useAccordionNavigation(ACCORDION_ITEMS);
+
   return (
     <Stack spacing={10}>
       <PathHeader
@@ -55,7 +60,7 @@ export default function BadMoonPath() {
         frequency={frequency}
         recordBreaking={recordBreaking}
       />
-      <Accordion allowToggle>
+      <Accordion allowToggle {...accordionProps}>
         <LeaderboardAccordionItem
           title="Leaderboard"
           description="The official leaderboard as it currently stands"

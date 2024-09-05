@@ -8,6 +8,7 @@ import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { Dedication } from "~/components/Dedication";
 import { db, getPathData } from "~/db.server";
+import { useAccordionNavigation } from "~/useAccordionNavigation";
 
 export const loader = defineLoader(async ({ params }) => {
   const { slug } = params;
@@ -31,6 +32,8 @@ export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
   ];
 };
 
+const ACCORDION_ITEMS = ["leaderboards", "pyrites", "dedication"];
+
 export default function PathPage() {
   const {
     current,
@@ -47,6 +50,8 @@ export default function PathPage() {
 
   const showClass = path.class.length !== 1;
 
+  const accordionProps = useAccordionNavigation(ACCORDION_ITEMS);
+
   return (
     <Stack spacing={10}>
       <PathHeader
@@ -54,7 +59,7 @@ export default function PathPage() {
         frequency={frequency}
         recordBreaking={recordBreaking}
       />
-      <Accordion allowToggle>
+      <Accordion allowToggle {...accordionProps}>
         <LeaderboardAccordionItem
           title="Leaderboards"
           description={

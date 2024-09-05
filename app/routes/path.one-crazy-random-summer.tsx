@@ -7,6 +7,7 @@ import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { getExtra } from "~/utils";
 import { Dedication } from "~/components/Dedication";
+import { useAccordionNavigation } from "~/useAccordionNavigation";
 
 export const loader = defineLoader(async () => {
   const slug = "one-crazy-random-summer";
@@ -33,6 +34,14 @@ export const meta = () => {
 
 const getFunScore = getExtra("Fun");
 
+const ACCORDION_ITEMS = [
+  "fun-leaderboards",
+  "time-leaderboards",
+  "fun-pyrites",
+  "time-pyrites",
+  "dedication",
+];
+
 export default function OCRSPath() {
   const {
     frequency,
@@ -50,6 +59,8 @@ export default function OCRSPath() {
     scSpecialPyrite,
   } = useLoaderData<typeof loader>();
 
+  const accordionProps = useAccordionNavigation(ACCORDION_ITEMS);
+
   return (
     <Stack spacing={10}>
       <PathHeader
@@ -58,7 +69,7 @@ export default function OCRSPath() {
         recordBreaking={recordBreaking}
         extra="Fun"
       />
-      <Accordion allowToggle>
+      <Accordion allowToggle {...accordionProps}>
         <LeaderboardAccordionItem
           title="Leaderboards (Fun)"
           description={

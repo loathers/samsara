@@ -7,6 +7,7 @@ import { db, getPathData } from "~/db.server";
 import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { Dedication } from "~/components/Dedication";
+import { useAccordionNavigation } from "~/useAccordionNavigation";
 
 export const loader = defineLoader(async () => {
   const path = await db.path.findFirst({
@@ -36,6 +37,8 @@ export const meta = () => {
   ];
 };
 
+const ACCORDION_ITEMS = ["leaderboards", "casual", "dedication"];
+
 export default function NoPath() {
   const {
     path,
@@ -48,6 +51,9 @@ export default function NoPath() {
     hcDedication,
     casualDedication,
   } = useLoaderData<typeof loader>();
+
+  const accordionProps = useAccordionNavigation(ACCORDION_ITEMS);
+
   return (
     <Stack spacing={10}>
       <PathHeader
@@ -55,7 +61,7 @@ export default function NoPath() {
         frequency={frequency}
         recordBreaking={recordBreaking}
       />
-      <Accordion allowToggle>
+      <Accordion allowToggle {...accordionProps}>
         <LeaderboardAccordionItem
           title="Leaderboards"
           description="The official leaderboards as they currently stand"
