@@ -171,9 +171,14 @@ async function guessPathDates() {
       data: { seasonal: false, start: { set: null }, end: { set: null } },
     }),
 
+    // The first time this runs in a new standard season, the standard dates will be updated.
     db.path.updateMany({
       where: { name: "Standard" },
-      data: { seasonal: true, start: null, end: null },
+      data: {
+        seasonal: true,
+        start: new Date(new Date().getFullYear(), 0, 1),
+        end: new Date(new Date().getFullYear(), 11, 31),
+      },
     }),
   ]);
 

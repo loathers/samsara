@@ -233,11 +233,6 @@ export async function getPathData(
     true;
   const hasPyrites = path.seasonal && (!current || standard);
 
-  if (standard) {
-    path.start = new Date(new Date().getFullYear(), 0, 1);
-    path.end = new Date(new Date().getFullYear(), 11, 31);
-  }
-
   const bestSC = db.ascension.getLeaderboard({
     path,
     lifestyle: "SOFTCORE",
