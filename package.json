@@ -25,12 +25,12 @@
     "@remix-run/web-fetch": "^4.4.2",
     "@tanstack/react-table": "^8.20.5",
     "create-color": "^2.0.6",
-    "framer-motion": "^11.5.3",
+    "framer-motion": "^11.5.4",
     "isbot": "^5.1.17",
     "react": "19.0.0-rc-d1afcb43-20240903",
     "react-dom": "19.0.0-rc-d1afcb43-20240903",
     "react-is": "19.0.0-rc-d1afcb43-20240903",
-    "recharts": "^2.13.0-alpha.4",
+    "recharts": "^2.13.0-alpha.5",
     "remix-utils": "^7.6.0"
   },
   "devDependencies": {
@@ -39,8 +39,8 @@
     "@remix-run/dev": "^2.11.2",
     "@types/react": "npm:types-react@rc",
     "@types/react-dom": "npm:types-react-dom@rc",
-    "@typescript-eslint/eslint-plugin": "^7.15.0",
-    "@typescript-eslint/parser": "^7.15.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
     "autoprefixer": "^10.4.20",
     "commander": "^12.1.0",
     "eslint": "^8.57.0",
@@ -63,7 +63,8 @@
   "resolutions": {
     "@types/react": "npm:types-react@rc",
     "@types/react-dom": "npm:types-react-dom@rc",
-    "react-is": "19.0.0-rc-d1afcb43-20240903"
+    "react-is": "19.0.0-rc-d1afcb43-20240903",
+    "@emotion/utils": "1.4.0"
   },
   "engines": {
     "node": ">=20.0.0"
