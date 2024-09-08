@@ -45,7 +45,7 @@ export function PathHeader({ path, frequency, recordBreaking, extra }: Props) {
         </Text>
       )}
       <ButtonGroup justifyContent="center">
-        <Button as={Link} leftIcon={<span>←</span>} to="/">
+        <Button as={Link} to="/">
           home
         </Button>
       </ButtonGroup>
