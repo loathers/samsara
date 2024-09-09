@@ -33,7 +33,8 @@ export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
   ];
 };
 
-const ACCORDION_ITEMS = ["leaderboards", "pyrites", "dedication"];
+const ACCORDION_ITEMS = ["leaderboards", "dedication"];
+const ACCORDION_ITEMS_WITH_PYRITES = ["leaderboards", "pyrites", "dedication"];
 
 export default function PathPage() {
   const {
@@ -50,8 +51,11 @@ export default function PathPage() {
   } = useLoaderData<typeof loader>();
 
   const showClass = path.class.length !== 1;
+  const showPyrites = scPyrite.length + hcPyrite.length > 0;
 
-  const accordionProps = useAccordionNavigation(ACCORDION_ITEMS);
+  const accordionProps = useAccordionNavigation(
+    showPyrites ? ACCORDION_ITEMS_WITH_PYRITES : ACCORDION_ITEMS,
+  );
 
   return (
     <Stack spacing={10}>
@@ -80,7 +84,7 @@ export default function PathPage() {
             showClass={showClass}
           />
         </LeaderboardAccordionItem>
-        {scPyrite.length + hcPyrite.length > 0 && (
+        {showPyrites && (
           <LeaderboardAccordionItem title="Pyrites" description="{PYRITE}">
             <Leaderboard
               title="Softcore Pyrites"
