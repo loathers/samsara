@@ -12,6 +12,7 @@ import { useAccordionNavigation } from "~/useAccordionNavigation";
 
 export const loader = defineLoader(async ({ params }) => {
   const { slug } = params;
+
   const path = await db.path.findFirst({
     where: { slug },
     include: { class: true },

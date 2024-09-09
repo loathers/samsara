@@ -6,7 +6,12 @@ import {
   ScrollRestoration,
 } from "@remix-run/react";
 import { ChakraProvider, Container } from "@chakra-ui/react";
-import { LinksFunction } from "@remix-run/node";
+import {
+  HeadersFunction,
+  LinksFunction,
+  unstable_data as data,
+} from "@remix-run/node";
+import { getMaxAge } from "./db.server";
 
 export const links: LinksFunction = () => [
   {
@@ -15,6 +20,21 @@ export const links: LinksFunction = () => [
     type: "image/webp",
   },
 ];
+
+export const loader = async () => {
+  return data(
+    {},
+    {
+      headers: {
+        "Cache-Control": `public, max-age=${await getMaxAge()}`,
+      },
+    },
+  );
+};
+
+export const headers: HeadersFunction = ({ loaderHeaders }) => {
+  return loaderHeaders;
+};
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (

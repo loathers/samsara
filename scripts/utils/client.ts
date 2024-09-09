@@ -17,6 +17,15 @@ const LATEST_KNOWN_ACCOUNT = 3726568;
 
 export const workers = parseWorkers(process.env);
 
+export async function nextUpdateIn(seconds: number) {
+  const timestamp = Date.now() + seconds * 1000;
+  await db.setting.upsert({
+    where: { key: "nextUpdate" },
+    update: { value: timestamp.toString() },
+    create: { key: "nextUpdate", value: timestamp.toString() },
+  });
+}
+
 export async function checkPlayers(
   ids: Generator<number>,
   stopOnBlank = true,

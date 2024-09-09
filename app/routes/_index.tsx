@@ -12,10 +12,6 @@ import {
   InputGroup,
   InputRightAddon,
 } from "@chakra-ui/react";
-import {
-  unstable_defineLoader as defineLoader,
-  HeadersFunction,
-} from "@remix-run/node";
 import { Link, useLoaderData, useNavigate } from "@remix-run/react";
 
 import { FrequencyGraph } from "../components/FrequencyGraph.js";
@@ -34,11 +30,7 @@ export const meta = () => {
   ];
 };
 
-export const headers: HeadersFunction = () => ({
-  "Cache-Control": "public, max-age=1800",
-});
-
-export const loader = defineLoader(async () => {
+export const loader = async () => {
   const totalTracked = await db.ascension.count();
 
   const frequency = await db.ascension.getFrequency();
@@ -75,7 +67,7 @@ export const loader = defineLoader(async () => {
     totalTracked,
     popularity,
   };
-});
+};
 
 export default function Index() {
   const {

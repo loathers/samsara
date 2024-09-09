@@ -345,3 +345,14 @@ export async function getKittycoreLeaderboard() {
     LIMIT 35
   `;
 }
+
+export async function getMaxAge() {
+  const { value } =
+    (await db.setting.findFirst({
+      where: { key: "nextUpdate" },
+    })) ?? {};
+  if (!value) return 1800;
+
+  const secondsLeft = Math.ceil((Number(value) - Date.now()) / 1000);
+  return Math.max(0, secondsLeft);
+}
