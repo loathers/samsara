@@ -24,6 +24,7 @@ export async function fetchPaths() {
 
     return data.allPaths.nodes;
   } catch (error) {
+    console.error(error);
     return null;
   }
 }
@@ -56,6 +57,7 @@ export async function fetchClasses() {
 
     return data.allClasses.nodes;
   } catch (error) {
+    console.error(error);
     return null;
   }
 }

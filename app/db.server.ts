@@ -12,6 +12,7 @@ import { calculateRange } from "./utils";
 export const NS13 = "2007-06-25";
 
 declare global {
+  // eslint-disable-next-line no-var
   var globalPrisma: PrismaClient;
 }
 
