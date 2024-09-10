@@ -1,4 +1,4 @@
-import { Accordion, Stack } from "@chakra-ui/react";
+import { Stack } from "@chakra-ui/react";
 import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
 import { MetaArgs_SingleFetch, useLoaderData } from "@remix-run/react";
 
@@ -8,7 +8,7 @@ import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { Dedication } from "~/components/Dedication";
 import { db, getPathData } from "~/db.server";
-import { useAccordionNavigation } from "~/useAccordionNavigation";
+import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 
 export const loader = defineLoader(async ({ params }) => {
   const { slug } = params;
@@ -33,9 +33,6 @@ export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
   ];
 };
 
-const ACCORDION_ITEMS = ["leaderboards", "dedication"];
-const ACCORDION_ITEMS_WITH_PYRITES = ["leaderboards", "pyrites", "dedication"];
-
 export default function PathPage() {
   const {
     current,
@@ -53,10 +50,6 @@ export default function PathPage() {
   const showClass = path.class.length !== 1;
   const showPyrites = scPyrite.length + hcPyrite.length > 0;
 
-  const accordionProps = useAccordionNavigation(
-    showPyrites ? ACCORDION_ITEMS_WITH_PYRITES : ACCORDION_ITEMS,
-  );
-
   return (
     <Stack spacing={10}>
       <PathHeader
@@ -64,7 +57,7 @@ export default function PathPage() {
         frequency={frequency}
         recordBreaking={recordBreaking}
       />
-      <Accordion allowToggle {...accordionProps}>
+      <LeaderboardAccordion>
         <LeaderboardAccordionItem
           title="Leaderboards"
           description={
@@ -105,7 +98,7 @@ export default function PathPage() {
           <Dedication title="Softcore Dedication" dedication={scDedication} />
           <Dedication title="Hardcore Dedication" dedication={hcDedication} />
         </LeaderboardAccordionItem>
-      </Accordion>
+      </LeaderboardAccordion>
     </Stack>
   );
 }

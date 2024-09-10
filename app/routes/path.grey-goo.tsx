@@ -1,11 +1,11 @@
-import { Accordion, Stack } from "@chakra-ui/react";
+import { Stack } from "@chakra-ui/react";
 import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { Leaderboard } from "~/components/Leaderboard";
+import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
 import { db, getPathData } from "~/db.server";
-import { useAccordionNavigation } from "~/useAccordionNavigation";
 import { getExtra } from "~/utils";
 
 export const loader = defineLoader(async () => {
@@ -31,8 +31,6 @@ export const meta = () => {
 
 const getGooScore = getExtra("Goo Score");
 
-const ACCORDION_ITEMS = ["leaderboards", "pyrites"];
-
 export default function GreyGooPath() {
   const {
     frequency,
@@ -44,8 +42,6 @@ export default function GreyGooPath() {
     scSpecialPyrite,
   } = useLoaderData<typeof loader>();
 
-  const accordionProps = useAccordionNavigation(ACCORDION_ITEMS);
-
   return (
     <Stack spacing={10}>
       <PathHeader
@@ -54,8 +50,9 @@ export default function GreyGooPath() {
         recordBreaking={recordBreaking}
         extra="Goo Score"
       />
-      <Accordion allowToggle {...accordionProps}>
+      <LeaderboardAccordion>
         <LeaderboardAccordionItem
+          slug="leaderboards"
           title="Leaderboards (Goo)"
           description="The official leaderboards frozen once the path went out-of-season. This season was ranked by Goo score, rather than days and turns"
         >
@@ -70,7 +67,11 @@ export default function GreyGooPath() {
             alternativeScore={["Goo", getGooScore]}
           />
         </LeaderboardAccordionItem>
-        <LeaderboardAccordionItem title="Pyrites (Goo)" description="{PYRITE}">
+        <LeaderboardAccordionItem
+          slug="pyrites"
+          title="Pyrites (Goo)"
+          description="{PYRITE}"
+        >
           <Leaderboard
             title="Softcore Leaderboard"
             ascensions={scSpecialPyrite}
@@ -82,7 +83,7 @@ export default function GreyGooPath() {
             alternativeScore={["Goo", getGooScore]}
           />
         </LeaderboardAccordionItem>
-      </Accordion>
+      </LeaderboardAccordion>
     </Stack>
   );
 }

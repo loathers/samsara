@@ -1,4 +1,4 @@
-import { Accordion, Stack } from "@chakra-ui/react";
+import { Stack } from "@chakra-ui/react";
 import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 
@@ -7,7 +7,7 @@ import { db, getPathData } from "~/db.server";
 import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { Dedication } from "~/components/Dedication";
-import { useAccordionNavigation } from "~/useAccordionNavigation";
+import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 
 export const loader = defineLoader(async () => {
   const path = await db.path.findFirst({
@@ -37,8 +37,6 @@ export const meta = () => {
   ];
 };
 
-const ACCORDION_ITEMS = ["leaderboards", "casual", "dedication"];
-
 export default function NoPath() {
   const {
     path,
@@ -52,8 +50,6 @@ export default function NoPath() {
     casualDedication,
   } = useLoaderData<typeof loader>();
 
-  const accordionProps = useAccordionNavigation(ACCORDION_ITEMS);
-
   return (
     <Stack spacing={10}>
       <PathHeader
@@ -61,7 +57,7 @@ export default function NoPath() {
         frequency={frequency}
         recordBreaking={recordBreaking}
       />
-      <Accordion allowToggle {...accordionProps}>
+      <LeaderboardAccordion>
         <LeaderboardAccordionItem
           title="Leaderboards"
           description="The official leaderboards as they currently stand"
@@ -92,7 +88,7 @@ export default function NoPath() {
           <Dedication title="Softcore Dedication" dedication={scDedication} />
           <Dedication title="Hardcore Dedication" dedication={hcDedication} />
         </LeaderboardAccordionItem>
-      </Accordion>
+      </LeaderboardAccordion>
     </Stack>
   );
 }

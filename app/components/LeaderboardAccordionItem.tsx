@@ -12,6 +12,7 @@ import React from "react";
 
 type Props = {
   title: string;
+  slug?: string;
   description: React.ReactNode;
   children: React.ReactNode;
 };

@@ -1,4 +1,4 @@
-import { Accordion, Stack } from "@chakra-ui/react";
+import { Stack } from "@chakra-ui/react";
 import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { Leaderboard } from "~/components/Leaderboard";
@@ -7,7 +7,7 @@ import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { getExtra } from "~/utils";
 import { Dedication } from "~/components/Dedication";
-import { useAccordionNavigation } from "~/useAccordionNavigation";
+import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 
 export const loader = defineLoader(async () => {
   const slug = "one-crazy-random-summer";
@@ -34,14 +34,6 @@ export const meta = () => {
 
 const getFunScore = getExtra("Fun");
 
-const ACCORDION_ITEMS = [
-  "fun-leaderboards",
-  "time-leaderboards",
-  "fun-pyrites",
-  "time-pyrites",
-  "dedication",
-];
-
 export default function OCRSPath() {
   const {
     frequency,
@@ -59,8 +51,6 @@ export default function OCRSPath() {
     scSpecialPyrite,
   } = useLoaderData<typeof loader>();
 
-  const accordionProps = useAccordionNavigation(ACCORDION_ITEMS);
-
   return (
     <Stack spacing={10}>
       <PathHeader
@@ -69,8 +59,9 @@ export default function OCRSPath() {
         recordBreaking={recordBreaking}
         extra="Fun"
       />
-      <Accordion allowToggle {...accordionProps}>
+      <LeaderboardAccordion>
         <LeaderboardAccordionItem
+          slug="fun-leaderboards"
           title="Leaderboards (Fun)"
           description={
             <>
@@ -91,6 +82,7 @@ export default function OCRSPath() {
           />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
+          slug="time-leaderboards"
           title="Leaderboards (Days/Turns)"
           description="Essentially a special pyrite; in-season leaderboards had this had been a normally ranked path"
         >
@@ -105,7 +97,11 @@ export default function OCRSPath() {
             alternativeScore={["Fun", getFunScore]}
           />
         </LeaderboardAccordionItem>
-        <LeaderboardAccordionItem title="Pyrites (Fun)" description="{PYRITE}">
+        <LeaderboardAccordionItem
+          slug="fun-pyrites"
+          title="Pyrites (Fun)"
+          description="{PYRITE}"
+        >
           <Leaderboard
             title="Softcore Pyrites"
             ascensions={scSpecialPyrite}
@@ -118,6 +114,7 @@ export default function OCRSPath() {
           />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
+          slug="time-pyrites"
           title="Pyrites (Days/Turns)"
           description="A doubly hypothetical leaderboard for all-time; invented, respected, and dominated by turbo-fools"
         >
@@ -139,7 +136,7 @@ export default function OCRSPath() {
           <Dedication title="Softcore Dedication" dedication={scDedication} />
           <Dedication title="Hardcore Dedication" dedication={hcDedication} />
         </LeaderboardAccordionItem>
-      </Accordion>
+      </LeaderboardAccordion>
     </Stack>
   );
 }
