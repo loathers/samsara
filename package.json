@@ -6,7 +6,7 @@
     "build": "remix vite:build",
     "dev": "remix vite:dev",
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
-    "start": "remix-serve ./build/server/index.js",
+    "start": "node --max-old-space-size=4000 ./node_modules/.bin/remix-serve ./build/server/index.js",
     "typecheck": "tsc",
     "test": "vitest",
     "format": "prettier --write .; prisma format",
