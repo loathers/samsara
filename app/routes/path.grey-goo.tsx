@@ -1,5 +1,5 @@
 import { Stack } from "@chakra-ui/react";
-import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
+import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
@@ -8,7 +8,7 @@ import { PathHeader } from "~/components/PathHeader";
 import { db, getPathData } from "~/db.server";
 import { getExtra } from "~/utils";
 
-export const loader = defineLoader(async () => {
+export const loader = async () => {
   const path = await db.path.findFirst({
     where: { slug: "grey-goo" },
     include: { class: true },
@@ -16,8 +16,8 @@ export const loader = defineLoader(async () => {
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  return await getPathData(path, true);
-});
+  return json(await getPathData(path, true));
+};
 
 export const meta = () => {
   return [

@@ -1,5 +1,5 @@
 import { Stack } from "@chakra-ui/react";
-import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
+import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 
 import { Leaderboard } from "~/components/Leaderboard";
@@ -9,7 +9,7 @@ import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem"
 import { Dedication } from "~/components/Dedication";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 
-export const loader = defineLoader(async () => {
+export const loader = async () => {
   const path = await db.path.findFirst({
     where: { slug: "bad-moon" },
     include: { class: true },
@@ -17,15 +17,15 @@ export const loader = defineLoader(async () => {
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  return {
+  return json({
     ...(await getPathData(path)),
     casualLeaderboard: await db.ascension.getLeaderboard({
       path,
       lifestyle: "CASUAL",
     }),
     kittycoreLeaderboard: await getKittycoreLeaderboard(),
-  };
-});
+  });
+};
 
 export const meta = () => {
   return [

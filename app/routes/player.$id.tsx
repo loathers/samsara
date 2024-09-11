@@ -1,7 +1,7 @@
 import { Heading, Stack, Button, ButtonGroup, Box } from "@chakra-ui/react";
-import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
+import { json, LoaderFunctionArgs } from "@remix-run/node";
 import {
-  MetaArgs_SingleFetch,
+  MetaArgs,
   redirect,
   useLoaderData,
   Link as RemixLink,
@@ -12,8 +12,9 @@ import { db } from "../db.server.js";
 import { numberFormatter } from "~/utils.js";
 import { FrequencyGraph } from "~/components/FrequencyGraph";
 import { PlayerTable } from "~/components/PlayerTable";
+import { Ascension, Class, Path, Tag } from "@prisma/client";
 
-export const loader = defineLoader(async ({ params }) => {
+export const loader = async ({ params }: LoaderFunctionArgs) => {
   const { id } = params;
 
   if (id && isNaN(parseInt(id))) {
@@ -41,10 +42,10 @@ export const loader = defineLoader(async ({ params }) => {
 
   const frequency = await db.ascension.getFrequency({ player });
 
-  return { player, frequency };
-});
+  return json({ player, frequency });
+};
 
-export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
+export const meta = ({ data }: MetaArgs<typeof loader>) => {
   return [
     { title: data && `Saṃsāra - ${data.player.name} (#${data.player.id})` },
     {
@@ -56,9 +57,12 @@ export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
   ];
 };
 
-export type RowData = Awaited<
-  ReturnType<typeof loader>
->["player"]["ascensions"][number];
+export type RowData = Omit<Ascension, "date"> & {
+  date: string;
+  path: Omit<Path, "start" | "end">;
+  class: Class;
+  tags: Tag[];
+};
 
 export default function Player() {
   const { player, frequency } = useLoaderData<typeof loader>()!;
@@ -70,7 +74,7 @@ export default function Player() {
           {player.name} (#{player.id})
         </Heading>
         <ButtonGroup justifyContent="center">
-          <Button as={RemixLink} leftIcon={<span>←</span>} to="/">
+          <Button as={RemixLink} to="/">
             home
           </Button>
         </ButtonGroup>

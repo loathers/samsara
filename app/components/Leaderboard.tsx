@@ -16,13 +16,17 @@ import { Class } from "./Class";
 import { awardBg, formatTurncount } from "~/utils";
 import { ResponsiveContent } from "./ResponsiveContent";
 
+type JsonifiedLeaderboardEntry = Omit<LeaderboardEntry, "date"> & {
+  date: string;
+};
+
 type Props = {
   title?: string;
-  ascensions: LeaderboardEntry[];
+  ascensions: JsonifiedLeaderboardEntry[];
   showClass?: boolean;
   alternativeScore?: [
     title: string,
-    renderer: (ascension: LeaderboardEntry) => React.ReactNode,
+    renderer: (ascension: JsonifiedLeaderboardEntry) => React.ReactNode,
   ];
 };
 

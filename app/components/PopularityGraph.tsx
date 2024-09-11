@@ -13,21 +13,22 @@ import { Lifestyle } from "@prisma/client";
 import { PathLink } from "./PathLink";
 import { formatTick } from "~/utils";
 
-type Datum = {
-  date: Date;
+type Datum<D = Date> = {
+  date: D;
   path: { slug: string; name: string; image: string | null };
   lifestyle: Lifestyle;
   count: number;
 };
-type Props = { data: Datum[] };
+type Props = { data: Datum<string>[] };
 
 const shortenLifestyle = (l: Lifestyle) => (l === "HARDCORE" ? "HC" : "SC");
 
 const toKey = (d: Datum) => `${shortenLifestyle(d.lifestyle)} ${d.path.name}`;
 
 export function PopularityGraph({ data }: Props) {
+  const dateData = data.map((d) => ({ ...d, date: new Date(d.date) }));
   const [seriesData, seriesKeys, paths] = useMemo(() => {
-    const paths = data.reduce(
+    const paths = dateData.reduce(
       (acc, d) => {
         const key = toKey(d);
         return {
@@ -57,7 +58,7 @@ export function PopularityGraph({ data }: Props) {
       .map((d) => d.key);
 
     const dataObjects = Object.values(
-      data
+      dateData
         .filter((d) => top10.includes(toKey(d)))
         .reduce(
           (acc, d) => ({

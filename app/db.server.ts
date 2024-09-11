@@ -9,19 +9,20 @@ import {
 } from "@prisma/client";
 import { calculateRange } from "./utils";
 
-export const NS13 = "2007-06-25";
+export const NS13 = "2007-06-25T00:00:00Z";
 
 declare global {
   // eslint-disable-next-line no-var
   var globalPrisma: PrismaClient;
 }
 
-let prisma: PrismaClient;
+let prisma: PrismaClient<object, "query">;
 
 if (process.env.NODE_ENV === "production") {
   prisma = new PrismaClient();
 } else {
   if (!global.globalPrisma) {
+    console.log("New client incoming");
     global.globalPrisma = new PrismaClient({
       log: [
         {
@@ -32,11 +33,11 @@ if (process.env.NODE_ENV === "production") {
     });
   }
   prisma = global.globalPrisma;
-}
 
-// prisma.$on("query", async (e) => {
-//   console.log(`${e.query} ${e.params}`);
-// });
+  prisma.$on("query", async (e) => {
+    console.log(`${e.query} ${e.params}`);
+  });
+}
 
 export const db = prisma.$extends({
   model: {
@@ -203,7 +204,7 @@ export const db = prisma.$extends({
         return await prisma.$queryRaw<(Player & { runs: number })[]>`
           SELECT
             "Player".*,
-            COUNT("Player"."id") AS "runs"
+            COUNT("Player"."id")::integer AS "runs"
           FROM
             "Ascension"
           JOIN

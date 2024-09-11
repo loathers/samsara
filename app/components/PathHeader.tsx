@@ -15,17 +15,17 @@ import { RecordDatum, RecordGraph } from "./RecordGraph/RecordGraph";
 import { PathIcon } from "./PathIcon";
 import { Path } from "./Path";
 
-type Datum = { date: Date; count: number };
+type Datum<D = Date> = { date: D; count: number };
 type Props = {
   path: {
     name: string;
     seasonal: boolean;
-    start: Date | null;
-    end: Date | null;
+    start: string | null;
+    end: string | null;
     image: string | null;
   };
-  frequency: Datum[];
-  recordBreaking: RecordDatum[];
+  frequency: Datum<string>[];
+  recordBreaking: RecordDatum<string>[];
   extra?: string;
 };
 

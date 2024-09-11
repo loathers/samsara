@@ -20,17 +20,17 @@ import {
   fullDateFormatter,
 } from "~/utils";
 
-export type RecordDatum = {
+export type RecordDatum<D = Date> = {
   days: number;
   turns: number;
-  date: Date;
+  date: D;
   lifestyle: Lifestyle;
   extra: JsonValue;
   player: { name: string; id: number };
 };
 
 type Props = {
-  data: RecordDatum[];
+  data: RecordDatum<string>[];
   extra?: string;
 };
 
@@ -52,20 +52,21 @@ const LIFESTYLE_COLOUR = {
 };
 
 export function RecordGraph({ data, extra }: Props) {
+  const dateData = data.map((d) => ({ ...d, date: new Date(d.date) }));
   const [seriesShown, setSeriesShown] = useState<Record<Lifestyle, boolean>>({
     HARDCORE: true,
     SOFTCORE: true,
     CASUAL: true,
   });
 
-  const range = calculateRange(data);
+  const range = calculateRange(dateData);
 
-  const graphData = data.map((d) => ({
+  const graphData = dateData.map((d) => ({
     [d.lifestyle]: extra ? (d.extra as JsonObject)[extra] : d.turns,
     ...d,
   }));
 
-  const lifestyles = [...new Set(data.map((d) => d.lifestyle))];
+  const lifestyles = [...new Set(dateData.map((d) => d.lifestyle))];
 
   const formatRunForTooltip = (run: RecordDatum) => {
     if (extra)

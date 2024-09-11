@@ -1,6 +1,6 @@
 import { Stack } from "@chakra-ui/react";
-import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
-import { MetaArgs_SingleFetch, useLoaderData } from "@remix-run/react";
+import { json, LoaderFunctionArgs } from "@remix-run/node";
+import { MetaArgs, useLoaderData } from "@remix-run/react";
 
 import { Leaderboard } from "~/components/Leaderboard";
 import { formatPathName } from "~/components/Path";
@@ -10,7 +10,7 @@ import { Dedication } from "~/components/Dedication";
 import { db, getPathData } from "~/db.server";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 
-export const loader = defineLoader(async ({ params }) => {
+export const loader = async ({ params }: LoaderFunctionArgs) => {
   const { slug } = params;
 
   const path = await db.path.findFirst({
@@ -19,11 +19,17 @@ export const loader = defineLoader(async ({ params }) => {
   });
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
+  const p = await getPathData(path);
+  console.log(
+    JSON.stringify(p, (k, v) => {
+      if (typeof v === "bigint") console.log(k);
+      return v;
+    }),
+  );
+  return json(p);
+};
 
-  return await getPathData(path);
-});
-
-export const meta = ({ data }: MetaArgs_SingleFetch<typeof loader>) => {
+export const meta = ({ data }: MetaArgs<typeof loader>) => {
   return [
     { title: `Saṃsāra - ${formatPathName(data?.path)}` },
     {

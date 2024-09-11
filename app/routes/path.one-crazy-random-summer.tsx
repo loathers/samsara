@@ -1,5 +1,5 @@
 import { Stack } from "@chakra-ui/react";
-import { json, unstable_defineLoader as defineLoader } from "@remix-run/node";
+import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { Leaderboard } from "~/components/Leaderboard";
 import { db, getPathData } from "~/db.server";
@@ -9,7 +9,7 @@ import { getExtra } from "~/utils";
 import { Dedication } from "~/components/Dedication";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 
-export const loader = defineLoader(async () => {
+export const loader = async () => {
   const slug = "one-crazy-random-summer";
 
   const path = await db.path.findFirst({
@@ -19,8 +19,8 @@ export const loader = defineLoader(async () => {
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
 
-  return await getPathData(path, true);
-});
+  return json(await getPathData(path, true));
+};
 
 export const meta = () => {
   return [

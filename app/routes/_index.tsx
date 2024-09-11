@@ -12,7 +12,7 @@ import {
   InputGroup,
   InputRightAddon,
 } from "@chakra-ui/react";
-import { Link, useLoaderData, useNavigate } from "@remix-run/react";
+import { json, Link, useLoaderData, useNavigate } from "@remix-run/react";
 
 import { FrequencyGraph } from "../components/FrequencyGraph.js";
 import { Counter } from "../components/Counter.js";
@@ -56,7 +56,7 @@ export const loader = async () => {
     numberOfAscensions: 7,
   });
 
-  return {
+  return json({
     paths,
     loopers,
     loopersChange,
@@ -66,7 +66,7 @@ export const loader = async () => {
     frequency,
     totalTracked,
     popularity,
-  };
+  });
 };
 
 export default function Index() {

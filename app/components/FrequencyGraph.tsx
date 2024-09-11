@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   Line,
   LineChart,
@@ -8,20 +9,29 @@ import {
 } from "recharts";
 import { formatTick, calculateRange, compactNumberFormatter } from "~/utils";
 
-type Datum = { date: Date; count: number };
+type Datum<D = Date> = { date: D; count: number };
 type Props = {
-  data: Datum[];
+  data: Datum<string>[];
   untilNow?: boolean;
-  inSeasonTo?: Date | null;
+  inSeasonTo?: string | Date | null;
 };
 
 export function FrequencyGraph({ data, inSeasonTo, untilNow }: Props) {
-  const range = calculateRange(data);
+  const dateData = useMemo(
+    () => data.map((d) => ({ ...d, date: new Date(d.date) })),
+    [data],
+  );
+  const range = calculateRange(dateData);
+  const seasonTime = useMemo(() => {
+    if (!inSeasonTo) return null;
+    const d = inSeasonTo instanceof Date ? inSeasonTo : new Date(inSeasonTo);
+    return d.getTime();
+  }, [inSeasonTo]);
 
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart
-        data={data}
+        data={dateData}
         title="Ascensions over time"
         margin={{ top: 0, bottom: 0 }}
       >
@@ -39,7 +49,7 @@ export function FrequencyGraph({ data, inSeasonTo, untilNow }: Props) {
           width={25}
         />
         <Line type="monotone" dataKey="count" dot={false} />
-        {inSeasonTo && <ReferenceLine x={inSeasonTo.getTime()} stroke="red" />}
+        {seasonTime && <ReferenceLine x={seasonTime} stroke="red" />}
       </LineChart>
     </ResponsiveContainer>
   );
