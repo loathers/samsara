@@ -197,6 +197,13 @@ export default function Index() {
         <CoolStat current={loopers} change={loopersChange}>
           Accounts that ascended every day in the last week
         </CoolStat>
+        <Card>
+          <CardBody>
+            <Button as={Link} to="/pyrites">
+              Pyrite Plugs
+            </Button>
+          </CardBody>
+        </Card>
       </Stack>
     </Stack>
   );
