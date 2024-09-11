@@ -34,6 +34,8 @@ export async function checkPlayers(
 ) {
   let shouldStop = false;
 
+  console.timeLog("etl", `Updating ascensions`);
+
   const paths = (await db.path.findMany({ select: { name: true } })).map(
     (p) => p.name,
   );
@@ -54,6 +56,7 @@ export async function checkPlayers(
     const available = workers.find((w) => !w.isBusy())!;
 
     available.run(async (client) => {
+      console.timeLog("etl", `  Checking ${id}`);
       const pre = await rolloverSafeFetch(
         client,
         `ascensionhistory.php?who=${id}&prens13=1`,
@@ -64,8 +67,9 @@ export async function checkPlayers(
 
       if (player === null) {
         if (id >= LATEST_KNOWN_ACCOUNT) {
-          console.log(
-            `Found blank id ${id} after the last known account id${stopOnBlank ? ` - stopping` : ""}`,
+          console.timeLog(
+            "etl",
+            `!! Found blank id ${id} after the last known account id${stopOnBlank ? ` - stopping` : ""}`,
           );
           shouldStop = stopOnBlank;
         }
@@ -85,8 +89,9 @@ export async function checkPlayers(
 
       // We care not for non-ascenders
       if (playerAscensions.length === 0) {
-        console.log(
-          `Skipped ${player.name} (${player.id}) as they have never ascended`,
+        console.timeLog(
+          "etl",
+          `  Skipped ${player.name} (${player.id}) as they have never ascended`,
         );
         return;
       }
@@ -151,6 +156,7 @@ export async function checkPlayers(
     classes.push(...newClasses.map((a) => a.className));
   }
 
+  console.timeLog("etl", `  Inserting ascensions to database`);
   // Now add all the ascensions
   let added = 0;
 
@@ -165,6 +171,12 @@ export async function checkPlayers(
     });
     added = count;
   }
+  console.timeLog(
+    "etl",
+    `  Finished inserting ascensions to database (${added} added)`,
+  );
+
+  console.timeLog("etl", `Finished updating ascensions`);
 
   await Promise.all([updatePaths(), updateClasses(), tagAscensions()]);
 }
@@ -250,14 +262,18 @@ async function fetchExtraPathData() {
 }
 
 export async function updatePaths() {
+  console.timeLog("etl", `Updating paths`);
   // Add start and end dates to paths
   await guessPathDates();
   await fetchExtraPathData();
+  console.timeLog("etl", `Finished updating paths`);
 }
 
 export async function updateClasses() {
   const knownClasses = await fetchClasses();
   if (!knownClasses) return;
+  console.timeLog("etl", `Updating classes`);
+
   const classMap = new Map(knownClasses.map((p) => [p.name, p]));
 
   // DoL's name doesn't match up on some things
@@ -285,4 +301,6 @@ export async function updateClasses() {
       });
     }
   });
+
+  console.timeLog("etl", `Finished updating classes`);
 }

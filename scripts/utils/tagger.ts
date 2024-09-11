@@ -81,6 +81,7 @@ function getRecordBreakingByExtraQuery(pathName: string, extra: string) {
 }
 
 async function tagRecordBreaking() {
+  console.timeLog("etl", "Tagging record-breaking ascensions");
   await db.$transaction(
     async (tx) => {
       await tx.$executeRaw`DELETE FROM "Tag" WHERE "type" = ${TagType.RECORD_BREAKING}::"TagType";`;
@@ -169,6 +170,7 @@ async function tagRecordBreaking() {
       timeout: 30000,
     },
   );
+  console.timeLog("etl", "Finished tagging record-breaking ascensions");
 }
 
 function getPersonalBestByExtraQuery(pathName: string, extra: string) {
@@ -205,6 +207,7 @@ function getPersonalBestByExtraQuery(pathName: string, extra: string) {
 }
 
 async function tagPersonalBest() {
+  console.timeLog("etl", `Tagging personal bests`);
   await db.$transaction(
     async (tx) => {
       await tx.$executeRaw`
@@ -251,6 +254,7 @@ async function tagPersonalBest() {
       timeout: 30000,
     },
   );
+  console.timeLog("etl", `Finished tagging personal bests`);
 }
 
 function getLeaderboardQuery(
@@ -330,6 +334,7 @@ function getLeaderboardQuery(
 }
 
 async function tagPyrites() {
+  console.timeLog("etl", `Tagging pyrites`);
   await db.$transaction(
     async (tx) => {
       await tx.$executeRaw`
@@ -353,9 +358,11 @@ async function tagPyrites() {
       timeout: 30000,
     },
   );
+  console.timeLog("etl", `Finished tagging pyrites`);
 }
 
 async function tagLeaderboard() {
+  console.timeLog("etl", `Tagging leaderboards`);
   await db.$transaction(
     async (tx) => {
       await tx.$executeRaw`
@@ -384,4 +391,5 @@ async function tagLeaderboard() {
       timeout: 30000,
     },
   );
+  console.timeLog("etl", `Finished tagging leaderboards`);
 }

@@ -9,12 +9,14 @@ function* players(p: Player[]) {
 }
 
 async function main() {
+  console.time("etl");
   const recent = await kol.fetchText(
     "museum.php?place=leaderboards&whichboard=999&showhist=500",
   );
 
   if (kol.isRollover()) {
-    console.log("Rollover detected, exiting");
+    console.timeLog("etl", "Rollover detected, exiting");
+    console.timeEnd("etl");
     return;
   }
 
@@ -23,6 +25,7 @@ async function main() {
   await checkPlayers(players(ascenders), false);
 
   await nextUpdateIn(Number(process.env.SCHEDULE || 1800));
+  console.timeEnd("etl");
 }
 
 main();
