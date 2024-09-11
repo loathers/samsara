@@ -5,7 +5,7 @@ import {
 } from "@prisma/client";
 import { Client } from "kol.js";
 
-interface Ascension extends AscensionModel {
+export interface Ascension extends AscensionModel {
   extra: Record<string, number>;
 }
 

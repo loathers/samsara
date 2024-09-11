@@ -1,13 +1,14 @@
 import { db } from "~/db.server.js";
+import { type Player } from "@prisma/client";
 import {
   parseAscensions,
   parsePlayer,
   rolloverSafeFetch,
   slugify,
   wait,
+  type Ascension,
 } from "./utils.js";
 import { parseWorkers } from "./Worker.js";
-import { Ascension } from "@prisma/client";
 import { fetchClasses, fetchPaths } from "./data.js";
 import { tagAscensions } from "./tagger.js";
 
@@ -40,6 +41,9 @@ export async function checkPlayers(
   const classes = (await db.class.findMany({ select: { name: true } })).map(
     (c) => c.name,
   );
+
+  const players: Player[] = [];
+  const ascensions: Ascension[] = [];
 
   for (const id of ids) {
     if (shouldStop) break;
@@ -74,90 +78,92 @@ export async function checkPlayers(
       );
 
       // Parse and merge pre and post NS13 ascensions
-      const ascensions = [
+      const playerAscensions = [
         ...parseAscensions(pre, player.id),
         ...parseAscensions(post, player.id),
       ];
 
       // We care not for non-ascenders
-      if (ascensions.length === 0) {
+      if (playerAscensions.length === 0) {
         console.log(
           `Skipped ${player.name} (${player.id}) as they have never ascended`,
         );
         return;
       }
 
-      // Upsert in case the player name has changed
-      await db.player.upsert({
-        create: player,
-        update: { name: player.name },
-        where: { id: player.id },
-      });
-
-      const newPaths = ascensions.filter((a) => !paths.includes(a.pathName));
-
-      if (newPaths.length > 0) {
-        const firstPerNewPath = Object.values(
-          newPaths.reduce(
-            (acc, a) => {
-              if (a.pathName in acc) return acc;
-              return { ...acc, [a.pathName]: a };
-            },
-            {} as Record<string, Ascension>,
-          ),
-        );
-
-        await db.path.createMany({
-          data: firstPerNewPath.map((a) => ({
-            name: a.pathName,
-            slug: slugify(a.pathName),
-          })),
-          skipDuplicates: true,
-        });
-        paths.push(...newPaths.map((a) => a.pathName));
-      }
-
-      const newClasses = ascensions.filter(
-        (a) => !classes.includes(a.className),
-      );
-      if (newClasses.length > 0) {
-        const firstPerNewPerClass = Object.values(
-          newClasses.reduce(
-            (acc, a) => {
-              if (a.className in acc) return acc;
-              return { ...acc, [a.className]: a };
-            },
-            {} as Record<string, Ascension>,
-          ),
-        );
-
-        await db.class.createMany({
-          data: firstPerNewPerClass.map((a) => ({
-            name: a.className,
-          })),
-          skipDuplicates: true,
-        });
-        classes.push(...newClasses.map((a) => a.className));
-      }
-
-      let added = 0;
-
-      if (ascensionUpdater) {
-        // We are correcting a parsing issue, so we can't skip duplicates
-        added = await ascensionUpdater(ascensions);
-      } else {
-        // Ascensions never change, so we can skip duplicates
-        const { count } = await db.ascension.createMany({
-          data: ascensions,
-          skipDuplicates: true,
-        });
-        added = count;
-      }
-
-      console.log(
-        `Processed ${ascensions.length} (${added} new) ascensions for ${player.name} (${player.id})`,
-      );
+      players.push(player);
+      ascensions.push(...playerAscensions);
+      console.timeLog("etl", `  Finished checking ${id}`);
     });
+  }
+
+  // Upsert all players detected (in case of name change)
+  for (const player of players) {
+    await db.player.upsert({
+      create: player,
+      update: { name: player.name },
+      where: { id: player.id },
+    });
+  }
+
+  // Add any new paths or classes
+  const newPaths = ascensions.filter((a) => !paths.includes(a.pathName));
+
+  if (newPaths.length > 0) {
+    const firstPerNewPath = Object.values(
+      newPaths.reduce(
+        (acc, a) => {
+          if (a.pathName in acc) return acc;
+          return { ...acc, [a.pathName]: a };
+        },
+        {} as Record<string, Ascension>,
+      ),
+    );
+
+    await db.path.createMany({
+      data: firstPerNewPath.map((a) => ({
+        name: a.pathName,
+        slug: slugify(a.pathName),
+      })),
+      skipDuplicates: true,
+    });
+    paths.push(...newPaths.map((a) => a.pathName));
+  }
+
+  const newClasses = ascensions.filter((a) => !classes.includes(a.className));
+  if (newClasses.length > 0) {
+    const firstPerNewPerClass = Object.values(
+      newClasses.reduce(
+        (acc, a) => {
+          if (a.className in acc) return acc;
+          return { ...acc, [a.className]: a };
+        },
+        {} as Record<string, Ascension>,
+      ),
+    );
+
+    await db.class.createMany({
+      data: firstPerNewPerClass.map((a) => ({
+        name: a.className,
+      })),
+      skipDuplicates: true,
+    });
+    classes.push(...newClasses.map((a) => a.className));
+  }
+
+  // Now add all the ascensions
+  let added = 0;
+
+  if (ascensionUpdater) {
+    // We are correcting a parsing issue, so we can't skip duplicates
+    added = await ascensionUpdater(ascensions);
+  } else {
+    // Ascensions never change, so we can skip duplicates
+    const { count } = await db.ascension.createMany({
+      data: ascensions,
+      skipDuplicates: true,
+    });
+    added = count;
   }
 
   await Promise.all([updatePaths(), updateClasses(), tagAscensions()]);
