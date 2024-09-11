@@ -22,7 +22,6 @@ if (process.env.NODE_ENV === "production") {
   prisma = new PrismaClient();
 } else {
   if (!global.globalPrisma) {
-    console.log("New client incoming");
     global.globalPrisma = new PrismaClient({
       log: [
         {

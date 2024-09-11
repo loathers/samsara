@@ -19,14 +19,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   });
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
-  const p = await getPathData(path);
-  console.log(
-    JSON.stringify(p, (k, v) => {
-      if (typeof v === "bigint") console.log(k);
-      return v;
-    }),
-  );
-  return json(p);
+  return json(await getPathData(path));
 };
 
 export const meta = ({ data }: MetaArgs<typeof loader>) => {
