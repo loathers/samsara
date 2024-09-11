@@ -1,5 +1,5 @@
 import { JsonObject, JsonValue } from "@prisma/client/runtime/library";
-import { checkPlayers } from "./utils/client.js";
+import { processAscensions } from "./utils/client.js";
 import { db } from "~/db.server.js";
 
 function* players(p: { playerId: number }[]) {
@@ -18,7 +18,7 @@ async function main() {
       (path = 'One Crazy Random Summer' AND extra ->>'Fun' is null)
   `;
 
-  await checkPlayers(players(needRechecked), false, async (ascensions) => {
+  await processAscensions(players(needRechecked), false, async (ascensions) => {
     const relevant = ascensions
       .filter(
         (a) =>

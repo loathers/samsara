@@ -1,5 +1,5 @@
 import { Player } from "@prisma/client";
-import { checkPlayers, nextUpdateIn, workers } from "./utils/client.js";
+import { processAscensions, nextUpdateIn, workers } from "./utils/client.js";
 import { parseRecentAscenders } from "./utils/utils.js";
 
 const kol = workers[0];
@@ -22,7 +22,7 @@ async function main() {
 
   const ascenders = parseRecentAscenders(recent);
 
-  await checkPlayers(players(ascenders), false);
+  await processAscensions(players(ascenders), false);
 
   await nextUpdateIn(Number(process.env.SCHEDULE || 1800));
   console.timeEnd("etl");

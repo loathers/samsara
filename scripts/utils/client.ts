@@ -27,7 +27,7 @@ export async function nextUpdateIn(seconds: number) {
   });
 }
 
-export async function checkPlayers(
+export async function processPlayers(
   ids: Generator<number>,
   stopOnBlank = true,
   ascensionUpdater?: (ascensions: Ascension[]) => Promise<number>,
@@ -177,7 +177,14 @@ export async function checkPlayers(
   );
 
   console.timeLog("etl", `Finished updating ascensions`);
+}
 
+export async function processAscensions(
+  ids: Generator<number>,
+  stopOnBlank = true,
+  ascensionUpdater?: (ascensions: Ascension[]) => Promise<number>,
+) {
+  await processPlayers(ids, stopOnBlank, ascensionUpdater);
   await Promise.all([updatePaths(), updateClasses(), tagAscensions()]);
 }
 

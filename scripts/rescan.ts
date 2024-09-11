@@ -1,5 +1,5 @@
 import { db } from "~/db.server.js";
-import { checkPlayers } from "./utils/client.js";
+import { processAscensions } from "./utils/client.js";
 import { program } from "commander";
 
 type OptionValues = {
@@ -31,7 +31,7 @@ async function main() {
     ? []
     : (await db.player.findMany({})).map((player) => player.id);
 
-  await checkPlayers(counter(startingId, skip));
+  await processAscensions(counter(startingId, skip));
 }
 
 main();
