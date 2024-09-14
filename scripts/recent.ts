@@ -10,7 +10,7 @@ function* players(p: Player[]) {
 
 async function main() {
   console.time("etl");
-  console.timeLog("etl", "Begin")
+  console.timeLog("etl", "Begin");
 
   const recent = await client.fetchText(
     "museum.php?place=leaderboards&whichboard=999&showhist=500",

@@ -333,8 +333,44 @@ function getLeaderboardQuery(
   `;
 }
 
+async function getGolds() {
+  const golds = await db.tag.findMany({
+    where: {
+      type: TagType.PYRITE,
+      value: 1,
+    },
+    select: {
+      ascension: {
+        select: {
+          ascensionNumber: true,
+          player: true,
+          days: true,
+          turns: true,
+          lifestyle: true,
+          pathName: true,
+        },
+      },
+    },
+  });
+
+  return golds
+    .map(({ ascension }) => ascension)
+    .reduce(
+      (acc, { pathName, lifestyle, ...rest }) => ({
+        ...acc,
+        [`${pathName}_${lifestyle}`]: { pathName, lifestyle, ...rest },
+      }),
+      {} as Record<string, (typeof golds)[number]["ascension"]>,
+    );
+}
+
 async function tagPyrites() {
+  console.timeLog("etl", "Collecting previous golds");
+  const golds = await getGolds();
+  console.timeLog("etl", "Finished collecting previous golds");
+
   console.timeLog("etl", `Tagging pyrites`);
+
   await db.$transaction(
     async (tx) => {
       await tx.$executeRaw`
@@ -359,6 +395,28 @@ async function tagPyrites() {
     },
   );
   console.timeLog("etl", `Finished tagging pyrites`);
+
+  console.timeLog("etl", "Reporting new golds to OAF webhook");
+  for (const [category, run] of Object.entries(await getGolds())) {
+    const previous = golds[category];
+    if (
+      run.ascensionNumber !== previous.ascensionNumber ||
+      run.player.id !== previous.player.id
+    ) {
+      // Record breaker!
+      await fetch(
+        `https://oaf.loathers.net/webhook/samsara?token=${process.env.OAF_TOKEN}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(run),
+        },
+      );
+    }
+  }
+  console.timeLog("etl", "Finished reporting new golds to OAF webhook");
 }
 
 async function tagLeaderboard() {
