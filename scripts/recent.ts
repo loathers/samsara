@@ -10,7 +10,7 @@ function* players(p: Player[]) {
 
 async function main() {
   console.time("etl");
-  console.timeLog("etl", "Begin")
+  console.timeLog("etl", "Begin");
 
   const recent = await client.fetchText(
     "museum.php?place=leaderboards&whichboard=999&showhist=500",
@@ -26,7 +26,10 @@ async function main() {
 
   console.timeLog("etl", `Found ${ascenders.length} ascenders`);
 
-  await processAscensions(players(ascenders), false);
+  await processAscensions(players(ascenders), {
+    stopOnBlank: false,
+    sendWebhook: true,
+  });
 
   await nextUpdateIn(Number(process.env.SCHEDULE || 1800));
   console.timeLog("etl", "Done");
