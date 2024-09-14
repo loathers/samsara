@@ -181,11 +181,22 @@ export async function processPlayers(
 
 export async function processAscensions(
   ids: Generator<number>,
-  stopOnBlank = true,
-  ascensionUpdater?: (ascensions: Ascension[]) => Promise<number>,
+  {
+    stopOnBlank = true,
+    sendWebhook = false,
+    ascensionUpdater,
+  }: {
+    stopOnBlank?: boolean;
+    sendWebhook?: boolean;
+    ascensionUpdater?: (ascensions: Ascension[]) => Promise<number>;
+  } = {},
 ) {
   await processPlayers(ids, stopOnBlank, ascensionUpdater);
-  await Promise.all([updatePaths(), updateClasses(), tagAscensions()]);
+  await Promise.all([
+    updatePaths(),
+    updateClasses(),
+    tagAscensions(sendWebhook),
+  ]);
 }
 
 async function guessPathDates() {

@@ -14,10 +14,10 @@ const SPECIAL_RANKINGS: [path: string, extra: string][] = [
  */
 const NEVER_RANK_BY_TURNCOUNT = ["Grey Goo"];
 
-export async function tagAscensions() {
+export async function tagAscensions(sendWebhook: boolean) {
   await tagRecordBreaking();
   await tagPersonalBest();
-  await tagPyrites();
+  await tagPyrites(sendWebhook);
   await tagLeaderboard();
 }
 
@@ -333,7 +333,7 @@ function getLeaderboardQuery(
   `;
 }
 
-async function getGolds() {
+async function getBestRuns() {
   const golds = await db.tag.findMany({
     where: {
       type: TagType.PYRITE,
@@ -364,10 +364,14 @@ async function getGolds() {
     );
 }
 
-async function tagPyrites() {
-  console.timeLog("etl", "Collecting previous golds");
-  const golds = await getGolds();
-  console.timeLog("etl", "Finished collecting previous golds");
+async function tagPyrites(sendWebhook: boolean) {
+  let golds: Awaited<ReturnType<typeof getBestRuns>> = {};
+
+  if (sendWebhook) {
+    console.timeLog("etl", "Collecting previous golds");
+    golds = await getBestRuns();
+    console.timeLog("etl", "Finished collecting previous golds");
+  }
 
   console.timeLog("etl", `Tagging pyrites`);
 
@@ -396,27 +400,29 @@ async function tagPyrites() {
   );
   console.timeLog("etl", `Finished tagging pyrites`);
 
-  console.timeLog("etl", "Reporting new golds to OAF webhook");
-  for (const [category, run] of Object.entries(await getGolds())) {
-    const previous = golds[category];
-    if (
-      run.ascensionNumber !== previous.ascensionNumber ||
-      run.player.id !== previous.player.id
-    ) {
-      // Record breaker!
-      await fetch(
-        `https://oaf.loathers.net/webhooks/samsara?token=${process.env.OAF_TOKEN}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+  if (sendWebhook) {
+    console.timeLog("etl", "Reporting new golds to OAF webhook");
+    for (const [category, run] of Object.entries(await getBestRuns())) {
+      const previous = golds[category];
+      if (
+        run.ascensionNumber !== previous.ascensionNumber ||
+        run.player.id !== previous.player.id
+      ) {
+        // Record breaker!
+        await fetch(
+          `https://oaf.loathers.net/webhooks/samsara?token=${process.env.OAF_TOKEN}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(run),
           },
-          body: JSON.stringify(run),
-        },
-      );
+        );
+      }
     }
+    console.timeLog("etl", "Finished reporting new golds to OAF webhook");
   }
-  console.timeLog("etl", "Finished reporting new golds to OAF webhook");
 }
 
 async function tagLeaderboard() {

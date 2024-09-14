@@ -26,7 +26,10 @@ async function main() {
 
   console.timeLog("etl", `Found ${ascenders.length} ascenders`);
 
-  await processAscensions(players(ascenders), false);
+  await processAscensions(players(ascenders), {
+    stopOnBlank: false,
+    sendWebhook: true,
+  });
 
   await nextUpdateIn(Number(process.env.SCHEDULE || 1800));
   console.timeLog("etl", "Done");
