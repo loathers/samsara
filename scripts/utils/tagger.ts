@@ -409,7 +409,7 @@ async function tagPyrites(sendWebhook: boolean) {
         run.player.id !== previous.player.id
       ) {
         // Record breaker!
-        await fetch(
+        const result = await fetch(
           `https://oaf.loathers.net/webhooks/samsara?token=${process.env.OAF_TOKEN}`,
           {
             method: "POST",
@@ -419,6 +419,16 @@ async function tagPyrites(sendWebhook: boolean) {
             body: JSON.stringify(run),
           },
         );
+
+        if (!result.ok) {
+          console.warn(
+            "OAF webhook error",
+            result.status,
+            ":",
+            result.statusText,
+            await result.text(),
+          );
+        }
       }
     }
     console.timeLog("etl", "Finished reporting new golds to OAF webhook");
