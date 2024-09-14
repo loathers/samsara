@@ -405,7 +405,7 @@ async function tagPyrites() {
     ) {
       // Record breaker!
       await fetch(
-        `https://oaf.loathers.net/webhook/samsara?token=${process.env.OAF_TOKEN}`,
+        `https://oaf.loathers.net/webhooks/samsara?token=${process.env.OAF_TOKEN}`,
         {
           method: "POST",
           headers: {
