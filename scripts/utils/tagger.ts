@@ -286,6 +286,7 @@ function getLeaderboardQuery(
         "turns",
         "ascensionNumber",
         "extra",
+        "date",
         ROW_NUMBER() OVER (PARTITION BY "pathName", "lifestyle", "playerId" ORDER BY ${order}, "date" ASC) AS "rankPerPlayer"
       FROM 
         "Ascension"
@@ -305,7 +306,8 @@ function getLeaderboardQuery(
         "days",
         "turns",
         "ascensionNumber",
-        "extra"
+        "extra",
+        "date"
       FROM 
         "ranked"
       WHERE 
@@ -318,7 +320,8 @@ function getLeaderboardQuery(
         "days",
         "turns",
         "ascensionNumber",
-        ROW_NUMBER() OVER (PARTITION BY "pathName", "lifestyle" ORDER BY ${order}) AS "rank"
+        "date",
+        ROW_NUMBER() OVER (PARTITION BY "pathName", "lifestyle" ORDER BY ${order}, "date" ASC) AS "rank"
       FROM
         "best")
     INSERT INTO "Tag" ("type", "value", "ascensionNumber", "playerId")
