@@ -22,6 +22,7 @@ import { PathLink } from "~/components/PathLink";
 import { CoolStat } from "~/components/CoolStat";
 import { FormEventHandler, useCallback } from "react";
 import { formatPathName } from "~/components/Path";
+import { HeadersFunction } from "@remix-run/node";
 
 export const meta = () => {
   return [
@@ -56,17 +57,32 @@ export const loader = async () => {
     numberOfAscensions: 7,
   });
 
-  return json({
-    paths,
-    loopers,
-    loopersChange,
-    currentPath,
-    currentPathers,
-    currentPathersChange,
-    frequency,
-    totalTracked,
-    popularity,
-  });
+  const rollover = new Date();
+  rollover.setUTCHours(24 + 3, 30, 0, 0);
+  const secondsToRollover = Math.ceil((rollover.getTime() - Date.now()) / 1000);
+
+  return json(
+    {
+      paths,
+      loopers,
+      loopersChange,
+      currentPath,
+      currentPathers,
+      currentPathersChange,
+      frequency,
+      totalTracked,
+      popularity,
+    },
+    {
+      headers: {
+        "Cache-Control": `public, max-age=${secondsToRollover + 60 * 60}`,
+      },
+    },
+  );
+};
+
+export const headers: HeadersFunction = ({ loaderHeaders }) => {
+  return loaderHeaders;
 };
 
 export default function Index() {
