@@ -16,11 +16,12 @@ function getClassAcronym(name: string) {
   switch (name) {
     case "Actually Ed the Undying":
       return "Ed";
+    case "Beanslinger":
+      return "BS";
   }
 
   const acronym = name
-    .replace("-", " ")
-    .split(" ")
+    .split(/[ -]/)
     .map((word) => (parseInt(word) ? word : word[0]))
     .join("");
   return acronym.length === 1 ? name.slice(0, 2).toUpperCase() : acronym;
