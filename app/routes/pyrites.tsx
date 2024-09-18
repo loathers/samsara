@@ -8,23 +8,26 @@ import {
   List,
   ListItem,
   Stack,
-  Text,
 } from "@chakra-ui/react";
 import { type Ascension, type Player, Lifestyle, Path } from "@prisma/client";
 import { useLoaderData, Link as RemixLink, json } from "@remix-run/react";
-import { SortingState } from "@tanstack/react-table";
-import { useState } from "react";
 import { FormattedDate } from "~/components/FormattedDate";
 import { PyriteTable } from "~/components/PyriteTable";
 import { db, NS13 } from "~/db.server";
 
-export type RowData = Omit<Ascension, "date"> & {
+type JsonAscension = Omit<Ascension, "date"> & {
   date: string;
   player: Player;
   path: Omit<Path, "start" | "end"> & {
     start: string | null;
     end: string | null;
   };
+};
+
+export type RowData = {
+  path: JsonAscension["path"];
+  hardcore: JsonAscension;
+  softcore: JsonAscension;
 };
 
 export const meta = () => {
@@ -38,7 +41,7 @@ export const meta = () => {
 };
 
 export const loader = async () => {
-  const pyrites = await db.tag.findMany({
+  const separatePyrites = await db.tag.findMany({
     include: {
       ascension: {
         include: { player: true, path: true },
@@ -59,23 +62,25 @@ export const loader = async () => {
     },
   });
 
-  type PyriteAscension = (typeof pyrites)[number]["ascension"][];
+  type PyriteAscension = (typeof separatePyrites)[number]["ascension"];
+  type PathPyrites = {
+    path: PyriteAscension["path"];
+    hardcore: PyriteAscension;
+    softcore: PyriteAscension;
+  };
 
-  const [hardcore, softcore] = pyrites.reduce<
-    [hardcore: PyriteAscension, softcore: PyriteAscension]
-  >(
-    (acc, { ascension }) => {
-      switch (ascension.lifestyle) {
-        case "HARDCORE":
-          acc[0].push(ascension);
-          break;
-        case "SOFTCORE":
-          acc[1].push(ascension);
-          break;
-      }
-      return acc;
-    },
-    [[], []],
+  const pyrites = Object.values(
+    separatePyrites.reduce<Record<string, PathPyrites>>(
+      (acc, { ascension }) => ({
+        ...acc,
+        [ascension.path.name]: {
+          ...acc[ascension.path.name],
+          path: ascension.path,
+          [ascension.lifestyle.toLowerCase()]: ascension,
+        },
+      }),
+      {},
+    ),
   );
 
   const tortoiseQueries = [
@@ -101,12 +106,11 @@ export const loader = async () => {
     (t) => t !== null,
   );
 
-  return json({ hardcore, softcore, tortoisecore });
+  return json({ pyrites, tortoisecore });
 };
 
 export default function Pyrites() {
-  const { hardcore, softcore, tortoisecore } = useLoaderData<typeof loader>();
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const { pyrites, tortoisecore } = useLoaderData<typeof loader>();
 
   return (
     <Stack spacing={10}>
@@ -118,39 +122,7 @@ export default function Pyrites() {
           </Button>
         </ButtonGroup>
       </Stack>
-      <Text textAlign="center">This page is a work in progress.</Text>
-      <Stack
-        fontSize="smaller"
-        spacing={4}
-        direction={["column", null, null, "row"]}
-        alignItems="stretch"
-        justifyContent="center"
-      >
-        <Card>
-          <CardHeader>
-            <Heading size="md">Hardcore</Heading>
-          </CardHeader>
-          <CardBody>
-            <PyriteTable
-              ascensions={hardcore}
-              sorting={sorting}
-              setSorting={setSorting}
-            />
-          </CardBody>
-        </Card>
-        <Card>
-          <CardHeader>
-            <Heading size="md">Softcore</Heading>
-          </CardHeader>
-          <CardBody>
-            <PyriteTable
-              ascensions={softcore}
-              sorting={sorting}
-              setSorting={setSorting}
-            />
-          </CardBody>
-        </Card>
-      </Stack>
+      <PyriteTable ascensions={pyrites} />
       <Card>
         <CardHeader>
           <Heading size="md">Tortoisecore</Heading>

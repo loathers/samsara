@@ -21,7 +21,7 @@ import { ResponsiveContent } from "./ResponsiveContent";
 import { RowData } from "~/routes/pyrites";
 import { PathLink } from "./PathLink";
 import { formatTurncount } from "~/utils";
-import React from "react";
+import { useState } from "react";
 import { PlayerLink } from "./PlayerLink";
 
 declare module "@tanstack/react-table" {
@@ -32,6 +32,52 @@ declare module "@tanstack/react-table" {
   }
 }
 
+const compareDaycount = (a: RowData["softcore"], b: RowData["softcore"]) => {
+  const dayComp = a.days - b.days;
+  return dayComp !== 0 ? dayComp : a.turns - b.turns;
+};
+
+const groupColumnsFactory = (type: "softcore" | "hardcore") => [
+  columnHelper.accessor(`${type}.days`, {
+    header: () => <ResponsiveContent narrow="D / T" wide="Days / Turns" />,
+    cell: (info) => (
+      <Text>
+        {formatTurncount(info.getValue(), info.row.original[type].turns)}
+      </Text>
+    ),
+    sortingFn: (a, b) => compareDaycount(a.original[type], b.original[type]),
+  }),
+  columnHelper.display({
+    header: "",
+    id: `${type}.slower-than-hardcore`,
+    cell: (info) =>
+      compareDaycount(info.row.original[type], info.row.original.hardcore) >
+      0 ? (
+        <span title="Slower than hardcore">🧊</span>
+      ) : null,
+  }),
+  columnHelper.accessor(`${type}.date`, {
+    header: "Date",
+    cell: (info) => <FormattedDate date={info.getValue()} />,
+  }),
+  columnHelper.display({
+    header: "",
+    id: `${type}.in-season`,
+    cell: (info) =>
+      info.row.original.path.end &&
+      new Date(info.row.original[type].date) <
+        new Date(info.row.original.path.end) ? (
+        <span title="In-Season">🌱</span>
+      ) : null,
+  }),
+  columnHelper.accessor(`${type}.player`, {
+    header: "Player",
+    cell: (info) => <PlayerLink player={info.getValue()} />,
+    sortingFn: (a, b) =>
+      a.original[type].player.name.localeCompare(b.original[type].player.name),
+  }),
+];
+
 const columnHelper = createColumnHelper<RowData>();
 
 const columns = [
@@ -41,45 +87,23 @@ const columns = [
     sortingFn: (a, b) =>
       a.original.path.name.localeCompare(b.original.path.name),
   }),
-  columnHelper.accessor("days", {
-    header: () => <ResponsiveContent narrow="D / T" wide="Days / Turns" />,
-    cell: (info) => (
-      <Text>{formatTurncount(info.getValue(), info.row.original.turns)}</Text>
-    ),
-    sortingFn: (a, b) => {
-      const dayComp = a.original.days - b.original.days;
-      return dayComp !== 0 ? dayComp : a.original.turns - b.original.turns;
-    },
+  columnHelper.group({
+    header: "Softcore",
+    columns: groupColumnsFactory("softcore"),
   }),
-  columnHelper.accessor("date", {
-    header: "Date",
-    cell: (info) => <FormattedDate date={info.getValue()} />,
-  }),
-  columnHelper.display({
-    header: "",
-    id: "in-season",
-    cell: (info) =>
-      info.row.original.path.end &&
-      new Date(info.row.original.date) <
-        new Date(info.row.original.path.end) ? (
-        <span title="In-Season">🌱</span>
-      ) : null,
-  }),
-  columnHelper.accessor("player", {
-    header: "Player",
-    cell: (info) => <PlayerLink player={info.getValue()} />,
-    sortingFn: (a, b) =>
-      a.original.player.name.localeCompare(b.original.player.name),
+  columnHelper.group({
+    header: "Hardcore",
+    columns: groupColumnsFactory("hardcore"),
   }),
 ];
 
 type Props = {
   ascensions: RowData[];
-  sorting: SortingState;
-  setSorting: React.Dispatch<React.SetStateAction<SortingState>>;
 };
 
-export function PyriteTable({ ascensions, sorting, setSorting }: Props) {
+export function PyriteTable({ ascensions }: Props) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+
   const table = useReactTable({
     columns,
     data: ascensions,
@@ -92,13 +116,13 @@ export function PyriteTable({ ascensions, sorting, setSorting }: Props) {
   });
 
   return (
-    <TableContainer>
+    <TableContainer fontSize="smaller">
       <Table>
         <Thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <Tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <Th key={header.id}>
+                <Th px={4} key={header.id} colSpan={header.colSpan}>
                   {header.isPlaceholder ? null : (
                     <Text
                       onClick={header.column.getToggleSortingHandler()}
