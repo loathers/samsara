@@ -55,12 +55,17 @@ const groupColumnsFactory = (type: "softcore" | "hardcore") => [
   }),
   columnHelper.display({
     header: "",
-    id: `${type}.slower-than-hardcore`,
+    id: `${type}_slower-than-hardcore`,
     cell: (info) =>
       info.row.original[type] ? (
-        compareDaycount(info.row.original[type], info.row.original.hardcore) >
+        compareDaycount(info.row.original[type], info.row.original.hardcore) >=
         0 ? (
-          <span title="Slower than hardcore">🧊</span>
+          <Text
+            title="Slower than or equal to the hardcore equivalent"
+            cursor="help"
+          >
+            🧊
+          </Text>
         ) : null
       ) : null,
   }),
@@ -71,13 +76,15 @@ const groupColumnsFactory = (type: "softcore" | "hardcore") => [
   }),
   columnHelper.display({
     header: "",
-    id: `${type}.in-season`,
+    id: `${type}_in-season`,
     cell: (info) =>
       info.row.original[type] &&
       info.row.original.path.end &&
-      new Date(info.row.original[type].date) <
+      new Date(info.row.original[type].date) <=
         new Date(info.row.original.path.end) ? (
-        <span title="In-Season">🌱</span>
+        <Text title="Achieved while path was in season" cursor="help">
+          🌱
+        </Text>
       ) : null,
   }),
   columnHelper.accessor(`${type}.player`, {
@@ -85,8 +92,8 @@ const groupColumnsFactory = (type: "softcore" | "hardcore") => [
     cell: (info) =>
       info.row.original[type] && <PlayerLink player={info.getValue()} />,
     sortingFn: (a, b) => {
-      if (a.original[type] === null) return -1;
-      if (b.original[type] === null) return 1;
+      if (!a.original[type]) return -1;
+      if (!b.original[type]) return 1;
       return a.original[type].player.name.localeCompare(
         b.original[type].player.name,
       );
