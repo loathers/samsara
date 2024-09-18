@@ -56,7 +56,7 @@ export const loader = async () => {
     orderBy: {
       ascension: {
         path: {
-          name: "asc",
+          id: "desc",
         },
       },
     },
@@ -76,7 +76,10 @@ export const loader = async () => {
         [ascension.path.name]: {
           ...acc[ascension.path.name],
           path: ascension.path,
-          [ascension.lifestyle.toLowerCase()]: ascension,
+          [ascension.lifestyle.toLowerCase()]:
+            ascension.path.id === 999 && ascension.lifestyle === "SOFTCORE"
+              ? null
+              : ascension,
         },
       }),
       {},
