@@ -1,6 +1,5 @@
 import {
   Heading,
-  Link,
   Table,
   TableContainer,
   Tbody,
@@ -9,9 +8,9 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { Link as RemixLink } from "@remix-run/react";
 import { DedicationEntry } from "~/db.server";
 import { awardBg, numberFormatter } from "~/utils";
+import { PlayerLink } from "./PlayerLink";
 
 type Props = {
   title?: string;
@@ -39,9 +38,7 @@ export function Dedication({ title, dedication }: Props) {
             <Tr key={p.id} bg={awardBg(i + 1, [1, 1, 1])}>
               <Td>{i + 1}</Td>
               <Td>
-                <Link as={RemixLink} to={`/player/${p.id}`}>
-                  {p.name} (#{p.id})
-                </Link>
+                <PlayerLink player={p} />
               </Td>
               <Td>{numberFormatter.format(p.runs)}</Td>
             </Tr>

@@ -1,6 +1,5 @@
 import {
   Heading,
-  Link,
   Table,
   TableContainer,
   Tbody,
@@ -10,11 +9,11 @@ import {
   Tr,
 } from "@chakra-ui/react";
 import { FormattedDate } from "./FormattedDate";
-import { Link as RemixLink } from "@remix-run/react";
 import { LeaderboardEntry } from "~/db.server";
 import { Class } from "./Class";
 import { awardBg, formatTurncount } from "~/utils";
 import { ResponsiveContent } from "./ResponsiveContent";
+import { PlayerLink } from "./PlayerLink";
 
 type JsonifiedLeaderboardEntry = Omit<LeaderboardEntry, "date"> & {
   date: string;
@@ -65,9 +64,7 @@ export function Leaderboard({
             <Tr key={`${a.playerId}/${a.ascensionNumber}`} bg={awardBg(i + 1)}>
               <Td>{i + 1}</Td>
               <Td>
-                <Link as={RemixLink} to={`/player/${a.player.id}`}>
-                  {a.player.name} (#{a.player.id})
-                </Link>
+                <PlayerLink player={a.player} />
               </Td>
               <Td>
                 <FormattedDate date={a.date} />

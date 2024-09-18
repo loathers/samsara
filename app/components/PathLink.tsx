@@ -23,8 +23,10 @@ export function PathLink({ lifestyle, path, shorten }: Props) {
 
   return (
     <Link as={RemixLink} to={`/path/${path.slug}`} title={title}>
-      {shorten === "symbols" ? (
-        <HStack spacing={shorten ? 0 : 1}>{child}</HStack>
+      {["symbols", "full-symbols"].includes(shorten!) ? (
+        <HStack minWidth={15} spacing={shorten === "symbols" ? 0 : 1}>
+          {child}
+        </HStack>
       ) : (
         child
       )}

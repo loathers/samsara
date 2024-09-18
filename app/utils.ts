@@ -1,6 +1,6 @@
 import { JsonValue } from "@prisma/client/runtime/library";
 
-export type ShortenStyle = null | "acronyms" | "symbols";
+export type ShortenStyle = null | "acronyms" | "symbols" | "full-symbols";
 
 export const yearFormatter = new Intl.DateTimeFormat(undefined, {
   year: "numeric",

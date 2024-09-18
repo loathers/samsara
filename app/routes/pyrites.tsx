@@ -10,40 +10,72 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import {
-  type Ascension,
-  type Tag,
-  type Player,
-  Lifestyle,
-} from "@prisma/client";
+import { type Ascension, type Player, Lifestyle, Path } from "@prisma/client";
 import { useLoaderData, Link as RemixLink, json } from "@remix-run/react";
+import { SortingState } from "@tanstack/react-table";
+import { useState } from "react";
 import { FormattedDate } from "~/components/FormattedDate";
+import { PyriteTable } from "~/components/PyriteTable";
 import { db, NS13 } from "~/db.server";
 
-type Row = Ascension & Tag & Player;
+export type RowData = Omit<Ascension, "date"> & {
+  date: string;
+  player: Player;
+  path: Omit<Path, "start" | "end"> & {
+    start: string | null;
+    end: string | null;
+  };
+};
+
+export const meta = () => {
+  return [
+    { title: `Saṃsāra - Pyrites` },
+    {
+      name: "description",
+      content: `Stats for the best runs in history for each path, as well as some extra special runs.`,
+    },
+  ];
+};
 
 export const loader = async () => {
-  const pyrites = await db.$queryRaw<Row[]>`
-    SELECT *
-      FROM "Tag"
-      INNER JOIN "Ascension" ON "Tag"."ascensionNumber" = "Ascension"."ascensionNumber" AND "Tag"."playerId" = "Ascension"."playerId"
-      INNER JOIN "Player" ON "Ascension"."playerId" = "Player"."id"
-      WHERE "type" IN ('PYRITE','PYRITE_SPECIAL') AND "value" = 1
-      ORDER BY "Ascension"."pathName" ASC`;
+  const pyrites = await db.tag.findMany({
+    include: {
+      ascension: {
+        include: { player: true, path: true },
+      },
+    },
+    where: {
+      type: {
+        in: ["PYRITE", "PYRITE_SPECIAL"],
+      },
+      value: 1,
+    },
+    orderBy: {
+      ascension: {
+        path: {
+          name: "asc",
+        },
+      },
+    },
+  });
 
-  const [hardcore, softcore] = pyrites.reduce(
-    (acc, asc) => {
-      switch (asc.lifestyle) {
+  type PyriteAscension = (typeof pyrites)[number]["ascension"][];
+
+  const [hardcore, softcore] = pyrites.reduce<
+    [hardcore: PyriteAscension, softcore: PyriteAscension]
+  >(
+    (acc, { ascension }) => {
+      switch (ascension.lifestyle) {
         case "HARDCORE":
-          acc[0].push(asc);
+          acc[0].push(ascension);
           break;
         case "SOFTCORE":
-          acc[1].push(asc);
+          acc[1].push(ascension);
           break;
       }
       return acc;
     },
-    [[], []] as [hardcore: Row[], softcore: Row[]],
+    [[], []],
   );
 
   const tortoiseQueries = [
@@ -74,6 +106,7 @@ export const loader = async () => {
 
 export default function Pyrites() {
   const { hardcore, softcore, tortoisecore } = useLoaderData<typeof loader>();
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   return (
     <Stack spacing={10}>
@@ -87,6 +120,7 @@ export default function Pyrites() {
       </Stack>
       <Text textAlign="center">This page is a work in progress.</Text>
       <Stack
+        fontSize="smaller"
         spacing={4}
         direction={["column", null, null, "row"]}
         alignItems="stretch"
@@ -97,14 +131,11 @@ export default function Pyrites() {
             <Heading size="md">Hardcore</Heading>
           </CardHeader>
           <CardBody>
-            <List>
-              {hardcore.map((asc) => (
-                <ListItem key={`${asc.playerId}${asc.ascensionNumber}`}>
-                  {asc.pathName} {asc.lifestyle} {asc.days}/{asc.turns} (
-                  <FormattedDate date={asc.date} />) <b>{asc.name}</b>
-                </ListItem>
-              ))}
-            </List>
+            <PyriteTable
+              ascensions={hardcore}
+              sorting={sorting}
+              setSorting={setSorting}
+            />
           </CardBody>
         </Card>
         <Card>
@@ -112,14 +143,11 @@ export default function Pyrites() {
             <Heading size="md">Softcore</Heading>
           </CardHeader>
           <CardBody>
-            <List>
-              {softcore.map((asc) => (
-                <ListItem key={`${asc.playerId}${asc.ascensionNumber}`}>
-                  {asc.pathName} {asc.lifestyle} {asc.days}/{asc.turns} (
-                  <FormattedDate date={asc.date} />) <b>{asc.name}</b>
-                </ListItem>
-              ))}
-            </List>
+            <PyriteTable
+              ascensions={softcore}
+              sorting={sorting}
+              setSorting={setSorting}
+            />
           </CardBody>
         </Card>
       </Stack>

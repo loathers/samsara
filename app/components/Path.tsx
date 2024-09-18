@@ -34,16 +34,22 @@ function getPathAcronym(name: string) {
 export function Path({ path, shorten }: Props) {
   const name = formatPathName(path);
 
-  if (shorten === "acronyms") {
-    return (
-      <Text as="span" title={name}>
-        {getPathAcronym(name)}
-      </Text>
-    );
-  }
-
-  if (shorten === "symbols") {
-    return <PathIcon path={path} />;
+  switch (shorten) {
+    case "acronyms":
+      return (
+        <Text as="span" title={name}>
+          {getPathAcronym(name)}
+        </Text>
+      );
+    case "symbols":
+      return <PathIcon path={path} />;
+    case "full-symbols":
+      return (
+        <>
+          <PathIcon path={path} />
+          {name}
+        </>
+      );
   }
 
   return name;
