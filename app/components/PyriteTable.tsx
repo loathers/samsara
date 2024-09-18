@@ -47,44 +47,40 @@ const groupColumnsFactory = (type: "softcore" | "hardcore") => [
     header: () => <ResponsiveContent narrow="D / T" wide="Days / Turns" />,
     cell: (info) =>
       info.row.original[type] ? (
-        <Text>
-          {formatTurncount(info.getValue(), info.row.original[type].turns)}
-        </Text>
+        <HStack>
+          <Text>
+            {formatTurncount(info.getValue(), info.row.original[type].turns)}
+          </Text>
+          {type === "softcore" &&
+            compareDaycount(
+              info.row.original[type],
+              info.row.original.hardcore,
+            ) >= 0 && (
+              <Text
+                title="Slower than or equal to the hardcore equivalent"
+                cursor="help"
+              >
+                🧊
+              </Text>
+            )}
+        </HStack>
       ) : null,
     sortingFn: (a, b) => compareDaycount(a.original[type], b.original[type]),
-  }),
-  columnHelper.display({
-    header: "",
-    id: `${type}_slower-than-hardcore`,
-    cell: (info) =>
-      info.row.original[type] ? (
-        compareDaycount(info.row.original[type], info.row.original.hardcore) >=
-        0 ? (
-          <Text
-            title="Slower than or equal to the hardcore equivalent"
-            cursor="help"
-          >
-            🧊
-          </Text>
-        ) : null
-      ) : null,
   }),
   columnHelper.accessor(`${type}.date`, {
     header: "Date",
     cell: (info) =>
-      info.row.original[type] ? <FormattedDate date={info.getValue()} /> : null,
-  }),
-  columnHelper.display({
-    header: "",
-    id: `${type}_in-season`,
-    cell: (info) =>
-      info.row.original[type] &&
-      info.row.original.path.end &&
-      new Date(info.row.original[type].date) <=
-        new Date(info.row.original.path.end) ? (
-        <Text title="Achieved while path was in season" cursor="help">
-          🌱
-        </Text>
+      info.row.original[type] ? (
+        <HStack>
+          <FormattedDate date={info.getValue()} />
+          {info.row.original.path.end &&
+            new Date(info.row.original[type].date) <=
+              new Date(info.row.original.path.end) && (
+              <Text title="Achieved while path was in season" cursor="help">
+                🌱
+              </Text>
+            )}
+        </HStack>
       ) : null,
   }),
   columnHelper.accessor(`${type}.player`, {
