@@ -34,9 +34,12 @@ declare module "@tanstack/react-table" {
   }
 }
 
-const compareDaycount = (a: RowData["softcore"], b: RowData["softcore"]) => {
-  const dayComp = a.days - b.days;
-  return dayComp !== 0 ? dayComp : a.turns - b.turns;
+const compareDaycount = (
+  a: RowData["softcore" | "hardcore"],
+  b: RowData["softcore" | "hardcore"],
+) => {
+  const dayComp = (a?.days ?? 0) - (b?.days ?? 0);
+  return dayComp !== 0 ? dayComp : (a?.turns ?? 0) - (b?.turns ?? 0);
 };
 
 const groupColumnsFactory = (type: "softcore" | "hardcore") => [
@@ -81,8 +84,13 @@ const groupColumnsFactory = (type: "softcore" | "hardcore") => [
     header: "Player",
     cell: (info) =>
       info.row.original[type] && <PlayerLink player={info.getValue()} />,
-    sortingFn: (a, b) =>
-      a.original[type].player.name.localeCompare(b.original[type].player.name),
+    sortingFn: (a, b) => {
+      if (a.original[type] === null) return -1;
+      if (b.original[type] === null) return 1;
+      return a.original[type].player.name.localeCompare(
+        b.original[type].player.name,
+      );
+    },
   }),
 ];
 

@@ -27,7 +27,7 @@ type JsonAscension = Omit<Ascension, "date"> & {
 export type RowData = {
   path: JsonAscension["path"];
   hardcore: JsonAscension;
-  softcore: JsonAscension;
+  softcore: JsonAscension | null;
 };
 
 export const meta = () => {
