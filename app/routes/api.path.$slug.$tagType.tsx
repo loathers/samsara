@@ -1,7 +1,7 @@
 import { Lifestyle, TagType } from "@prisma/client";
 import { json, LoaderFunctionArgs, redirect } from "@remix-run/node";
 
-import { db } from "~/db.server";
+import { db, getMaxAge } from "~/db.server";
 
 const isTagType = (input?: string): input is TagType => {
   if (!input) return false;
@@ -14,8 +14,12 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   slug = slug?.toLowerCase();
   tagType = tagType?.toUpperCase();
 
+  const headers = {
+    "Cache-Control": `public, max-age=${await getMaxAge()}`,
+  };
+
   if (!isTagType(tagType))
-    throw json({ message: "Invalid tag type" }, { status: 400 });
+    throw json({ message: "Invalid tag type" }, { status: 400, headers });
 
   const id = Number.isNaN(Number(slug)) ? undefined : Number(slug);
   const path = await db.path.findFirst({
@@ -27,7 +31,8 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     },
   });
 
-  if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
+  if (!path)
+    throw json({ message: "Invalid path name" }, { status: 400, headers });
 
   if (slug !== String(path.id)) {
     throw redirect(`/api/path/${path.id}/${tagType.toLowerCase()}`);
@@ -49,5 +54,5 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     ),
   );
 
-  return json(leaderboards);
+  return json(leaderboards, { headers });
 };
