@@ -18,8 +18,12 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     throw json({ message: "Invalid tag type" }, { status: 400 });
 
   const path = await db.path.findFirst({
-    where: { slug },
-    include: { class: true },
+    where: { OR: [{ slug }, { id: Number(slug) }] },
+    include: {
+      class: {
+        select: { name: true, id: true },
+      },
+    },
   });
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
