@@ -177,7 +177,17 @@ export const db = prisma.$extends({
           (((inSeason ? "LEADERBOARD" : "PYRITE") +
             (special ? "_SPECIAL" : "")) as TagType);
         const board = await db.ascension.findMany({
-          include: {
+          select: {
+            ascensionNumber: true,
+            date: true,
+            dropped: true,
+            abandoned: true,
+            level: true,
+            sign: true,
+            turns: true,
+            days: true,
+            lifestyle: true,
+            extra: true,
             player: true,
             class: {
               select: { name: true, id: true },

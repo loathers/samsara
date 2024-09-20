@@ -61,7 +61,7 @@ export function Leaderboard({
         </Thead>
         <Tbody>
           {ascensions.map((a, i) => (
-            <Tr key={`${a.playerId}/${a.ascensionNumber}`} bg={awardBg(i + 1)}>
+            <Tr key={`${a.player.id}/${a.ascensionNumber}`} bg={awardBg(i + 1)}>
               <Td>{i + 1}</Td>
               <Td>
                 <PlayerLink player={a.player} />
