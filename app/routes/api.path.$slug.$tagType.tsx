@@ -1,4 +1,4 @@
-import { TagType } from "@prisma/client";
+import { Lifestyle, TagType } from "@prisma/client";
 import { json, LoaderFunctionArgs, redirect } from "@remix-run/node";
 
 import { db } from "~/db.server";
@@ -35,7 +35,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
   const leaderboards = Object.fromEntries(
     await Promise.all(
-      ["HARDCORE" as const, "SOFTCORE" as const].map(
+      Object.values(Lifestyle).map(
         async (lifestyle) =>
           [
             lifestyle,
