@@ -10,16 +10,19 @@ type Props = {
 const LIFESTYLE_FORMATS = {
   HARDCORE: {
     full: "Hardcore",
+    "full-symbols": "Hardcore",
     acronyms: "HC",
     symbols: "hardcorex",
   },
   SOFTCORE: {
     full: "Softcore",
+    "full-symbols": "Softcore",
     acronyms: "SC",
     symbols: "blank",
   },
   CASUAL: {
     full: "Casual",
+    "full-symbols": "Casual",
     acronyms: "C",
     symbols: "beanbag",
   },
