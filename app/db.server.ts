@@ -179,7 +179,9 @@ export const db = prisma.$extends({
         const board = await db.ascension.findMany({
           include: {
             player: true,
-            class: true,
+            class: {
+              select: { name: true, id: true },
+            },
             tags: {
               where: {
                 type: tagType,

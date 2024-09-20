@@ -24,11 +24,6 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   const id = Number.isNaN(Number(slug)) ? undefined : Number(slug);
   const path = await db.path.findFirst({
     where: { OR: [{ slug }, { id }] },
-    include: {
-      class: {
-        select: { name: true, id: true },
-      },
-    },
   });
 
   if (!path)
