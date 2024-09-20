@@ -1,6 +1,6 @@
 import { Stack } from "@chakra-ui/react";
 import { json, LoaderFunctionArgs } from "@remix-run/node";
-import { MetaArgs, useLoaderData } from "@remix-run/react";
+import { MetaArgs, redirect, useLoaderData } from "@remix-run/react";
 
 import { Leaderboard } from "~/components/Leaderboard";
 import { formatPathName } from "~/components/Path";
@@ -12,14 +12,24 @@ import { getPathData } from "~/path.server";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
-  const { slug } = params;
+  let { slug } = params;
+
+  slug = slug?.toLowerCase();
+
+  const id = Number.isNaN(Number(slug)) ? undefined : Number(slug);
 
   const path = await db.path.findFirst({
-    where: { slug },
+    where: { OR: [{ slug }, { id }] },
     include: { class: true },
   });
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
+
+  // Redirect to the slug form of the path
+  if (slug !== path.slug) {
+    throw redirect(`/path/${path.slug}`);
+  }
+
   return json(await getPathData(path));
 };
 

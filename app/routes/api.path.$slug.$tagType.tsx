@@ -1,5 +1,5 @@
 import { TagType } from "@prisma/client";
-import { json, LoaderFunctionArgs } from "@remix-run/node";
+import { json, LoaderFunctionArgs, redirect } from "@remix-run/node";
 
 import { db } from "~/db.server";
 
@@ -17,8 +17,9 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   if (!isTagType(tagType))
     throw json({ message: "Invalid tag type" }, { status: 400 });
 
+  const id = Number.isNaN(Number(slug)) ? undefined : Number(slug);
   const path = await db.path.findFirst({
-    where: { OR: [{ slug }, { id: Number(slug) }] },
+    where: { OR: [{ slug }, { id }] },
     include: {
       class: {
         select: { name: true, id: true },
@@ -27,6 +28,10 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   });
 
   if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
+
+  if (slug !== String(path.id)) {
+    throw redirect(`/api/path/${path.id}/${tagType.toLowerCase()}`);
+  }
 
   const leaderboards = Object.fromEntries(
     await Promise.all(
