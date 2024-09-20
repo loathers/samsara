@@ -180,7 +180,7 @@ export const db = prisma.$extends({
           include: {
             player: true,
             class: {
-              select: { name: true, id: true, image: true },
+              select: { name: true, id: true },
             },
             tags: {
               where: {

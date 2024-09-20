@@ -1,11 +1,17 @@
-import { ShortenStyle } from "~/utils";
 import { Text } from "@chakra-ui/react";
 import { ClassIcon } from "./ClassIcon";
 
-type Props = {
+type SymbolsProps = {
   class: { name: string; image: string | null };
-  shorten?: ShortenStyle;
+  shorten: "full-symbols" | "symbols";
 };
+
+type TextProps = {
+  class: { name: string };
+  shorten: "acronyms" | undefined;
+};
+
+type Props = SymbolsProps | TextProps;
 
 export function formatClassName(clazz?: { name: string }) {
   if (!clazz) return "Unknown";
@@ -24,18 +30,18 @@ function getClassAcronym(name: string) {
     .split(/[ -]/)
     .map((word) => (parseInt(word) ? word : word[0]))
     .join("");
-  return acronym.length === 1 ? name.slice(0, 2).toUpperCase() : acronym;
+  return acronym.length === 1 ? name.slice(0, 2) : acronym;
 }
 
 export function Class({ class: clazz, shorten }: Props) {
+  if (shorten === "symbols") {
+    return <ClassIcon class={clazz} />;
+  }
+
   const name = formatClassName(clazz);
 
   if (shorten === "acronyms") {
     return <Text title={name}>{getClassAcronym(name)}</Text>;
-  }
-
-  if (shorten === "symbols") {
-    return <ClassIcon class={clazz} />;
   }
 
   return name;

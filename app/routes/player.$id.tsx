@@ -32,7 +32,11 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     where: { id: parseInt(id) },
     include: {
       ascensions: {
-        include: { path: true, class: true, tags: true },
+        include: {
+          path: { select: { slug: true, name: true, image: true } },
+          class: { select: { name: true, image: true } },
+          tags: { select: { type: true, value: true } },
+        },
         orderBy: { ascensionNumber: "asc" },
       },
     },
@@ -59,9 +63,9 @@ export const meta = ({ data }: MetaArgs<typeof loader>) => {
 
 export type RowData = Omit<Ascension, "date"> & {
   date: string;
-  path: Omit<Path, "start" | "end">;
-  class: Class;
-  tags: Tag[];
+  path: Pick<Path, "slug" | "name" | "image">;
+  class: Pick<Class, "name" | "image">;
+  tags: Pick<Tag, "type" | "value">[];
 };
 
 export default function Player() {

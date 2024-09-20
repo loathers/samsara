@@ -1,5 +1,7 @@
-import { Tag, TagType } from "@prisma/client";
+import { Tag as FullTag, TagType } from "@prisma/client";
 import { KoLImage } from "./KoLImage";
+
+type Tag = Pick<FullTag, "type" | "value">;
 
 type Props = {
   tag: Tag;
