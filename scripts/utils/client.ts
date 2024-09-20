@@ -262,21 +262,21 @@ async function fetchExtraPathData() {
   const pathMap = new Map(knownPaths.map((p) => [p.name, p]));
 
   // This path gets a shorter name in ascension logs
+  pathMap.set("None", pathMap.get("none")!);
   pathMap.set("Class Act II", pathMap.get("Class Act II: A Class For Pigs")!);
 
-  await db.$transaction(async (tx) => {
-    const paths = await tx.path.findMany({ where: { image: null } });
-
-    for (const path of paths) {
-      const knownPath = pathMap.get(path.name);
-      if (!knownPath) continue;
-
-      await tx.path.update({
+  const paths = await db.path.findMany({ where: { image: null } });
+  const updates = paths
+    .filter((path) => pathMap.has(path.name))
+    .map((path) => {
+      const knownPath = pathMap.get(path.name)!;
+      return db.path.update({
         where: { name: path.name },
         data: { image: knownPath.image, id: knownPath.id },
       });
-    }
-  });
+    });
+
+  await db.$transaction(updates);
 }
 
 export async function updatePaths() {
