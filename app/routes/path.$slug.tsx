@@ -7,7 +7,8 @@ import { formatPathName } from "~/components/Path";
 import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { Dedication } from "~/components/Dedication";
-import { db, getPathData } from "~/db.server";
+import { db } from "~/db.server";
+import { getPathData } from "~/path.server";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {

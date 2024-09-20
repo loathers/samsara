@@ -5,7 +5,8 @@ import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
-import { db, getPathData } from "~/db.server";
+import { db } from "~/db.server";
+import { getPathData } from "~/path.server";
 import { getExtra } from "~/utils";
 
 export const loader = async () => {

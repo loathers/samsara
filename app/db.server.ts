@@ -1,5 +1,4 @@
 import {
-  Class,
   Lifestyle,
   Path,
   Player,
@@ -7,7 +6,6 @@ import {
   PrismaClient,
   TagType,
 } from "@prisma/client";
-import { calculateRange } from "./utils";
 
 export const NS13 = "2007-06-25T00:00:00Z";
 
@@ -165,36 +163,45 @@ export const db = prisma.$extends({
         lifestyle,
         inSeason,
         special,
+        type,
       }: {
         path: { name: string; start: Date | null; end: Date | null };
         lifestyle: Lifestyle;
         inSeason?: boolean;
         special?: boolean;
+        type?: TagType;
       }) {
         if (inSeason && (!path.start || !path.end)) return [];
-        const type = ((inSeason ? "LEADERBOARD" : "PYRITE") +
-          (special ? "_SPECIAL" : "")) as TagType;
+        const tagType =
+          type ||
+          (((inSeason ? "LEADERBOARD" : "PYRITE") +
+            (special ? "_SPECIAL" : "")) as TagType);
         const board = await db.ascension.findMany({
           include: {
             player: true,
             class: true,
-            tags: true,
+            tags: {
+              where: {
+                type: tagType,
+              },
+              select: {
+                value: true,
+              },
+            },
           },
           where: {
             path: { name: path.name },
             lifestyle,
             tags: {
               some: {
-                type,
+                type: tagType,
               },
             },
           },
         });
 
         return board.sort(
-          (a, b) =>
-            (a.tags.find((t) => t.type === type)?.value ?? 35) -
-            (b.tags.find((t) => t.type === type)?.value ?? 35),
+          (a, b) => (a.tags[0]?.value ?? 35) - (b.tags[0]?.value ?? 35),
         );
       },
     },
@@ -232,87 +239,6 @@ export type DedicationEntry = Awaited<
 export type LeaderboardEntry = Awaited<
   ReturnType<typeof db.ascension.getLeaderboard>
 >[number];
-
-export async function getPathData(
-  path: Path & { class: Class[] },
-  special?: boolean,
-) {
-  const standard = path.name === "Standard";
-
-  const current =
-    (path.start &&
-      path.end &&
-      new Date() > path.start &&
-      new Date() < path.end) ??
-    true;
-  const hasPyrites = path.seasonal && (!current || standard);
-
-  const bestSC = db.ascension.getLeaderboard({
-    path,
-    lifestyle: "SOFTCORE",
-  });
-  const bestSCInSeason = db.ascension.getLeaderboard({
-    path,
-    lifestyle: "SOFTCORE",
-    inSeason: true,
-  });
-  const bestSCSpecial = db.ascension.getLeaderboard({
-    path,
-    lifestyle: "SOFTCORE",
-    special: true,
-  });
-  const bestSCSpecialInSeason = db.ascension.getLeaderboard({
-    path,
-    lifestyle: "SOFTCORE",
-    special: true,
-    inSeason: true,
-  });
-
-  const bestHC = db.ascension.getLeaderboard({
-    path,
-    lifestyle: "HARDCORE",
-  });
-  const bestHCInSeason = db.ascension.getLeaderboard({
-    path,
-    lifestyle: "HARDCORE",
-    inSeason: true,
-  });
-  const bestHCSpecial = db.ascension.getLeaderboard({
-    path,
-    lifestyle: "HARDCORE",
-    special: true,
-  });
-  const bestHCSpecialInSeason = db.ascension.getLeaderboard({
-    path,
-    lifestyle: "HARDCORE",
-    special: true,
-    inSeason: true,
-  });
-
-  return {
-    current,
-    frequency: await db.ascension.getFrequency({
-      path,
-      range: calculateRange(path.start ?? new Date(0), new Date()),
-    }),
-    hcDedication: await db.player.getDedication(path, "HARDCORE"),
-    hcLeaderboard: await (hasPyrites ? bestHCInSeason : bestHC),
-    hcPyrite: hasPyrites ? await bestHC : [],
-    hcSpecialLeaderboard: special
-      ? await (hasPyrites ? bestHCSpecialInSeason : bestHCSpecial)
-      : [],
-    hcSpecialPyrite: special && hasPyrites ? await bestHCSpecial : [],
-    path,
-    recordBreaking: await db.ascension.getRecordBreaking(path),
-    scDedication: await db.player.getDedication(path, "SOFTCORE"),
-    scLeaderboard: await (hasPyrites ? bestSCInSeason : bestSC),
-    scPyrite: hasPyrites ? await bestSC : [],
-    scSpecialLeaderboard: special
-      ? await (hasPyrites ? bestSCSpecialInSeason : bestSCSpecial)
-      : [],
-    scSpecialPyrite: special && hasPyrites ? await bestSCSpecial : [],
-  };
-}
 
 export async function getKittycoreLeaderboard() {
   return db.$queryRaw<LeaderboardEntry[]>`

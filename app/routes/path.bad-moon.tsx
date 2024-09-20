@@ -3,7 +3,8 @@ import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 
 import { Leaderboard } from "~/components/Leaderboard";
-import { db, getKittycoreLeaderboard, getPathData } from "~/db.server";
+import { db, getKittycoreLeaderboard } from "~/db.server";
+import { getPathData } from "~/path.server";
 import { PathHeader } from "~/components/PathHeader";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { Dedication } from "~/components/Dedication";
