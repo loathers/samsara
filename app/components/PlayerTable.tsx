@@ -100,7 +100,7 @@ const columns = [
       <HStack>
         <Text>{formatTurncount(info.getValue(), info.row.original.turns)}</Text>
         {info.row.original.tags.map((t) => (
-          <TagMedal key={t.type} tag={t} />
+          <TagMedal key={t.type} tag={t} path={info.row.original.path} />
         ))}
       </HStack>
     ),
