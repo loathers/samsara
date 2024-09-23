@@ -31,7 +31,7 @@ import { PathLink } from "./PathLink";
 import { formatLifestyle } from "./Lifestyle";
 import { formatTurncount } from "~/utils";
 import { TagMedal } from "./TagMedal";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 declare module "@tanstack/react-table" {
   // @ts-expect-error This should work but TS is wrong here
@@ -114,19 +114,36 @@ const columns = [
 
 type Props = {
   ascensions: RowData[];
+  jumpTo?: number;
 };
 
-export function PlayerTable({ ascensions }: Props) {
+export function PlayerTable({ ascensions, jumpTo }: Props) {
+  const pageSize = 50;
+  const pageIndex = jumpTo ? Math.floor((jumpTo - 1) / pageSize) : 0;
+
   const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 50,
+    pageIndex,
+    pageSize,
   });
+
+  const hasScrolledToAscension = useRef(false);
+  useEffect(() => {
+    if (
+      hasScrolledToAscension.current ||
+      !jumpTo ||
+      pagination.pageIndex !== pageIndex
+    )
+      return;
+    document.getElementById(`${jumpTo}`)?.scrollIntoView();
+    hasScrolledToAscension.current = true;
+  }, [pageIndex, pagination, jumpTo]);
 
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const table = useReactTable({
     columns,
     data: ascensions,
+    getRowId: (row) => `${row.ascensionNumber}`,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -158,33 +175,18 @@ export function PlayerTable({ ascensions }: Props) {
           </Thead>
           <Tbody>
             {table.getRowModel().rows.map((row) => {
-              if (row.original.abandoned) {
-                const cells = row.getVisibleCells();
-                return (
-                  <Tr key={row.id}>
-                    <Td>
-                      {flexRender(
-                        cells[0].column.columnDef.cell,
-                        cells[0].getContext(),
-                      )}
-                    </Td>
-                    <Td>
-                      {flexRender(
-                        cells[1].column.columnDef.cell,
-                        cells[1].getContext(),
-                      )}
-                    </Td>
-                    <Td colSpan={cells.length - 2} fontSize="sm" color="grey">
-                      Run abandoned
-                    </Td>
-                  </Tr>
-                );
-              }
-
+              const abandoned = row.original.abandoned;
+              const cells = row.getVisibleCells();
+              const selected = row.original.ascensionNumber === jumpTo;
               return (
-                <Tr key={row.id}>
-                  {row
-                    .getVisibleCells()
+                <Tr
+                  id={row.id}
+                  key={row.id}
+                  bg={selected ? "yellow.50" : undefined}
+                  scrollMarginTop={20}
+                >
+                  {cells
+                    .slice(0, abandoned ? 2 : cells.length)
                     .map(
                       (cell) =>
                         !cell.column.columnDef.meta?.hide && (
@@ -196,6 +198,11 @@ export function PlayerTable({ ascensions }: Props) {
                           </Td>
                         ),
                     )}
+                  {abandoned && (
+                    <Td colSpan={cells.length - 2} fontSize="sm" color="grey">
+                      Run abandoned
+                    </Td>
+                  )}
                 </Tr>
               );
             })}

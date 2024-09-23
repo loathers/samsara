@@ -5,6 +5,7 @@ import {
   redirect,
   useLoaderData,
   Link as RemixLink,
+  useLocation,
 } from "@remix-run/react";
 
 import { db } from "../db.server.js";
@@ -69,7 +70,10 @@ export type RowData = Omit<Ascension, "date"> & {
 };
 
 export default function Player() {
+  const { hash } = useLocation();
   const { player, frequency } = useLoaderData<typeof loader>()!;
+
+  const jumpTo = hash && /#\d+/.test(hash) ? Number(hash.slice(1)) : undefined;
 
   return (
     <Stack spacing={10}>
@@ -92,7 +96,7 @@ export default function Player() {
       >
         <FrequencyGraph data={frequency} untilNow />
       </Box>
-      <PlayerTable ascensions={player.ascensions} />
+      <PlayerTable ascensions={player.ascensions} jumpTo={jumpTo} />
     </Stack>
   );
 }
