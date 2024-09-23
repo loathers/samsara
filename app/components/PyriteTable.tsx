@@ -17,7 +17,6 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { FormattedDate } from "./FormattedDate";
 import { ResponsiveContent } from "./ResponsiveContent";
 import { RowData } from "~/routes/pyrites";
 import { PathLink } from "./PathLink";
@@ -25,6 +24,7 @@ import { formatTurncount } from "~/utils";
 import { useState } from "react";
 import { PlayerLink } from "./PlayerLink";
 import { ArrowDownIcon, ArrowUpIcon } from "@chakra-ui/icons";
+import { AscensionDate } from "./AscensionDate";
 
 declare module "@tanstack/react-table" {
   // @ts-expect-error This should work but TS is wrong here
@@ -72,7 +72,7 @@ const groupColumnsFactory = (type: "softcore" | "hardcore") => [
     cell: (info) =>
       info.row.original[type] ? (
         <HStack>
-          <FormattedDate date={info.getValue()} />
+          <AscensionDate ascension={info.row.original[type]} />
           {info.row.original.path.end &&
             new Date(info.row.original[type].date) <=
               new Date(info.row.original.path.end) && (

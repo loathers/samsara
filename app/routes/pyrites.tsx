@@ -21,7 +21,7 @@ import {
 } from "@chakra-ui/react";
 import { type Ascension, type Player, Lifestyle, Path } from "@prisma/client";
 import { useLoaderData, Link as RemixLink, json } from "@remix-run/react";
-import { FormattedDate } from "~/components/FormattedDate";
+import { AscensionDate } from "~/components/AscensionDate";
 import { KoLImage } from "~/components/KoLImage";
 import { PlayerLink } from "~/components/PlayerLink";
 import { PyriteTable } from "~/components/PyriteTable";
@@ -205,7 +205,7 @@ export default function Pyrites() {
             {tortoisecore.map((asc) => (
               <ListItem key={`${asc.playerId}${asc.ascensionNumber}`}>
                 {asc.lifestyle} {asc.days}/{asc.turns} (
-                <FormattedDate date={asc.date} />) <b>{asc.player.name}</b>
+                <AscensionDate ascension={asc} />) <b>{asc.player.name}</b>
               </ListItem>
             ))}
           </List>

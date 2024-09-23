@@ -8,12 +8,12 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { FormattedDate } from "./FormattedDate";
 import { LeaderboardEntry } from "~/db.server";
 import { Class } from "./Class";
 import { awardBg, formatTurncount } from "~/utils";
 import { ResponsiveContent } from "./ResponsiveContent";
 import { PlayerLink } from "./PlayerLink";
+import { AscensionDate } from "./AscensionDate";
 
 type JsonifiedLeaderboardEntry = Omit<LeaderboardEntry, "date"> & {
   date: string;
@@ -67,7 +67,7 @@ export function Leaderboard({
                 <PlayerLink player={a.player} />
               </Td>
               <Td>
-                <FormattedDate date={a.date} />
+                <AscensionDate ascension={a} />
               </Td>
               {alternativeScore && <Td>{alternativeScore[1](a)}</Td>}
               <Td>{formatTurncount(a.days, a.turns)}</Td>
