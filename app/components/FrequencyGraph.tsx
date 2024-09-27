@@ -1,33 +1,60 @@
+import { useToken } from "@chakra-ui/system";
 import { useMemo } from "react";
 import {
+  LabelProps,
   Line,
   LineChart,
   ReferenceLine,
   ResponsiveContainer,
+  Text,
   XAxis,
   YAxis,
 } from "recharts";
+import { CartesianViewBox } from "recharts/types/util/types";
 import { formatTick, calculateRange, compactNumberFormatter } from "~/utils";
 
 type Datum<D = Date> = { date: D; count: number };
 type Props = {
   data: Datum<string>[];
   untilNow?: boolean;
-  inSeasonTo?: string | Date | null;
+  lines?: { time: number; label?: string }[];
 };
 
-export function FrequencyGraph({ data, inSeasonTo, untilNow }: Props) {
+function LineLabel({
+  value,
+  viewBox: { x, y } = {},
+  xOffset = 2,
+  yOffset = 0,
+  color,
+}: Omit<LabelProps, "viewBox"> & {
+  viewBox?: CartesianViewBox;
+  xOffset?: number;
+  yOffset?: number;
+}) {
+  return (
+    <Text
+      x={xOffset + (x ?? 0)}
+      y={yOffset + (y ?? 0)}
+      offset={yOffset}
+      fill={color}
+      fontSize={8}
+      angle={90}
+    >
+      {value}
+    </Text>
+  );
+}
+
+export function FrequencyGraph({ data, lines = [], untilNow }: Props) {
   const dateData = useMemo(
     () => data.map((d) => ({ ...d, date: new Date(d.date) })),
     [data],
   );
+  const [referenceLine, referenceText] = useToken("colors", [
+    "gray.300",
+    "gray.500",
+  ]);
   const range = calculateRange(dateData);
-  const seasonTime = useMemo(() => {
-    if (!inSeasonTo) return null;
-    const d = inSeasonTo instanceof Date ? inSeasonTo : new Date(inSeasonTo);
-    return d.getTime();
-  }, [inSeasonTo]);
-
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart
@@ -49,7 +76,14 @@ export function FrequencyGraph({ data, inSeasonTo, untilNow }: Props) {
           width={25}
         />
         <Line type="monotone" dataKey="count" dot={false} />
-        {seasonTime && <ReferenceLine x={seasonTime} stroke="red" />}
+        {lines.map((l) => (
+          <ReferenceLine
+            key={l.time}
+            x={l.time}
+            stroke={referenceLine}
+            label={<LineLabel value={l.label} color={referenceText} />}
+          />
+        ))}
       </LineChart>
     </ResponsiveContainer>
   );

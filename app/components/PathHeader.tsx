@@ -14,6 +14,7 @@ import { Link } from "@remix-run/react";
 import { RecordDatum, RecordGraph } from "./RecordGraph/RecordGraph";
 import { PathIcon } from "./PathIcon";
 import { Path } from "./Path";
+import { useMemo } from "react";
 
 type Datum<D = Date> = { date: D; count: number };
 type Props = {
@@ -30,6 +31,11 @@ type Props = {
 };
 
 export function PathHeader({ path, frequency, recordBreaking, extra }: Props) {
+  const lines = useMemo(() => {
+    if (!path.seasonal || !path.end) return [];
+    return [{ time: new Date(path.end).getTime(), label: "Season end" }];
+  }, [path]);
+
   return (
     <Stack alignItems="center">
       <HStack>
@@ -57,10 +63,7 @@ export function PathHeader({ path, frequency, recordBreaking, extra }: Props) {
           width="100%"
           alignSelf="center"
         >
-          <FrequencyGraph
-            data={frequency}
-            inSeasonTo={path.seasonal ? path.end : null}
-          />
+          <FrequencyGraph data={frequency} lines={lines} />
           <Text fontSize="2xs">Ascension frequency over time</Text>
         </Box>
         <Box
