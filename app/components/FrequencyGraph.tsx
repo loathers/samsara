@@ -1,3 +1,4 @@
+import { useBreakpointValue } from "@chakra-ui/react";
 import { useToken } from "@chakra-ui/system";
 import { useMemo } from "react";
 import {
@@ -54,6 +55,11 @@ export function FrequencyGraph({ data, lines = [], untilNow }: Props) {
     "gray.300",
     "gray.500",
   ]);
+  const maxReferenceLines = useBreakpointValue({
+    base: 0,
+    sm: 20,
+    md: Infinity,
+  })!;
   const range = calculateRange(dateData);
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -76,14 +82,15 @@ export function FrequencyGraph({ data, lines = [], untilNow }: Props) {
           width={25}
         />
         <Line type="monotone" dataKey="count" dot={false} />
-        {lines.map((l) => (
-          <ReferenceLine
-            key={l.time}
-            x={l.time}
-            stroke={referenceLine}
-            label={<LineLabel value={l.label} color={referenceText} />}
-          />
-        ))}
+        {lines.length < maxReferenceLines &&
+          lines.map((l) => (
+            <ReferenceLine
+              key={l.time}
+              x={l.time}
+              stroke={referenceLine}
+              label={<LineLabel value={l.label} color={referenceText} />}
+            />
+          ))}
       </LineChart>
     </ResponsiveContainer>
   );
