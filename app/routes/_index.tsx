@@ -206,7 +206,7 @@ export default function Index() {
           <FrequencyGraph
             data={frequency}
             lines={paths
-              .filter((p) => p.start)
+              .filter((p) => p.start && p.name !== "Standard")
               .map((p) => ({
                 time: new Date(p.start!).getTime(),
                 label: getPathAcronym(p.name),
