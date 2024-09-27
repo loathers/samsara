@@ -412,25 +412,28 @@ async function tagPyrites(sendWebhook: boolean) {
         run.player.id !== previous.player.id
       ) {
         // Record breaker!
-        const result = await fetch(
-          `https://oaf.loathers.net/webhooks/samsara?token=${process.env.OAF_TOKEN}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
+        try {
+          const result = await fetch(
+            `https://oaf.loathers.net/webhooks/samsara?token=${process.env.OAF_TOKEN}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(run),
             },
-            body: JSON.stringify(run),
-          },
-        );
-
-        if (!result.ok) {
-          console.warn(
-            "OAF webhook error",
-            result.status,
-            ":",
-            result.statusText,
-            await result.text(),
           );
+          if (!result.ok) {
+            console.warn(
+              "OAF webhook error",
+              result.status,
+              ":",
+              result.statusText,
+              await result.text(),
+            );
+          }
+        } catch (error) {
+          console.warn("OAF webhook error", error);
         }
       }
     }
