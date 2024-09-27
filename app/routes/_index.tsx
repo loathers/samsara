@@ -21,7 +21,7 @@ import { PopularityGraph } from "~/components/PopularityGraph";
 import { PathLink } from "~/components/PathLink";
 import { CoolStat } from "~/components/CoolStat";
 import { FormEventHandler, useCallback } from "react";
-import { formatPathName } from "~/components/Path";
+import { formatPathName, getPathAcronym } from "~/components/Path";
 import { HeadersFunction } from "@remix-run/node";
 
 export const meta = () => {
@@ -203,7 +203,15 @@ export default function Index() {
           <Heading size="md">All time ascension frequency</Heading>
         </CardHeader>
         <CardBody>
-          <FrequencyGraph data={frequency} />
+          <FrequencyGraph
+            data={frequency}
+            lines={paths
+              .filter((p) => p.start)
+              .map((p) => ({
+                time: new Date(p.start!).getTime(),
+                label: getPathAcronym(p.name),
+              }))}
+          />
         </CardBody>
       </Card>
       <Stack direction={["column", "row"]} justifyContent="space-around">
