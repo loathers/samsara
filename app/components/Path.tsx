@@ -13,7 +13,7 @@ export function formatPathName(path?: { name: string }) {
   return path.name;
 }
 
-function getPathAcronym(name: string) {
+export function getPathAcronym(name: string) {
   switch (name) {
     case "Actually Ed the Undying":
       return "Ed";
@@ -21,13 +21,25 @@ function getPathAcronym(name: string) {
       return "Smol";
     case "Standard":
       return "Std";
+    case "Path of the Plumber":
+      return "PP";
+    case "Class Act II":
+      return "CA2";
+    case "Wildfire":
+      return "WF";
   }
 
-  const acronym = name
-    .replace("-", " ")
-    .split(" ")
+  const parts = name.replace("-", " ").split(" ");
+
+  if (parts.length === 1) {
+    const caps = [...name].filter((c) => c === c.toUpperCase());
+    if (caps.length > 1) return caps.join("");
+  }
+
+  const acronym = parts
     .map((word) => (parseInt(word) ? word : word[0]))
     .join("");
+
   return acronym.length === 1 ? name.slice(0, 3) : acronym;
 }
 
