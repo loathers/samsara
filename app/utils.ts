@@ -60,10 +60,18 @@ export const formatTurncount = (days: number, turns: number) => {
   return `${numberFormatter.format(days)} / ${numberFormatter.format(turns)}`;
 };
 
+export const compareDaycount = (
+  a?: { days: number; turns: number },
+  b?: { days: number; turns: number },
+) => {
+  const dayComp = (a?.days ?? 0) - (b?.days ?? 0);
+  return dayComp !== 0 ? dayComp : (a?.turns ?? 0) - (b?.turns ?? 0);
+};
+
 export const getExtra = (key: string) => (a: { extra: JsonValue }) => {
   if (typeof a.extra !== "object" || a.extra === null || Array.isArray(a.extra))
     return 0;
-  return numberFormatter.format(Number(a.extra[key] ?? 0));
+  return Number(a.extra[key] ?? 0);
 };
 
 export function awardBg(rank: number, [gold, silver, bronze] = [1, 11, 23]) {

@@ -10,7 +10,7 @@ import {
 } from "@chakra-ui/react";
 import { LeaderboardEntry } from "~/db.server";
 import { Class } from "./Class";
-import { awardBg, formatTurncount } from "~/utils";
+import { awardBg, formatTurncount, numberFormatter } from "~/utils";
 import { ResponsiveContent } from "./ResponsiveContent";
 import { PlayerLink } from "./PlayerLink";
 import { AscensionDate } from "./AscensionDate";
@@ -25,7 +25,7 @@ type Props = {
   showClass?: boolean;
   alternativeScore?: [
     title: string,
-    renderer: (ascension: JsonifiedLeaderboardEntry) => React.ReactNode,
+    renderer: (ascension: JsonifiedLeaderboardEntry) => number,
   ];
 };
 
@@ -69,7 +69,9 @@ export function Leaderboard({
               <Td>
                 <AscensionDate ascension={a} />
               </Td>
-              {alternativeScore && <Td>{alternativeScore[1](a)}</Td>}
+              {alternativeScore && (
+                <Td>{numberFormatter.format(alternativeScore[1](a))}</Td>
+              )}
               <Td>{formatTurncount(a.days, a.turns)}</Td>
               <Td>{a.level}</Td>
               {showClass && (

@@ -20,11 +20,12 @@ import {
 import { ResponsiveContent } from "./ResponsiveContent";
 import { RowData } from "~/routes/pyrites";
 import { PathLink } from "./PathLink";
-import { formatTurncount } from "~/utils";
+import { compareDaycount } from "~/utils";
 import { useState } from "react";
 import { PlayerLink } from "./PlayerLink";
 import { ArrowDownIcon, ArrowUpIcon } from "@chakra-ui/icons";
 import { AscensionDate } from "./AscensionDate";
+import { SpeedCell } from "./PyriteTableSpeedCell";
 
 declare module "@tanstack/react-table" {
   // @ts-expect-error This should work but TS is wrong here
@@ -34,37 +35,10 @@ declare module "@tanstack/react-table" {
   }
 }
 
-const compareDaycount = (
-  a: RowData["softcore" | "hardcore"],
-  b: RowData["softcore" | "hardcore"],
-) => {
-  const dayComp = (a?.days ?? 0) - (b?.days ?? 0);
-  return dayComp !== 0 ? dayComp : (a?.turns ?? 0) - (b?.turns ?? 0);
-};
-
 const groupColumnsFactory = (type: "softcore" | "hardcore") => [
   columnHelper.accessor(`${type}.days`, {
     header: () => <ResponsiveContent narrow="D / T" wide="Days / Turns" />,
-    cell: (info) =>
-      info.row.original[type] ? (
-        <HStack>
-          <Text>
-            {formatTurncount(info.getValue(), info.row.original[type].turns)}
-          </Text>
-          {type === "softcore" &&
-            compareDaycount(
-              info.row.original[type],
-              info.row.original.hardcore,
-            ) >= 0 && (
-              <Text
-                title="Slower than or equal to the hardcore equivalent"
-                cursor="help"
-              >
-                🧊
-              </Text>
-            )}
-        </HStack>
-      ) : null,
+    cell: (info) => <SpeedCell type={type} info={info} />,
     sortingFn: (a, b) => compareDaycount(a.original[type], b.original[type]),
   }),
   columnHelper.accessor(`${type}.date`, {

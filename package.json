@@ -7,7 +7,7 @@
     "dev": "remix vite:dev",
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "remix-serve ./build/server/index.js",
-    "typecheck": "tsc",
+    "typecheck": "tsc --noEmit",
     "test": "vitest",
     "format": "prettier --write .; prisma format",
     "rescan": "node --import tsx --env-file .env scripts/rescan.ts",

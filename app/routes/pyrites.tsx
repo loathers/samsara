@@ -74,36 +74,42 @@ export const loader = async () => {
         },
       },
     })
-  )
-    .map((t) => t.ascension)
-    .filter((a) => a.path.id !== 999 || a.lifestyle !== "SOFTCORE");
+  ).filter(
+    (a) => a.ascension.path.id !== 999 || a.ascension.lifestyle !== "SOFTCORE",
+  );
 
   type PyriteAscension = (typeof separatePyrites)[number];
   type PathPyrites = {
-    path: PyriteAscension["path"];
-    hardcore: PyriteAscension;
-    softcore?: PyriteAscension;
+    path: PyriteAscension["ascension"]["path"];
+    hardcore: PyriteAscension["ascension"];
+    softcore?: PyriteAscension["ascension"];
   };
 
   const pyrites = Object.values(
     separatePyrites.reduce<Record<string, PathPyrites>>(
-      (acc, ascension) => ({
+      (acc, tag) => ({
         ...acc,
-        [ascension.path.name]: {
-          ...acc[ascension.path.name],
-          path: ascension.path,
-          [ascension.lifestyle.toLowerCase()]: ascension,
+        [tag.ascension.path.name]: {
+          ...acc[tag.ascension.path.name],
+          path: tag.ascension.path,
+          // If we have no ascension for this path/lifestyle, then use this one. Or overwrite if we have a PYRITE_SPECIAL as those are the true pyrites
+          ...(!acc[tag.ascension.lifestyle.toLowerCase()] ||
+          tag.type === "PYRITE_SPECIAL"
+            ? { [tag.ascension.lifestyle.toLowerCase()]: tag.ascension }
+            : {}),
         },
       }),
       {},
     ),
   );
 
+  // Count up all the pyrite holders for the ultimate leaderboard of fools
   const leaderboard = [
     ...separatePyrites
       .reduce<Map<Player, number>>((acc, p) => {
         const key =
-          [...acc.keys()].find((k) => k.id === p.player.id) ?? p.player;
+          [...acc.keys()].find((k) => k.id === p.ascension.player.id) ??
+          p.ascension.player;
         const count = acc.get(key) ?? 0;
         acc.set(key, count + 1);
         return acc;
