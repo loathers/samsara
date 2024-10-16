@@ -8,6 +8,11 @@ import {
 } from "@prisma/client";
 
 export const NS13 = "2007-06-25T00:00:00Z";
+export const STANDARD = 2015;
+export const pastYearsOfStandard = () =>
+  [...Array(new Date().getFullYear() - STANDARD).keys()].map(
+    (y) => y + STANDARD,
+  );
 
 declare global {
   // eslint-disable-next-line no-var
@@ -164,12 +169,14 @@ export const db = prisma.$extends({
         inSeason,
         special,
         type,
+        year,
       }: {
         path: { name: string; start: Date | null; end: Date | null };
         lifestyle: Lifestyle;
         inSeason?: boolean;
         special?: boolean;
         type?: TagType;
+        year?: number;
       }) {
         if (inSeason && (!path.start || !path.end)) return [];
         const tagType =
@@ -195,6 +202,7 @@ export const db = prisma.$extends({
             tags: {
               where: {
                 type: tagType,
+                year,
               },
               select: {
                 value: true,

@@ -84,11 +84,13 @@ enum TagType {
   PYRITE
   LEADERBOARD_SPECIAL
   PYRITE_SPECIAL
+  STANDARD
 }
 
 model Tag {
   type            TagType
   value           Int?
+  year            Int?
   ascension       Ascension @relation(fields: [ascensionNumber, playerId], references: [ascensionNumber, playerId])
   ascensionNumber Int
   playerId        Int

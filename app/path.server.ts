@@ -1,5 +1,5 @@
-import { Class, Path } from "@prisma/client";
-import { db } from "./db.server";
+import { Class, Lifestyle, Path, TagType } from "@prisma/client";
+import { db, pastYearsOfStandard } from "./db.server";
 import { calculateRange } from "./utils";
 
 export function inSeason(path: Path) {
@@ -95,4 +95,33 @@ export async function getPathData(
       "SOFTCORE",
     )) as SoftcoreLeaderboards),
   };
+}
+
+export async function getPastStandardLeaderboards(
+  path: Path & { class: Class[] },
+) {
+  return Object.fromEntries(
+    await Promise.all(
+      pastYearsOfStandard().map(
+        async (year) =>
+          [
+            year,
+            {
+              softcore: await db.ascension.getLeaderboard({
+                path,
+                lifestyle: Lifestyle.SOFTCORE,
+                type: TagType.STANDARD,
+                year,
+              }),
+              hardcore: await db.ascension.getLeaderboard({
+                path,
+                lifestyle: Lifestyle.HARDCORE,
+                type: TagType.STANDARD,
+                year,
+              }),
+            },
+          ] as const,
+      ),
+    ),
+  );
 }

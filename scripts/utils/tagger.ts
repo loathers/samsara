@@ -1,5 +1,5 @@
 import { Prisma, TagType } from "@prisma/client";
-import { db, NS13 } from "~/db.server";
+import { db, NS13, pastYearsOfStandard } from "~/db.server";
 
 /**
  * These paths have a special score for which a leaderboard should be generated. This score exists as metadata in the "extra" field.
@@ -19,6 +19,7 @@ export async function tagAscensions(sendWebhook: boolean) {
   await tagPersonalBest();
   await tagPyrites(sendWebhook);
   await tagLeaderboard();
+  await tagStandard();
 }
 
 function getRecordBreakingByExtraQuery(pathName: string, extra: string) {
@@ -265,12 +266,14 @@ function getLeaderboardQuery(
     excludePaths,
     extra,
     limit = 35,
+    year,
   }: {
     path?: string;
     excludePaths?: string[];
     inSeason?: boolean;
     extra?: string;
     limit?: number;
+    year?: number;
   } = {},
 ) {
   const order = extra
@@ -294,10 +297,10 @@ function getLeaderboardQuery(
       WHERE
       "dropped" IS FALSE
       AND "abandoned" IS FALSE
-      AND "date" >= ${NS13}::date
       ${inSeason ? Prisma.sql`AND "date" >= "Path"."start" AND "date" <= "Path"."end"` : Prisma.empty}
       ${excludePaths ? Prisma.sql`AND "pathName" NOT IN (${Prisma.join(excludePaths)})` : Prisma.empty}
-      ${path ? Prisma.sql`AND "pathName" = ${path}` : Prisma.empty}),
+      ${path ? Prisma.sql`AND "pathName" = ${path}` : Prisma.empty}
+      ${year ? Prisma.sql`AND DATE_PART('year', "date") = ${year}` : Prisma.sql`AND "date" >= ${NS13}::date`}),
     "best" AS (
       SELECT 
         "pathName",
@@ -324,12 +327,13 @@ function getLeaderboardQuery(
         ROW_NUMBER() OVER (PARTITION BY "pathName", "lifestyle" ORDER BY ${order}, "date" ASC) AS "rank"
       FROM
         "best")
-    INSERT INTO "Tag" ("type", "value", "ascensionNumber", "playerId")
+    INSERT INTO "Tag" ("type", "value", "ascensionNumber", "playerId"${year ? Prisma.sql`, "year"` : Prisma.empty})
     SELECT
       ${tagType}::"TagType" as "type",
       "rank" as "value",
       "ascensionNumber",
       "playerId"
+      ${year ? Prisma.sql`, ${year} as "year"` : Prisma.empty}
     FROM
       "leaderboard"
     ${limit ? Prisma.sql`WHERE "rank" <= ${limit}` : Prisma.empty}
@@ -472,4 +476,23 @@ async function tagLeaderboard() {
     },
   );
   console.timeLog("etl", `Finished tagging leaderboards`);
+}
+
+async function tagStandard() {
+  console.timeLog("etl", `Tagging standard leaderboards`);
+
+  const years = pastYearsOfStandard().map((year) =>
+    db.$executeRaw(
+      getLeaderboardQuery(TagType.STANDARD, {
+        path: "Standard",
+        year,
+      }),
+    ),
+  );
+
+  await db.$transaction([
+    db.$executeRaw`DELETE FROM "Tag" WHERE "type" IN (${TagType.STANDARD}::"TagType");`,
+    ...years,
+  ]);
+  console.timeLog("etl", `Finished tagging standard leaderboards`);
 }

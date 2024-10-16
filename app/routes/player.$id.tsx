@@ -36,7 +36,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
         include: {
           path: { select: { slug: true, name: true, image: true } },
           class: { select: { name: true, image: true } },
-          tags: { select: { type: true, value: true } },
+          tags: { select: { type: true, value: true, year: true } },
         },
         orderBy: { ascensionNumber: "asc" },
       },
@@ -66,7 +66,7 @@ export type RowData = Omit<Ascension, "date"> & {
   date: string;
   path: Pick<Path, "slug" | "name" | "image">;
   class: Pick<Class, "name" | "image">;
-  tags: Pick<Tag, "type" | "value">[];
+  tags: Pick<Tag, "type" | "value" | "year">[];
 };
 
 export default function Player() {
