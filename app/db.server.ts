@@ -215,6 +215,7 @@ export const db = prisma.$extends({
             tags: {
               some: {
                 type: tagType,
+                year,
               },
             },
           },
