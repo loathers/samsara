@@ -1,13 +1,6 @@
 import { Prisma, TagType } from "@prisma/client";
 import { db, NS13, pastYearsOfStandard } from "~/db.server";
-
-/**
- * These paths have a special score for which a leaderboard should be generated. This score exists as metadata in the "extra" field.
- */
-const SPECIAL_RANKINGS: [path: string, extra: string][] = [
-  ["Grey Goo", "Goo Score"],
-  ["One Crazy Random Summer", "Fun"],
-];
+import { SPECIAL_RANKINGS } from "~/utils";
 
 /**
  * These paths should never be ranked by Days / Turns, only by their special ranking.
@@ -107,7 +100,7 @@ async function tagRecordBreaking() {
           "dropped" = FALSE
           AND "abandoned" = FALSE
           AND "date" >= ${NS13}::date
-          AND "pathName" NOT IN (${Prisma.join(SPECIAL_RANKINGS.map(([p]) => p))})),
+          AND "pathName" NOT IN (${Prisma.join([...SPECIAL_RANKINGS.keys()])}),
       "preceding_days" AS (
         SELECT
           "ascensionNumber",
@@ -237,7 +230,7 @@ async function tagPersonalBest() {
         WHERE
           "dropped" = FALSE
           AND "abandoned" = FALSE
-          AND "pathName" NOT IN (${Prisma.join(SPECIAL_RANKINGS.map(([p]) => p))}))
+          AND "pathName" NOT IN (${Prisma.join([...SPECIAL_RANKINGS.keys()])}))
       INSERT INTO "Tag" ("type", "value", "ascensionNumber", "playerId")
       SELECT
         ${TagType.PERSONAL_BEST}::"TagType" AS "type",

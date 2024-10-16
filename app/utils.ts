@@ -80,3 +80,11 @@ export function awardBg(rank: number, [gold, silver, bronze] = [1, 11, 23]) {
   if (rank <= bronze) return "transparent";
   return "transparent";
 }
+
+/**
+ * These paths have a special score for which a leaderboard should be generated. This score exists as metadata in the "extra" field.
+ */
+export const SPECIAL_RANKINGS = new Map<string, string>([
+  ["Grey Goo", "Goo Score"],
+  ["One Crazy Random Summer", "Fun"],
+]);
