@@ -100,7 +100,7 @@ async function tagRecordBreaking() {
           "dropped" = FALSE
           AND "abandoned" = FALSE
           AND "date" >= ${NS13}::date
-          AND "pathName" NOT IN (${Prisma.join([...SPECIAL_RANKINGS.keys()])}),
+          AND "pathName" NOT IN (${Prisma.join([...SPECIAL_RANKINGS.keys()])})),
       "preceding_days" AS (
         SELECT
           "ascensionNumber",
