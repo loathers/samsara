@@ -1,4 +1,5 @@
-import { Box, Flex, keyframes, ListItem, OrderedList } from "@chakra-ui/react";
+import { Box, Flex, ListItem, OrderedList } from "@chakra-ui/react";
+import { keyframes } from "@emotion/react";
 
 type Props = {
   value: number;
