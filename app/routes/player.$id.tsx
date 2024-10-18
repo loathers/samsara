@@ -1,5 +1,5 @@
 import { Heading, Stack, Button, ButtonGroup, Box } from "@chakra-ui/react";
-import { json, LoaderFunctionArgs } from "@remix-run/node";
+import { json, LoaderFunctionArgs, data } from "@remix-run/node";
 import {
   MetaArgs,
   redirect,
@@ -10,10 +10,11 @@ import {
 
 import { db } from "../db.server.js";
 
-import { numberFormatter } from "~/utils.js";
+import { compareDaycount, numberFormatter } from "~/utils.js";
 import { FrequencyGraph } from "~/components/FrequencyGraph";
 import { PlayerTable } from "~/components/PlayerTable";
-import { Ascension, Class, Path, Tag } from "@prisma/client";
+import { Ascension, Class, Lifestyle, Path, Tag } from "@prisma/client";
+import { PlayerStats } from "~/components/PlayerStats";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const { id } = params;
@@ -24,10 +25,10 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     });
 
     if (found) throw redirect(`/player/${found.id}`);
-    throw json({ message: "Invalid player name" }, { status: 400 });
+    throw data({ message: "Invalid player name" }, { status: 400 });
   }
 
-  if (!id) throw json({ message: "Invalid player ID" }, { status: 400 });
+  if (!id) throw data({ message: "Invalid player ID" }, { status: 400 });
 
   const player = await db.player.findUnique({
     where: { id: parseInt(id) },
@@ -43,11 +44,41 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     },
   });
 
-  if (!player) throw json({ message: "Player not found" }, { status: 404 });
+  if (!player) throw data({ message: "Player not found" }, { status: 404 });
 
   const frequency = await db.ascension.getFrequency({ player });
 
-  return json({ player, frequency });
+  const stats = player.ascensions.reduce<
+    Record<
+      string,
+      {
+        runs: number;
+        best: [softcore: Ascension | null, hardcore: Ascension | null];
+      }
+    >
+  >((acc, a) => {
+    if (!acc[a.path.name]) acc[a.path.name] = { runs: 0, best: [null, null] };
+    const [softcore, hardcore] = acc[a.path.name].best;
+
+    acc[a.path.name].runs += 1;
+
+    switch (a.lifestyle) {
+      case Lifestyle.SOFTCORE:
+        if (!softcore || compareDaycount(a, softcore)) {
+          acc[a.path.name].best[0] = a;
+        }
+        break;
+      case Lifestyle.HARDCORE:
+        if (!hardcore || compareDaycount(a, hardcore) < 0) {
+          acc[a.path.name].best[1] = a;
+        }
+        break;
+    }
+
+    return acc;
+  }, {});
+
+  return json({ player, frequency, stats });
 };
 
 export const meta = ({ data }: MetaArgs<typeof loader>) => {
@@ -71,7 +102,7 @@ export type RowData = Omit<Ascension, "date"> & {
 
 export default function Player() {
   const { hash } = useLocation();
-  const { player, frequency } = useLoaderData<typeof loader>()!;
+  const { player, frequency, stats } = useLoaderData<typeof loader>()!;
 
   const jumpTo = hash && /#\d+/.test(hash) ? Number(hash.slice(1)) : undefined;
 
@@ -96,6 +127,7 @@ export default function Player() {
       >
         <FrequencyGraph data={frequency} untilNow />
       </Box>
+      <PlayerStats stats={stats} />
       <PlayerTable ascensions={player.ascensions} jumpTo={jumpTo} />
     </Stack>
   );
