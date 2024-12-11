@@ -1,45 +1,34 @@
 import {
   Button,
-  ButtonGroup,
   Card,
-  CardBody,
-  CardHeader,
+  Container,
+  Group,
   Heading,
   HStack,
   Link,
   List,
-  ListItem,
   Stack,
   Table,
-  TableContainer,
-  Tbody,
-  Td,
   Text,
-  Th,
-  Thead,
-  Tr,
 } from "@chakra-ui/react";
 import { type Ascension, type Player, Lifestyle, Path } from "@prisma/client";
-import { useLoaderData, Link as RemixLink, json } from "@remix-run/react";
+import { useLoaderData, Link as RemixLink } from "@remix-run/react";
 import { AscensionDate } from "~/components/AscensionDate";
 import { KoLImage } from "~/components/KoLImage";
 import { PlayerLink } from "~/components/PlayerLink";
 import { PyriteTable } from "~/components/PyriteTable";
 import { db, NS13 } from "~/db.server";
 
-type JsonAscension = Omit<Ascension, "date"> & {
-  date: string;
+type AscensionData = Ascension & {
+  date: Date;
   player: Player;
-  path: Omit<Path, "start" | "end"> & {
-    start: string | null;
-    end: string | null;
-  };
+  path: Path;
 };
 
 export type RowData = {
-  path: JsonAscension["path"];
-  hardcore: JsonAscension;
-  softcore?: JsonAscension;
+  path: AscensionData["path"];
+  hardcore: AscensionData;
+  softcore?: AscensionData;
 };
 
 export const meta = () => {
@@ -143,21 +132,21 @@ export const loader = async () => {
     (t) => t !== null,
   );
 
-  return json({ leaderboard, pyrites, tortoisecore });
+  return { leaderboard, pyrites, tortoisecore };
 };
 
 export default function Pyrites() {
   const { leaderboard, pyrites, tortoisecore } = useLoaderData<typeof loader>();
 
   return (
-    <Stack spacing={10} alignItems="center">
-      <Stack spacing={4}>
+    <Stack gap={10} alignItems="center">
+      <Stack gap={4}>
         <Heading alignSelf="center">Pyrites</Heading>
-        <ButtonGroup justifyContent="center">
-          <Button as={RemixLink} to="/">
-            home
+        <Group justifyContent="center">
+          <Button asChild>
+            <RemixLink to="/">home</RemixLink>
           </Button>
-        </ButtonGroup>
+        </Group>
       </Stack>
       <Text>
         Within the Kingdom of Loathing, <b>pyrites</b> are runs that are notable
@@ -170,18 +159,18 @@ export default function Pyrites() {
       <Heading as="h3" size="md">
         Leaderboard of Fools
       </Heading>
-      <TableContainer width={["100%", null, "50%"]}>
-        <Table>
-          <Thead>
-            <Tr>
-              <Th>Player</Th>
-              <Th isNumeric>Pyrites</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
+      <Container width={["100%", null, "50%"]}>
+        <Table.Root>
+          <Table.Header>
+            <Table.Row>
+              <Table.ColumnHeader>Player</Table.ColumnHeader>
+              <Table.ColumnHeader align="right">Pyrites</Table.ColumnHeader>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
             {leaderboard.map(({ player, count }, i) => (
-              <Tr key={player.id}>
-                <Td>
+              <Table.Row key={player.id}>
+                <Table.Cell>
                   <HStack>
                     <PlayerLink player={player} />
                     {i === 0 && (
@@ -191,32 +180,32 @@ export default function Pyrites() {
                       />
                     )}
                   </HStack>
-                </Td>
-                <Td isNumeric>{count}</Td>
-              </Tr>
+                </Table.Cell>
+                <Table.Cell align="right">{count}</Table.Cell>
+              </Table.Row>
             ))}
-          </Tbody>
-        </Table>
-      </TableContainer>
+          </Table.Body>
+        </Table.Root>
+      </Container>
       <Heading as="h3" size="md">
         Pyrite Standings
       </Heading>
       <PyriteTable ascensions={pyrites} />
-      <Card>
-        <CardHeader>
+      <Card.Root>
+        <Card.Header>
           <Heading size="md">Tortoisecore</Heading>
-        </CardHeader>
-        <CardBody>
-          <List>
+        </Card.Header>
+        <Card.Body>
+          <List.Root>
             {tortoisecore.map((asc) => (
-              <ListItem key={`${asc.playerId}${asc.ascensionNumber}`}>
+              <List.Item key={`${asc.playerId}${asc.ascensionNumber}`}>
                 {asc.lifestyle} {asc.days}/{asc.turns} (
                 <AscensionDate ascension={asc} />) <b>{asc.player.name}</b>
-              </ListItem>
+              </List.Item>
             ))}
-          </List>
-        </CardBody>
-      </Card>
+          </List.Root>
+        </Card.Body>
+      </Card.Root>
     </Stack>
   );
 }

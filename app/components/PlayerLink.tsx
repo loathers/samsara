@@ -8,8 +8,10 @@ type Props = {
 
 export function PlayerLink({ player }: Props) {
   return (
-    <Link as={RemixLink} to={`/player/${player.id}`}>
-      {player.name} (#{player.id})
+    <Link asChild>
+      <RemixLink to={`/player/${player.id}`}>
+        {player.name} (#{player.id})
+      </RemixLink>
     </Link>
   );
 }

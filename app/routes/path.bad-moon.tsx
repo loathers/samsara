@@ -1,6 +1,5 @@
 import { Stack } from "@chakra-ui/react";
-import { json } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { data, useLoaderData } from "@remix-run/react";
 
 import { Leaderboard } from "~/components/Leaderboard";
 import { db, getKittycoreLeaderboard } from "~/db.server";
@@ -16,16 +15,16 @@ export const loader = async () => {
     include: { class: true },
   });
 
-  if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
+  if (!path) throw data({ message: "Invalid path name" }, { status: 400 });
 
-  return json({
+  return {
     ...(await getPathData(path)),
     casualLeaderboard: await db.ascension.getLeaderboard({
       path,
       lifestyle: "CASUAL",
     }),
     kittycoreLeaderboard: await getKittycoreLeaderboard(),
-  });
+  };
 };
 
 export const meta = () => {
@@ -51,7 +50,7 @@ export default function BadMoonPath() {
   } = useLoaderData<typeof loader>();
 
   return (
-    <Stack spacing={10}>
+    <Stack gap={10}>
       <PathHeader
         path={path}
         frequency={frequency}

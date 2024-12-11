@@ -1,5 +1,5 @@
-import { ArrowDownIcon, ArrowUpIcon, CloseIcon } from "@chakra-ui/icons";
-import { HStack, Link, Th, Text } from "@chakra-ui/react";
+import { LuArrowDown, LuArrowUp, LuX } from "react-icons/lu";
+import { HStack, Icon, Link, Table, Text } from "@chakra-ui/react";
 import { flexRender, Header } from "@tanstack/react-table";
 import { RowData } from "~/routes/player.$id";
 import { TableFilter } from "./TableFilter";
@@ -12,7 +12,7 @@ export function PlayerTableHeader({ header }: Props) {
   if (header.column.columnDef.meta?.hide) return null;
   const columns = header.column.parent?.columns ?? [header.column];
   return (
-    <Th>
+    <Table.ColumnHeader>
       <HStack>
         {columns.some((c) => c.getIsFiltered()) ? (
           <>
@@ -26,7 +26,9 @@ export function PlayerTableHeader({ header }: Props) {
                 columns.forEach((c) => c.setFilterValue(undefined));
               }}
             >
-              <CloseIcon p="2px" />
+              <Icon p="2px">
+                <LuX />
+              </Icon>
             </Link>
           </>
         ) : (
@@ -49,11 +51,10 @@ export function PlayerTableHeader({ header }: Props) {
         {header.column.getCanFilter() && <TableFilter column={header.column} />}
         {!header.column.getIsFiltered() &&
           ({
-            asc: <ArrowUpIcon />,
-            desc: <ArrowDownIcon />,
+            asc: <LuArrowUp />,
           }[header.column.getIsSorted() as string] ??
             null)}
       </HStack>
-    </Th>
+    </Table.ColumnHeader>
   );
 }

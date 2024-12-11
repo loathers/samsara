@@ -1,5 +1,5 @@
 import { Stack } from "@chakra-ui/react";
-import { json, LoaderFunctionArgs } from "@remix-run/node";
+import { data, LoaderFunctionArgs } from "@remix-run/node";
 import { MetaArgs, redirect, useLoaderData } from "@remix-run/react";
 
 import { Leaderboard } from "~/components/Leaderboard";
@@ -23,14 +23,14 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     include: { class: true },
   });
 
-  if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
+  if (!path) throw data({ message: "Invalid path name" }, { status: 400 });
 
   // Redirect to the slug form of the path
   if (slug !== path.slug) {
     throw redirect(`/path/${path.slug}`);
   }
 
-  return json(await getPathData(path));
+  return await getPathData(path);
 };
 
 export const meta = ({ data }: MetaArgs<typeof loader>) => {
@@ -61,7 +61,7 @@ export default function PathPage() {
   const showPyrites = scPyrite.length + hcPyrite.length > 0;
 
   return (
-    <Stack spacing={10}>
+    <Stack gap={10}>
       <PathHeader
         path={path}
         frequency={frequency}

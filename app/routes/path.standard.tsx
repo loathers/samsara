@@ -1,5 +1,5 @@
 import { Stack } from "@chakra-ui/react";
-import { json } from "@remix-run/node";
+import { data } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 
 import { Leaderboard } from "~/components/Leaderboard";
@@ -17,12 +17,12 @@ export const loader = async () => {
     include: { class: true },
   });
 
-  if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
+  if (!path) throw data({ message: "Invalid path name" }, { status: 400 });
 
-  return json({
+  return {
     ...(await getPathData(path)),
     years: await getPastStandardLeaderboards(path),
-  });
+  };
 };
 
 export const meta = () => {
@@ -75,7 +75,7 @@ export default function PathPage() {
   );
 
   return (
-    <Stack spacing={10}>
+    <Stack gap={10}>
       <PathHeader
         path={path}
         frequency={frequency}

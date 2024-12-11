@@ -1,5 +1,5 @@
 import { Stack } from "@chakra-ui/react";
-import { json } from "@remix-run/node";
+import { data } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { Leaderboard } from "~/components/Leaderboard";
 import { db } from "~/db.server";
@@ -18,9 +18,9 @@ export const loader = async () => {
     include: { class: true },
   });
 
-  if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
+  if (!path) throw data({ message: "Invalid path name" }, { status: 400 });
 
-  return json(await getPathData(path, true));
+  return await getPathData(path, true);
 };
 
 export const meta = () => {
@@ -53,7 +53,7 @@ export default function OCRSPath() {
   } = useLoaderData<typeof loader>();
 
   return (
-    <Stack spacing={10}>
+    <Stack gap={10}>
       <PathHeader
         path={path}
         frequency={frequency}

@@ -52,7 +52,7 @@ export default function NoPath() {
   } = useLoaderData<typeof loader>();
 
   return (
-    <Stack spacing={10}>
+    <Stack gap={10}>
       <PathHeader
         path={path}
         frequency={frequency}

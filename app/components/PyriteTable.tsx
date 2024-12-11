@@ -6,31 +6,21 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import {
-  HStack,
-  Table,
-  TableContainer,
-  Tbody,
-  Td,
-  Text,
-  Th,
-  Thead,
-  Tr,
-} from "@chakra-ui/react";
+import { HStack, Table, Container, Text } from "@chakra-ui/react";
 import { ResponsiveContent } from "./ResponsiveContent";
 import { RowData } from "~/routes/pyrites";
 import { PathLink } from "./PathLink";
 import { compareDaycount } from "~/utils";
 import { useState } from "react";
 import { PlayerLink } from "./PlayerLink";
-import { ArrowDownIcon, ArrowUpIcon } from "@chakra-ui/icons";
+import { LuArrowDown, LuArrowUp } from "react-icons/lu";
 import { AscensionDate } from "./AscensionDate";
 import { SpeedCell } from "./PyriteTableSpeedCell";
 
 declare module "@tanstack/react-table" {
   // @ts-expect-error This should work but TS is wrong here
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface ColumnMeta<TData extends RowData, TValue> {
+  interface ColumnMeta<TableData extends RowData, TValue> {
     hide: true;
   }
 }
@@ -109,13 +99,17 @@ export function PyriteTable({ ascensions }: Props) {
   });
 
   return (
-    <TableContainer fontSize="smaller">
-      <Table>
-        <Thead>
+    <Container fontSize="smaller">
+      <Table.Root>
+        <Table.Header>
           {table.getHeaderGroups().map((headerGroup) => (
-            <Tr key={headerGroup.id}>
+            <Table.Row key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <Th px={4} key={header.id} colSpan={header.colSpan}>
+                <Table.ColumnHeader
+                  px={4}
+                  key={header.id}
+                  colSpan={header.colSpan}
+                >
                   {header.isPlaceholder ? null : (
                     <HStack>
                       <Text
@@ -142,34 +136,34 @@ export function PyriteTable({ ascensions }: Props) {
                         )}
                       </Text>
                       {{
-                        asc: <ArrowUpIcon />,
-                        desc: <ArrowDownIcon />,
+                        asc: <LuArrowUp />,
+                        desc: <LuArrowDown />,
                       }[header.column.getIsSorted() as string] ?? null}
                     </HStack>
                   )}
-                </Th>
+                </Table.ColumnHeader>
               ))}
-            </Tr>
+            </Table.Row>
           ))}
-        </Thead>
-        <Tbody>
+        </Table.Header>
+        <Table.Body>
           {table.getRowModel().rows.map((row) => (
-            <Tr key={row.id}>
+            <Table.Row key={row.id}>
               {row.getVisibleCells().map(
                 (cell) =>
                   !cell.column.columnDef.meta?.hide && (
-                    <Td px={4} key={cell.id}>
+                    <Table.Cell px={4} key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),
                       )}
-                    </Td>
+                    </Table.Cell>
                   ),
               )}
-            </Tr>
+            </Table.Row>
           ))}
-        </Tbody>
-      </Table>
-    </TableContainer>
+        </Table.Body>
+      </Table.Root>
+    </Container>
   );
 }

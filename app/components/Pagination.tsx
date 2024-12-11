@@ -1,13 +1,14 @@
 import {
   Button,
-  ButtonGroup,
+  Group,
   Flex,
   HStack,
-  Select,
   Text,
+  createListCollection,
 } from "@chakra-ui/react";
 import { PaginationState, Table } from "@tanstack/react-table";
 import { Dispatch, SetStateAction, useMemo } from "react";
+import { Select } from "./Select";
 
 type Props<T> = {
   table: Table<T>;
@@ -20,26 +21,26 @@ export function Pagination<T>({ table, value, onChange }: Props<T>) {
 
   const options = useMemo(
     () =>
-      [...Array(count).keys()].map((i) => (
-        <option key={i} value={i}>
-          {i + 1}
-        </option>
-      )),
+      createListCollection({
+        items: [...Array(count).keys()],
+        itemToString: (item) => (item + 1).toString(),
+        itemToValue: (item) => item.toString(),
+      }),
     [count],
   );
 
   return (
     <Flex justifyContent="space-between">
-      <ButtonGroup isAttached>
+      <Group attached>
         <Button
-          isDisabled={!table.getCanPreviousPage()}
+          disabled={!table.getCanPreviousPage()}
           onClick={() => onChange((v) => ({ ...v, pageIndex: 0 }))}
           title="First Page"
         >
           {"<<"}
         </Button>
         <Button
-          isDisabled={!table.getCanPreviousPage()}
+          disabled={!table.getCanPreviousPage()}
           onClick={() =>
             onChange((v) => ({ ...v, pageIndex: v.pageIndex - 1 }))
           }
@@ -47,25 +48,36 @@ export function Pagination<T>({ table, value, onChange }: Props<T>) {
         >
           {"<"}
         </Button>
-      </ButtonGroup>
+      </Group>
       <HStack>
         <Text>Page</Text>
-        <Select
+        <Select.Root
+          collection={options}
           title="Current page"
           textAlign="center"
-          value={value.pageIndex}
-          onChange={(e) => {
-            onChange((v) => ({ ...v, pageIndex: Number(e.target.value) }));
+          value={[value.pageIndex.toString()]}
+          onValueChange={({ value: newValue }) => {
+            onChange((v) => ({ ...v, pageIndex: Number(newValue[0]) }));
           }}
           width="auto"
+          minWidth={Math.ceil(Math.log10(options.items.length)) + 5 + "ch"}
         >
-          {options}
-        </Select>{" "}
+          <Select.Trigger>
+            <Select.ValueText />
+          </Select.Trigger>
+          <Select.Content>
+            {options.items.map((item) => (
+              <Select.Item item={item} key={options.getItemValue(item)}>
+                {options.stringifyItem(item)}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Root>{" "}
         <Text>of {count}</Text>
       </HStack>
-      <ButtonGroup isAttached>
+      <Group attached>
         <Button
-          isDisabled={!table.getCanNextPage()}
+          disabled={!table.getCanNextPage()}
           onClick={() =>
             onChange((v) => ({ ...v, pageIndex: v.pageIndex + 1 }))
           }
@@ -74,13 +86,13 @@ export function Pagination<T>({ table, value, onChange }: Props<T>) {
           {">"}
         </Button>
         <Button
-          isDisabled={!table.getCanNextPage()}
+          disabled={!table.getCanNextPage()}
           onClick={() => onChange((v) => ({ ...v, pageIndex: count - 1 }))}
           title="Last Page"
         >
           {">>"}
         </Button>
-      </ButtonGroup>
+      </Group>
     </Flex>
   );
 }

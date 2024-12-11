@@ -1,5 +1,5 @@
 import { Lifestyle, TagType } from "@prisma/client";
-import { json, LoaderFunctionArgs, redirect } from "@remix-run/node";
+import { data, LoaderFunctionArgs, redirect } from "@remix-run/node";
 
 import { db, getMaxAge } from "~/db.server";
 
@@ -19,7 +19,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   };
 
   if (!isTagType(tagType))
-    throw json({ message: "Invalid tag type" }, { status: 400, headers });
+    throw data({ message: "Invalid tag type" }, { status: 400, headers });
 
   const id = Number.isNaN(Number(slug)) ? undefined : Number(slug);
   const path = await db.path.findFirst({
@@ -27,7 +27,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   });
 
   if (!path)
-    throw json({ message: "Invalid path name" }, { status: 400, headers });
+    throw data({ message: "Invalid path name" }, { status: 400, headers });
 
   if (slug !== String(path.id)) {
     throw redirect(`/api/path/${path.id}/${tagType.toLowerCase()}`);
@@ -49,5 +49,5 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     ),
   );
 
-  return json(leaderboards, { headers });
+  return data(leaderboards, { headers });
 };

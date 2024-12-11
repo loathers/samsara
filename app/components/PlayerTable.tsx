@@ -12,16 +12,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Pagination } from "./Pagination";
-import {
-  HStack,
-  Table,
-  TableContainer,
-  Tbody,
-  Td,
-  Text,
-  Thead,
-  Tr,
-} from "@chakra-ui/react";
+import { HStack, Table, Container, Text } from "@chakra-ui/react";
 import { PlayerTableHeader } from "./PlayerTableHeader";
 import { FormattedDate } from "./FormattedDate";
 import { ResponsiveContent } from "./ResponsiveContent";
@@ -36,7 +27,7 @@ import { useEffect, useRef, useState } from "react";
 declare module "@tanstack/react-table" {
   // @ts-expect-error This should work but TS is wrong here
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface ColumnMeta<TData extends RowData, TValue> {
+  interface ColumnMeta<TableData extends RowData, TValue> {
     hide: true;
   }
 }
@@ -164,22 +155,22 @@ export function PlayerTable({ ascensions, jumpTo }: Props) {
   return (
     <>
       <Pagination table={table} value={pagination} onChange={setPagination} />
-      <TableContainer>
-        <Table>
-          <Thead>
-            <Tr key={headerGroup.id}>
+      <Container>
+        <Table.Root>
+          <Table.Header>
+            <Table.Row key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
                 <PlayerTableHeader key={header.id} header={header} />
               ))}
-            </Tr>
-          </Thead>
-          <Tbody>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
             {table.getRowModel().rows.map((row) => {
               const abandoned = row.original.abandoned;
               const cells = row.getVisibleCells();
               const selected = row.original.ascensionNumber === jumpTo;
               return (
-                <Tr
+                <Table.Row
                   id={row.id}
                   key={row.id}
                   bg={selected ? "yellow.50" : undefined}
@@ -190,25 +181,29 @@ export function PlayerTable({ ascensions, jumpTo }: Props) {
                     .map(
                       (cell) =>
                         !cell.column.columnDef.meta?.hide && (
-                          <Td key={cell.id}>
+                          <Table.Cell key={cell.id}>
                             {flexRender(
                               cell.column.columnDef.cell,
                               cell.getContext(),
                             )}
-                          </Td>
+                          </Table.Cell>
                         ),
                     )}
                   {abandoned && (
-                    <Td colSpan={cells.length - 2} fontSize="sm" color="grey">
+                    <Table.Cell
+                      colSpan={cells.length - 2}
+                      fontSize="sm"
+                      color="grey"
+                    >
                       Run abandoned
-                    </Td>
+                    </Table.Cell>
                   )}
-                </Tr>
+                </Table.Row>
               );
             })}
-          </Tbody>
-        </Table>
-      </TableContainer>
+          </Table.Body>
+        </Table.Root>
+      </Container>
       <Pagination table={table} value={pagination} onChange={setPagination} />
     </>
   );

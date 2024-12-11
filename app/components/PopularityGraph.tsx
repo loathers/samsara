@@ -13,13 +13,13 @@ import { Lifestyle } from "@prisma/client";
 import { PathLink } from "./PathLink";
 import { formatTick } from "~/utils";
 
-type Datum<D = Date> = {
-  date: D;
+type Datum = {
+  date: Date;
   path: { slug: string; name: string; image: string | null };
   lifestyle: Lifestyle;
   count: number;
 };
-type Props = { data: Datum<string>[] };
+type Props = { data: Datum[] };
 
 const shortenLifestyle = (l: Lifestyle) => (l === "HARDCORE" ? "HC" : "SC");
 
@@ -104,14 +104,9 @@ export function PopularityGraph({ data }: Props) {
           iconType="circle"
           layout="vertical"
           content={({ payload }) => (
-            <HStack
-              spacing={2}
-              fontSize="xs"
-              textAlign="center"
-              flexWrap="wrap"
-            >
+            <HStack gap={2} fontSize="xs" textAlign="center" flexWrap="wrap">
               {payload?.map((entry) => (
-                <HStack spacing={1} key={entry.value}>
+                <HStack gap={1} key={entry.value}>
                   <Text as="span" color={entry.color}>
                     &#x25CF;
                   </Text>{" "}

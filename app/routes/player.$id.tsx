@@ -1,5 +1,5 @@
-import { Heading, Stack, Button, ButtonGroup, Box } from "@chakra-ui/react";
-import { json, LoaderFunctionArgs } from "@remix-run/node";
+import { Heading, Stack, Button, Group, Box } from "@chakra-ui/react";
+import { data, LoaderFunctionArgs } from "@remix-run/node";
 import {
   MetaArgs,
   redirect,
@@ -24,10 +24,10 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     });
 
     if (found) throw redirect(`/player/${found.id}`);
-    throw json({ message: "Invalid player name" }, { status: 400 });
+    throw data({ message: "Invalid player name" }, { status: 400 });
   }
 
-  if (!id) throw json({ message: "Invalid player ID" }, { status: 400 });
+  if (!id) throw data({ message: "Invalid player ID" }, { status: 400 });
 
   const player = await db.player.findUnique({
     where: { id: parseInt(id) },
@@ -43,11 +43,11 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     },
   });
 
-  if (!player) throw json({ message: "Player not found" }, { status: 404 });
+  if (!player) throw data({ message: "Player not found" }, { status: 404 });
 
   const frequency = await db.ascension.getFrequency({ player });
 
-  return json({ player, frequency });
+  return { player, frequency };
 };
 
 export const meta = ({ data }: MetaArgs<typeof loader>) => {
@@ -62,8 +62,7 @@ export const meta = ({ data }: MetaArgs<typeof loader>) => {
   ];
 };
 
-export type RowData = Omit<Ascension, "date"> & {
-  date: string;
+export type RowData = Ascension & {
   path: Pick<Path, "slug" | "name" | "image">;
   class: Pick<Class, "name" | "image">;
   tags: Pick<Tag, "type" | "value" | "year">[];
@@ -76,16 +75,16 @@ export default function Player() {
   const jumpTo = hash && /#\d+/.test(hash) ? Number(hash.slice(1)) : undefined;
 
   return (
-    <Stack spacing={10}>
-      <Stack spacing={4}>
-        <Heading alignSelf="center">
+    <Stack gap={10}>
+      <Stack gap={4}>
+        <Heading size="4xl" alignSelf="center">
           {player.name} (#{player.id})
         </Heading>
-        <ButtonGroup justifyContent="center">
-          <Button as={RemixLink} to="/">
-            home
+        <Group justifyContent="center">
+          <Button asChild>
+            <RemixLink to="/">home</RemixLink>
           </Button>
-        </ButtonGroup>
+        </Group>
       </Stack>
       <Box
         textAlign="center"

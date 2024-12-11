@@ -4,7 +4,7 @@ import {
   Heading,
   Text,
   Box,
-  ButtonGroup,
+  Group,
   Button,
 } from "@chakra-ui/react";
 
@@ -16,17 +16,17 @@ import { PathIcon } from "./PathIcon";
 import { Path } from "./Path";
 import { useMemo } from "react";
 
-type Datum<D = Date> = { date: D; count: number };
+type Datum = { date: Date; count: number };
 type Props = {
   path: {
     name: string;
     seasonal: boolean;
-    start: string | null;
-    end: string | null;
+    start: Date | null;
+    end: Date | null;
     image: string | null;
   };
-  frequency: Datum<string>[];
-  recordBreaking: RecordDatum<string>[];
+  frequency: Datum[];
+  recordBreaking: RecordDatum[];
   extra?: string;
 };
 
@@ -39,22 +39,22 @@ export function PathHeader({ path, frequency, recordBreaking, extra }: Props) {
   return (
     <Stack alignItems="center">
       <HStack>
-        <Heading>
+        <Heading size="4xl">
           <Path path={path} />
         </Heading>
         <PathIcon path={path} />
       </HStack>
       {path.start && path.end && (
-        <Text size="md">
+        <Text textStyle="md">
           <FormattedDate date={path.start} /> -{" "}
           <FormattedDate date={path.end} />
         </Text>
       )}
-      <ButtonGroup justifyContent="center">
-        <Button as={Link} to="/">
-          home
+      <Group justifyContent="center">
+        <Button asChild>
+          <Link to="/">home</Link>
         </Button>
-      </ButtonGroup>
+      </Group>
       <Stack direction={["column", null, "row"]} width="100%">
         <Box
           textAlign="center"

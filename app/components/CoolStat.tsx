@@ -1,12 +1,4 @@
-import {
-  Card,
-  CardBody,
-  Stat,
-  StatArrow,
-  StatHelpText,
-  StatLabel,
-  StatNumber,
-} from "@chakra-ui/react";
+import { Badge, Card, Stat } from "@chakra-ui/react";
 
 type Props = {
   current: number;
@@ -16,23 +8,30 @@ type Props = {
 
 export function CoolStat({ current, children, change }: Props) {
   return (
-    <Card>
-      <CardBody>
-        <Stat>
-          <StatLabel>{children}</StatLabel>
-          <StatNumber>{current}</StatNumber>
-          <StatHelpText>
-            {change === 0 ? (
-              "No change"
-            ) : (
-              <>
-                <StatArrow type={change > 0 ? "increase" : "decrease"} />
-                {(Math.abs(change) * 100).toFixed(1)}% on previous week
-              </>
-            )}
-          </StatHelpText>
-        </Stat>
-      </CardBody>
-    </Card>
+    <Card.Root>
+      <Card.Body>
+        <Stat.Root>
+          <Stat.Label>{children}</Stat.Label>
+          <Stat.ValueText>{current}</Stat.ValueText>
+          <Stat.HelpText>
+            <Badge
+              colorPalette={
+                change === 0 ? "gray" : change > 0 ? "green" : "red"
+              }
+              gap={0}
+            >
+              {change === 0 ? (
+                "No change"
+              ) : (
+                <>
+                  {change > 0 ? <Stat.UpIndicator /> : <Stat.DownIndicator />}
+                  {(Math.abs(change) * 100).toFixed(1)}% on previous week
+                </>
+              )}
+            </Badge>
+          </Stat.HelpText>
+        </Stat.Root>
+      </Card.Body>
+    </Card.Root>
   );
 }

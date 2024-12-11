@@ -59,12 +59,13 @@ export function TagMedal({ tag, path }: Props) {
     return image;
 
   return (
-    <Link
-      as={RemixLink}
-      to={`/path/${path.slug}#${getHash(tag)}`}
-      title={formatTag(tag)}
-    >
-      {image}
+    <Link asChild>
+      <RemixLink
+        to={`/path/${path.slug}#${getHash(tag)}`}
+        title={formatTag(tag)}
+      >
+        {image}
+      </RemixLink>
     </Link>
   );
 }

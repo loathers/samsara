@@ -1,5 +1,4 @@
-import { useBreakpointValue } from "@chakra-ui/react";
-import { useToken } from "@chakra-ui/system";
+import { useBreakpointValue, useToken } from "@chakra-ui/react";
 import { useMemo } from "react";
 import {
   LabelProps,
@@ -14,9 +13,9 @@ import {
 import { CartesianViewBox } from "recharts/types/util/types";
 import { formatTick, calculateRange, compactNumberFormatter } from "~/utils";
 
-type Datum<D = Date> = { date: D; count: number };
+type Datum = { date: Date; count: number };
 type Props = {
-  data: Datum<string>[];
+  data: Datum[];
   untilNow?: boolean;
   lines?: { time: number; label?: string }[];
 };

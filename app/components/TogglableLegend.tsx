@@ -1,5 +1,6 @@
-import { Checkbox, Stack } from "@chakra-ui/react";
+import { Stack } from "@chakra-ui/react";
 import { SetStateAction } from "react";
+import { Checkbox } from "./Checkbox";
 
 type Props<T extends Record<string, boolean>> = {
   value: T;
@@ -18,15 +19,14 @@ export function TogglableLegend<T extends Record<string, boolean>>(
     formatLabel = (label) => label.toString(),
   } = props;
   return (
-    <Stack spacing={2} direction={"row"} justifyContent="center">
+    <Stack gap={2} direction={"row"} justifyContent="center">
       {payload!.map((entry) => (
         <Checkbox
           size="sm"
           key={entry.value as string}
-          type="checkbox"
           defaultChecked={value[entry.value]}
-          onChange={(e) =>
-            onChange((v) => ({ ...v, [entry.value]: e.target.checked }))
+          onCheckedChange={({ checked }) =>
+            onChange((v) => ({ ...v, [entry.value]: checked }))
           }
         >
           {formatLabel(entry.value)}

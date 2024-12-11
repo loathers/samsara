@@ -1,14 +1,6 @@
-import {
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  Heading,
-  HStack,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
+import { Heading, HStack, Stack, Text } from "@chakra-ui/react";
 import React from "react";
+import { Accordion } from "./Accordion";
 
 type Props = {
   title: string;
@@ -21,6 +13,7 @@ export function LeaderboardAccordionItem({
   title,
   description,
   children,
+  slug,
 }: Props) {
   switch (description) {
     case "{PYRITE}":
@@ -30,23 +23,22 @@ export function LeaderboardAccordionItem({
   }
 
   return (
-    <AccordionItem>
-      <AccordionButton>
+    <Accordion.Item value={slug || title.toLowerCase()}>
+      <Accordion.ItemTrigger>
         <HStack flex={1}>
           <Heading size="md">{title}</Heading> <Text>{description}</Text>
         </HStack>
-        <AccordionIcon />
-      </AccordionButton>
-      <AccordionPanel>
+      </Accordion.ItemTrigger>
+      <Accordion.ItemContent>
         <Stack
-          spacing={4}
+          gap={4}
           direction={["column", null, null, "row"]}
           alignItems="stretch"
           justifyContent="center"
         >
           {children}
         </Stack>
-      </AccordionPanel>
-    </AccordionItem>
+      </Accordion.ItemContent>
+    </Accordion.Item>
   );
 }

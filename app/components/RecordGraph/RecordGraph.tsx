@@ -20,17 +20,17 @@ import {
   fullDateFormatter,
 } from "~/utils";
 
-export type RecordDatum<D = Date> = {
+export type RecordDatum = {
   days: number;
   turns: number;
-  date: D;
+  date: Date;
   lifestyle: Lifestyle;
   extra: JsonValue;
   player: { name: string; id: number };
 };
 
 type Props = {
-  data: RecordDatum<string>[];
+  data: RecordDatum[];
   extra?: string;
 };
 

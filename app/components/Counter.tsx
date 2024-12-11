@@ -1,4 +1,4 @@
-import { Box, Flex, ListItem, OrderedList } from "@chakra-ui/react";
+import { Box, Flex } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
 
 type Props = {
@@ -7,16 +7,16 @@ type Props = {
   duration?: number;
 };
 
-function Numbers({ lineHeight }: { lineHeight: number }) {
+function Numbers({ index, lineHeight }: { index: number; lineHeight: number }) {
   return Array.from({ length: 11 }, (_, i) => (
-    <ListItem
+    <Box
       height={`${lineHeight}px`}
       key={i}
       px={1}
-      borderLeft="1px solid black"
+      borderLeft={index > 0 ? `1px solid black` : undefined}
     >
       {i % 10}
-    </ListItem>
+    </Box>
   )).reverse();
 }
 
@@ -75,14 +75,13 @@ export function Counter({ value, lineHeight = 35, duration = 1 }: Props) {
           const iterations = Math.floor(value / 10 ** (length - i - 1)) / 10;
           const unitDuration = duration / iterations;
           return (
-            <OrderedList
+            <Box
               margin={0}
               p={0}
-              listStyleType="none"
               fontFamily="monospace"
               fontSize={`${lineHeight}px`}
               key={i}
-              sx={{
+              css={{
                 animationName: `${scrollDigits(lineHeight)}`,
                 animationTimingFunction: "ease-in-out",
                 animationDuration: `${unitDuration}s`,
@@ -91,8 +90,8 @@ export function Counter({ value, lineHeight = 35, duration = 1 }: Props) {
                 "&:first-of-type li": { borderLeft: "none" },
               }}
             >
-              <Numbers lineHeight={lineHeight} />
-            </OrderedList>
+              <Numbers index={i} lineHeight={lineHeight} />
+            </Box>
           );
         })}
       </Flex>

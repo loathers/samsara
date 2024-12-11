@@ -1,13 +1,4 @@
-import {
-  Heading,
-  Table,
-  TableContainer,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-} from "@chakra-ui/react";
+import { Heading, Table, Container } from "@chakra-ui/react";
 import { LeaderboardEntry } from "~/db.server";
 import { Class } from "./Class";
 import { awardBg, formatTurncount, numberFormatter } from "~/utils";
@@ -15,17 +6,13 @@ import { ResponsiveContent } from "./ResponsiveContent";
 import { PlayerLink } from "./PlayerLink";
 import { AscensionDate } from "./AscensionDate";
 
-type JsonifiedLeaderboardEntry = Omit<LeaderboardEntry, "date"> & {
-  date: string;
-};
-
 type Props = {
   title?: string;
-  ascensions: JsonifiedLeaderboardEntry[];
+  ascensions: LeaderboardEntry[];
   showClass?: boolean;
   alternativeScore?: [
     title: string,
-    renderer: (ascension: JsonifiedLeaderboardEntry) => number,
+    renderer: (ascension: LeaderboardEntry) => number,
   ];
 };
 
@@ -36,54 +23,61 @@ export function Leaderboard({
   alternativeScore,
 }: Props) {
   return (
-    <TableContainer>
+    <Container>
       {title && (
         <Heading textAlign="center" as="h3" size="sm">
           {title}
         </Heading>
       )}
-      <Table size="sm">
-        <Thead>
-          <Tr>
-            <Th>#</Th>
-            <Th>Player</Th>
-            <Th>Date</Th>
-            {alternativeScore && <Th>{alternativeScore[0]}</Th>}
-            <Th>
+      <Table.Root size="sm">
+        <Table.Header>
+          <Table.Row>
+            <Table.ColumnHeader>#</Table.ColumnHeader>
+            <Table.ColumnHeader>Player</Table.ColumnHeader>
+            <Table.ColumnHeader>Date</Table.ColumnHeader>
+            {alternativeScore && (
+              <Table.ColumnHeader>{alternativeScore[0]}</Table.ColumnHeader>
+            )}
+            <Table.ColumnHeader>
               <ResponsiveContent narrow="D / T" wide="Days / Turns" />
-            </Th>
-            <Th>
+            </Table.ColumnHeader>
+            <Table.ColumnHeader>
               <ResponsiveContent narrow="Lvl" wide="Level" />
-            </Th>
-            {showClass && <Th>Class</Th>}
-            <Th>Sign</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
+            </Table.ColumnHeader>
+            {showClass && <Table.ColumnHeader>Class</Table.ColumnHeader>}
+            <Table.ColumnHeader>Sign</Table.ColumnHeader>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
           {ascensions.map((a, i) => (
-            <Tr key={`${a.player.id}/${a.ascensionNumber}`} bg={awardBg(i + 1)}>
-              <Td>{i + 1}</Td>
-              <Td>
+            <Table.Row
+              key={`${a.player.id}/${a.ascensionNumber}`}
+              bg={awardBg(i + 1)}
+            >
+              <Table.Cell>{i + 1}</Table.Cell>
+              <Table.Cell>
                 <PlayerLink player={a.player} />
-              </Td>
-              <Td>
+              </Table.Cell>
+              <Table.Cell>
                 <AscensionDate ascension={a} />
-              </Td>
+              </Table.Cell>
               {alternativeScore && (
-                <Td>{numberFormatter.format(alternativeScore[1](a))}</Td>
+                <Table.Cell>
+                  {numberFormatter.format(alternativeScore[1](a))}
+                </Table.Cell>
               )}
-              <Td>{formatTurncount(a.days, a.turns)}</Td>
-              <Td>{a.level}</Td>
+              <Table.Cell>{formatTurncount(a.days, a.turns)}</Table.Cell>
+              <Table.Cell>{a.level}</Table.Cell>
               {showClass && (
-                <Td>
+                <Table.Cell>
                   <Class class={a.class} shorten="acronyms" />
-                </Td>
+                </Table.Cell>
               )}
-              <Td>{a.sign}</Td>
-            </Tr>
+              <Table.Cell>{a.sign}</Table.Cell>
+            </Table.Row>
           ))}
-        </Tbody>
-      </Table>
-    </TableContainer>
+        </Table.Body>
+      </Table.Root>
+    </Container>
   );
 }

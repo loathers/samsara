@@ -5,7 +5,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
-import { ChakraProvider, Container } from "@chakra-ui/react";
+import { ChakraProvider, Container, defaultSystem } from "@chakra-ui/react";
 import { HeadersFunction, LinksFunction } from "@remix-run/node";
 import { getMaxAge } from "./db.server";
 
@@ -49,7 +49,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <ChakraProvider>
+    <ChakraProvider value={defaultSystem}>
       <Container maxW={["100%", null, "container.xl"]} py={12}>
         <Outlet />
       </Container>

@@ -3,16 +3,16 @@ import {
   Stack,
   Heading,
   Card,
-  CardHeader,
-  CardBody,
-  Select,
   Button,
   Image,
   Input,
-  InputGroup,
-  InputRightAddon,
+  Group,
+  InputAddon,
+  createListCollection,
+  Grid,
+  SimpleGrid,
 } from "@chakra-ui/react";
-import { json, Link, useLoaderData, useNavigate } from "@remix-run/react";
+import { data, Link, useLoaderData, useNavigate } from "@remix-run/react";
 
 import { FrequencyGraph } from "../components/FrequencyGraph.js";
 import { Counter } from "../components/Counter.js";
@@ -23,6 +23,7 @@ import { CoolStat } from "~/components/CoolStat";
 import { FormEventHandler, useCallback } from "react";
 import { formatPathName, getPathAcronym } from "~/components/Path";
 import { HeadersFunction } from "@remix-run/node";
+import { Select } from "~/components/Select.js";
 
 export const meta = () => {
   return [
@@ -61,7 +62,7 @@ export const loader = async () => {
   rollover.setUTCHours(24 + 3, 30, 0, 0);
   const secondsToRollover = Math.ceil((rollover.getTime() - Date.now()) / 1000);
 
-  return json(
+  return data(
     {
       paths,
       loopers,
@@ -98,6 +99,8 @@ export default function Index() {
     popularity,
   } = useLoaderData<typeof loader>();
 
+  console.log(currentPathers);
+
   const navigate = useNavigate();
 
   const goToPath = useCallback<FormEventHandler<HTMLFormElement>>(
@@ -130,11 +133,17 @@ export default function Index() {
     [navigate],
   );
 
+  const pathCollection = createListCollection({
+    items: paths,
+    itemToString: formatPathName,
+    itemToValue: (p) => p.slug,
+  });
+
   return (
-    <Stack spacing={12} alignItems="stretch">
-      <Stack spacing={8} alignItems="center">
+    <SimpleGrid gap={8} alignItems="stretch">
+      <Stack gap={8} alignItems="center">
         <Link to="/">
-          <Heading alignSelf="center">
+          <Heading size="4xl" alignSelf="center">
             <Stack direction="row">
               <Text>Saṃsāra</Text>
               <Image height="1lh" src="/gash.webp" />
@@ -148,61 +157,70 @@ export default function Index() {
           <Text>incarnations!</Text>
         </Stack>
       </Stack>
-      <Stack direction={["column", null, "row"]} justifyContent="space-around">
-        <Card>
-          <CardHeader>
+      <SimpleGrid gap={8} columns={[1, null, 2]}>
+        <Card.Root>
+          <Card.Header>
             <Heading size="md">Browse by path</Heading>
-          </CardHeader>
-          <CardBody>
+          </Card.Header>
+          <Card.Body>
             <form onSubmit={goToPath}>
-              <InputGroup>
-                <Select name="slug" borderRightRadius={0}>
-                  {paths.map((path) => (
-                    <option key={path.name} value={path.slug}>
-                      {formatPathName(path)}
-                    </option>
-                  ))}
-                </Select>
-                <InputRightAddon>
+              <Group attached width="100%">
+                <Select.Root
+                  name="slug"
+                  collection={pathCollection}
+                  defaultValue={[pathCollection.items[0]?.slug]}
+                >
+                  <Select.Trigger borderRightRadius={0}>
+                    <Select.ValueText />
+                  </Select.Trigger>
+                  <Select.Content>
+                    {pathCollection.items.map((path) => (
+                      <Select.Item item={path} key={path.slug}>
+                        {formatPathName(path)}
+                      </Select.Item>
+                    ))}
+                  </Select.Content>
+                </Select.Root>
+                <InputAddon bg="colorPalette.solid">
                   <Button type="submit">Go</Button>
-                </InputRightAddon>
-              </InputGroup>
+                </InputAddon>
+              </Group>
             </form>
-          </CardBody>
-        </Card>
-        <Card>
-          <CardHeader>
+          </Card.Body>
+        </Card.Root>
+        <Card.Root>
+          <Card.Header>
             <Heading size="md">Browse by player</Heading>
-          </CardHeader>
-          <CardBody>
+          </Card.Header>
+          <Card.Body>
             <form onSubmit={goToPlayer}>
-              <InputGroup>
+              <Group attached width="100%">
                 <Input
                   name="player"
                   type="text"
                   placeholder="Player name or id"
                 />
-                <InputRightAddon>
+                <InputAddon bg="colorPalette.solid">
                   <Button type="submit">Go</Button>
-                </InputRightAddon>
-              </InputGroup>
+                </InputAddon>
+              </Group>
             </form>
-          </CardBody>
-        </Card>
-      </Stack>
-      <Card height={400}>
-        <CardHeader>
+          </Card.Body>
+        </Card.Root>
+      </SimpleGrid>
+      <Card.Root height={400}>
+        <Card.Header>
           <Heading size="md">Top 10 paths in the last week</Heading>
-        </CardHeader>
-        <CardBody>
+        </Card.Header>
+        <Card.Body>
           <PopularityGraph data={popularity} />
-        </CardBody>
-      </Card>
-      <Card height={200}>
-        <CardHeader>
+        </Card.Body>
+      </Card.Root>
+      <Card.Root height={200}>
+        <Card.Header>
           <Heading size="md">All time ascension frequency</Heading>
-        </CardHeader>
-        <CardBody>
+        </Card.Header>
+        <Card.Body>
           <FrequencyGraph
             data={frequency}
             lines={paths
@@ -212,23 +230,23 @@ export default function Index() {
                 label: getPathAcronym(p.name),
               }))}
           />
-        </CardBody>
-      </Card>
-      <Stack direction={["column", "row"]} justifyContent="space-around">
+        </Card.Body>
+      </Card.Root>
+      <SimpleGrid gap={8} columns={[1, 3]}>
         <CoolStat current={currentPathers} change={currentPathersChange}>
           Accounts that ascended <PathLink path={currentPath} /> this week
         </CoolStat>
         <CoolStat current={loopers} change={loopersChange}>
           Accounts that ascended every day in the last week
         </CoolStat>
-        <Card>
-          <CardBody>
-            <Button as={Link} to="/pyrites">
-              Pyrite Plugs
+        <Card.Root>
+          <Card.Body>
+            <Button asChild>
+              <Link to="/pyrites">Pyrite Plugs</Link>
             </Button>
-          </CardBody>
-        </Card>
-      </Stack>
-    </Stack>
+          </Card.Body>
+        </Card.Root>
+      </SimpleGrid>
+    </SimpleGrid>
   );
 }

@@ -22,14 +22,16 @@ export function PathLink({ lifestyle, path, shorten }: Props) {
   );
 
   return (
-    <Link as={RemixLink} to={`/path/${path.slug}`} title={title}>
-      {["symbols", "full-symbols"].includes(shorten!) ? (
-        <HStack minWidth={15} spacing={shorten === "symbols" ? 0 : 1}>
-          {child}
-        </HStack>
-      ) : (
-        child
-      )}
+    <Link asChild>
+      <RemixLink to={`/path/${path.slug}`} title={title}>
+        {["symbols", "full-symbols"].includes(shorten!) ? (
+          <HStack minWidth={15} gap={shorten === "symbols" ? 0 : 1}>
+            {child}
+          </HStack>
+        ) : (
+          child
+        )}
+      </RemixLink>
     </Link>
   );
 }
