@@ -99,8 +99,6 @@ export default function Index() {
     popularity,
   } = useLoaderData<typeof loader>();
 
-  console.log(currentPathers);
-
   const navigate = useNavigate();
 
   const goToPath = useCallback<FormEventHandler<HTMLFormElement>>(
