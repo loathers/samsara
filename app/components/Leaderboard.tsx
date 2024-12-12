@@ -29,55 +29,57 @@ export function Leaderboard({
           {title}
         </Heading>
       )}
-      <Table.Root size="sm">
-        <Table.Header>
-          <Table.Row>
-            <Table.ColumnHeader>#</Table.ColumnHeader>
-            <Table.ColumnHeader>Player</Table.ColumnHeader>
-            <Table.ColumnHeader>Date</Table.ColumnHeader>
-            {alternativeScore && (
-              <Table.ColumnHeader>{alternativeScore[0]}</Table.ColumnHeader>
-            )}
-            <Table.ColumnHeader>
-              <ResponsiveContent narrow="D / T" wide="Days / Turns" />
-            </Table.ColumnHeader>
-            <Table.ColumnHeader>
-              <ResponsiveContent narrow="Lvl" wide="Level" />
-            </Table.ColumnHeader>
-            {showClass && <Table.ColumnHeader>Class</Table.ColumnHeader>}
-            <Table.ColumnHeader>Sign</Table.ColumnHeader>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {ascensions.map((a, i) => (
-            <Table.Row
-              key={`${a.player.id}/${a.ascensionNumber}`}
-              bg={awardBg(i + 1)}
-            >
-              <Table.Cell>{i + 1}</Table.Cell>
-              <Table.Cell>
-                <PlayerLink player={a.player} />
-              </Table.Cell>
-              <Table.Cell>
-                <AscensionDate ascension={a} />
-              </Table.Cell>
+      <Table.ScrollArea>
+        <Table.Root size="sm">
+          <Table.Header>
+            <Table.Row>
+              <Table.ColumnHeader>#</Table.ColumnHeader>
+              <Table.ColumnHeader>Player</Table.ColumnHeader>
+              <Table.ColumnHeader>Date</Table.ColumnHeader>
               {alternativeScore && (
-                <Table.Cell>
-                  {numberFormatter.format(alternativeScore[1](a))}
-                </Table.Cell>
+                <Table.ColumnHeader>{alternativeScore[0]}</Table.ColumnHeader>
               )}
-              <Table.Cell>{formatTurncount(a.days, a.turns)}</Table.Cell>
-              <Table.Cell>{a.level}</Table.Cell>
-              {showClass && (
-                <Table.Cell>
-                  <Class class={a.class} shorten="acronyms" />
-                </Table.Cell>
-              )}
-              <Table.Cell>{a.sign}</Table.Cell>
+              <Table.ColumnHeader>
+                <ResponsiveContent narrow="D / T" wide="Days / Turns" />
+              </Table.ColumnHeader>
+              <Table.ColumnHeader>
+                <ResponsiveContent narrow="Lvl" wide="Level" />
+              </Table.ColumnHeader>
+              {showClass && <Table.ColumnHeader>Class</Table.ColumnHeader>}
+              <Table.ColumnHeader>Sign</Table.ColumnHeader>
             </Table.Row>
-          ))}
-        </Table.Body>
-      </Table.Root>
+          </Table.Header>
+          <Table.Body>
+            {ascensions.map((a, i) => (
+              <Table.Row
+                key={`${a.player.id}/${a.ascensionNumber}`}
+                bg={awardBg(i + 1)}
+              >
+                <Table.Cell>{i + 1}</Table.Cell>
+                <Table.Cell>
+                  <PlayerLink player={a.player} />
+                </Table.Cell>
+                <Table.Cell>
+                  <AscensionDate ascension={a} />
+                </Table.Cell>
+                {alternativeScore && (
+                  <Table.Cell>
+                    {numberFormatter.format(alternativeScore[1](a))}
+                  </Table.Cell>
+                )}
+                <Table.Cell>{formatTurncount(a.days, a.turns)}</Table.Cell>
+                <Table.Cell>{a.level}</Table.Cell>
+                {showClass && (
+                  <Table.Cell>
+                    <Class class={a.class} shorten="acronyms" />
+                  </Table.Cell>
+                )}
+                <Table.Cell>{a.sign}</Table.Cell>
+              </Table.Row>
+            ))}
+          </Table.Body>
+        </Table.Root>
+      </Table.ScrollArea>
     </Container>
   );
 }

@@ -6,7 +6,7 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { HStack, Table, Container, Text } from "@chakra-ui/react";
+import { HStack, Table, Text } from "@chakra-ui/react";
 import { ResponsiveContent } from "./ResponsiveContent";
 import { RowData } from "~/routes/pyrites";
 import { PathLink } from "./PathLink";
@@ -99,7 +99,7 @@ export function PyriteTable({ ascensions }: Props) {
   });
 
   return (
-    <Container fontSize="smaller">
+    <Table.ScrollArea fontSize="smaller">
       <Table.Root>
         <Table.Header>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -164,6 +164,6 @@ export function PyriteTable({ ascensions }: Props) {
           ))}
         </Table.Body>
       </Table.Root>
-    </Container>
+    </Table.ScrollArea>
   );
 }

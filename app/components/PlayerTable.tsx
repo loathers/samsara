@@ -12,7 +12,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Pagination } from "./Pagination";
-import { HStack, Table, Container, Text } from "@chakra-ui/react";
+import { HStack, Table, Text } from "@chakra-ui/react";
 import { PlayerTableHeader } from "./PlayerTableHeader";
 import { FormattedDate } from "./FormattedDate";
 import { ResponsiveContent } from "./ResponsiveContent";
@@ -155,7 +155,7 @@ export function PlayerTable({ ascensions, jumpTo }: Props) {
   return (
     <>
       <Pagination table={table} value={pagination} onChange={setPagination} />
-      <Container>
+      <Table.ScrollArea>
         <Table.Root>
           <Table.Header>
             <Table.Row key={headerGroup.id}>
@@ -203,7 +203,7 @@ export function PlayerTable({ ascensions, jumpTo }: Props) {
             })}
           </Table.Body>
         </Table.Root>
-      </Container>
+      </Table.ScrollArea>
       <Pagination table={table} value={pagination} onChange={setPagination} />
     </>
   );

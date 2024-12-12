@@ -22,7 +22,7 @@ export function PathLink({ lifestyle, path, shorten }: Props) {
   );
 
   return (
-    <Link asChild>
+    <Link asChild gap={0}>
       <RemixLink to={`/path/${path.slug}`} title={title}>
         {["symbols", "full-symbols"].includes(shorten!) ? (
           <HStack minWidth={15} gap={shorten === "symbols" ? 0 : 1}>

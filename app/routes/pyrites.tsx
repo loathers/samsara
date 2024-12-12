@@ -1,7 +1,6 @@
 import {
   Button,
   Card,
-  Container,
   Group,
   Heading,
   HStack,
@@ -159,7 +158,7 @@ export default function Pyrites() {
       <Heading as="h3" size="md">
         Leaderboard of Fools
       </Heading>
-      <Container width={["100%", null, "50%"]}>
+      <Table.ScrollArea width={["100%", null, "50%"]}>
         <Table.Root>
           <Table.Header>
             <Table.Row>
@@ -186,7 +185,7 @@ export default function Pyrites() {
             ))}
           </Table.Body>
         </Table.Root>
-      </Container>
+      </Table.ScrollArea>
       <Heading as="h3" size="md">
         Pyrite Standings
       </Heading>
