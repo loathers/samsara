@@ -222,7 +222,7 @@ export const db = prisma.$extends({
         });
 
         return board.sort(
-          (a, b) => (a.tags[0]?.value ?? 37) - (b.tags[0]?.value ?? 37),
+          (a, b) => (a.tags[0]?.value ?? 35) - (b.tags[0]?.value ?? 35),
         );
       },
     },
@@ -290,7 +290,7 @@ export async function getKittycoreLeaderboard() {
       "days" ASC,
       "turns" ASC,
       "date" ASC
-    LIMIT 37
+    LIMIT 35
   `;
 }
 
