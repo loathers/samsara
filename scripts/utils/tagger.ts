@@ -258,7 +258,7 @@ function getLeaderboardQuery(
     inSeason,
     excludePaths,
     extra,
-    limit = 35,
+    limit = 37,
     year,
   }: {
     path?: string;

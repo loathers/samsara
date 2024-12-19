@@ -74,7 +74,7 @@ export const getExtra = (key: string) => (a: { extra: JsonValue }) => {
   return Number(a.extra[key] ?? 0);
 };
 
-export function awardBg(rank: number, [gold, silver, bronze] = [1, 11, 23]) {
+export function awardBg(rank: number, [gold, silver, bronze] = [1, 12, 24]) {
   if (rank <= gold) return "#fad25a";
   if (rank <= silver) return "silver";
   if (rank <= bronze) return "transparent";
