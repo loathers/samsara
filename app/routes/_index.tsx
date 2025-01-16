@@ -9,7 +9,6 @@ import {
   Group,
   InputAddon,
   createListCollection,
-  Grid,
   SimpleGrid,
 } from "@chakra-ui/react";
 import { data, Link, useLoaderData, useNavigate } from "@remix-run/react";
@@ -47,7 +46,7 @@ export const loader = async () => {
 
   // This works because the list of paths is ordered such that the most recent seasonal is first.
   const currentPath =
-    paths[0].end && paths[0].end > new Date()
+    (paths[0]?.end ?? 0) > new Date()
       ? paths[0]
       : { name: "Standard", slug: "standard", image: "standard11" };
 

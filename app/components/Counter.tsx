@@ -57,7 +57,7 @@ export function Counter({ value, lineHeight = 35, duration = 1 }: Props) {
     }
   `;
 
-  const length = Math.floor(Math.log10(value) + 1);
+  const length = Math.max(1, Math.floor(Math.log10(value) + 1));
 
   return (
     <Box>
