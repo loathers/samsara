@@ -401,36 +401,40 @@ async function tagPyrites(sendWebhook: boolean) {
   console.timeLog("etl", `Finished tagging pyrites`);
 
   if (sendWebhook) {
-    console.timeLog("etl", "Reporting new golds to OAF webhook");
-    for (const [category, run] of Object.entries(await getBestRuns())) {
-      const previous = golds[category];
-      if (
-        run.ascensionNumber !== previous.ascensionNumber ||
-        run.player.id !== previous.player.id
-      ) {
-        // Record breaker!
-        try {
-          const result = await fetch(
-            `https://oaf.loathers.net/webhooks/samsara?token=${process.env.OAF_TOKEN}`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
+    if (!process.env.OAF_TOKEN) {
+      console.timeLog("etl", "No OAF_TOKEN set, skipping OAF webhook");
+    } else {
+      console.timeLog("etl", "Reporting new golds to OAF webhook");
+      for (const [category, run] of Object.entries(await getBestRuns())) {
+        const previous = golds[category];
+        if (
+          run.ascensionNumber !== previous.ascensionNumber ||
+          run.player.id !== previous.player.id
+        ) {
+          // Record breaker!
+          try {
+            const result = await fetch(
+              `https://oaf.loathers.net/webhooks/samsara?token=${process.env.OAF_TOKEN}`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(run),
               },
-              body: JSON.stringify(run),
-            },
-          );
-          if (!result.ok) {
-            console.warn(
-              "OAF webhook error",
-              result.status,
-              ":",
-              result.statusText,
-              await result.text(),
             );
+            if (!result.ok) {
+              console.warn(
+                "OAF webhook error",
+                result.status,
+                ":",
+                result.statusText,
+                await result.text(),
+              );
+            }
+          } catch (error) {
+            console.warn("OAF webhook error", error);
           }
-        } catch (error) {
-          console.warn("OAF webhook error", error);
         }
       }
     }

@@ -27,11 +27,17 @@ function* counter(startFrom = 1, skip: number[] = []) {
 async function main() {
   const { startingId, force } = cli.opts<OptionValues>();
 
+  console.time("etl");
+  console.timeLog("etl", "Begin");
+
   const skip = force
     ? []
     : (await db.player.findMany({})).map((player) => player.id);
 
   await processAscensions(counter(startingId, skip));
+
+  console.timeLog("etl", "Done");
+  console.timeEnd("etl");
 }
 
 main();

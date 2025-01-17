@@ -72,6 +72,8 @@ export async function processPlayers(
             `!! Found blank id ${id} after the last known account id${stopOnBlank ? ` - stopping` : ""}`,
           );
           shouldStop = stopOnBlank;
+        } else {
+          console.timeLog("etl", `  Finished checking ${id} (blank)`);
         }
         return;
       }
@@ -101,6 +103,9 @@ export async function processPlayers(
       console.timeLog("etl", `  Finished checking ${id}`);
     });
   }
+
+  // Wait for all workers to finish
+  while (workers.some((w) => w.isBusy())) await wait(1);
 
   // Upsert all players detected (in case of name change)
   for (const player of players) {
