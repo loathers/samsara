@@ -1,6 +1,7 @@
 import { Lifestyle as LifestyleEnum } from "@prisma/client";
 import { ShortenStyle } from "~/utils";
 import { KoLImage } from "./KoLImage";
+import { HStack } from "@chakra-ui/react";
 
 type Props = {
   lifestyle: LifestyleEnum;
@@ -36,15 +37,24 @@ export function formatLifestyle(
 }
 
 export function Lifestyle({ lifestyle, shorten }: Props) {
-  if (shorten === "symbols") {
-    const image = LIFESTYLE_FORMATS[lifestyle].symbols;
-    return (
-      <KoLImage
-        src={`itemimages/${image}.gif`}
-        alt={LIFESTYLE_FORMATS[lifestyle].full}
-      />
-    );
-  }
+  const imageElement = (
+    <KoLImage
+      src={`itemimages/${LIFESTYLE_FORMATS[lifestyle].symbols}.gif`}
+      alt={LIFESTYLE_FORMATS[lifestyle].full}
+    />
+  );
 
-  return formatLifestyle(lifestyle, shorten);
+  switch (shorten) {
+    case "symbols":
+      return imageElement;
+    case "full-symbols":
+      return (
+        <HStack minWidth={15} gap={1}>
+          {imageElement}
+          {formatLifestyle(lifestyle, shorten)}
+        </HStack>
+      );
+    default:
+      return formatLifestyle(lifestyle, shorten);
+  }
 }

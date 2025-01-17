@@ -8,14 +8,14 @@ import {
 } from "@tanstack/react-table";
 import { HStack, Table, Text } from "@chakra-ui/react";
 import { ResponsiveContent } from "./ResponsiveContent";
-import { RowData } from "~/routes/pyrites";
+import { RowData } from "~/routes/stats";
 import { PathLink } from "./PathLink";
-import { compareDaycount } from "~/utils";
+import { compareDaycount, numberFormatter } from "~/utils";
 import { useState } from "react";
 import { PlayerLink } from "./PlayerLink";
 import { LuArrowDown, LuArrowUp } from "react-icons/lu";
 import { AscensionDate } from "./AscensionDate";
-import { SpeedCell } from "./PyriteTableSpeedCell";
+import { SpeedCell } from "./StatsTableSpeedCell";
 
 declare module "@tanstack/react-table" {
   // @ts-expect-error This should work but TS is wrong here
@@ -71,25 +71,41 @@ const columns = [
       a.original.path.name.localeCompare(b.original.path.name),
   }),
   columnHelper.group({
-    header: "Softcore",
+    header: "Runs",
+    columns: [
+      columnHelper.accessor("totalRuns", {
+        header: "Total",
+        cell: (info) => <Text>{numberFormatter.format(info.getValue())}</Text>,
+      }),
+      columnHelper.accessor("totalRunsInSeason", {
+        header: "In Season",
+        cell: (info) =>
+          info.getValue() > 0 ? (
+            <Text>{numberFormatter.format(info.getValue())}</Text>
+          ) : null,
+      }),
+    ],
+  }),
+  columnHelper.group({
+    header: "Fastest Softcore",
     columns: groupColumnsFactory("softcore"),
   }),
   columnHelper.group({
-    header: "Hardcore",
+    header: "Fastest Hardcore",
     columns: groupColumnsFactory("hardcore"),
   }),
 ];
 
 type Props = {
-  ascensions: RowData[];
+  paths: RowData[];
 };
 
-export function PyriteTable({ ascensions }: Props) {
+export function StatsTable({ paths }: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const table = useReactTable({
     columns,
-    data: ascensions,
+    data: paths,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,

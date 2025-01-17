@@ -1,7 +1,7 @@
 import { HStack, Text } from "@chakra-ui/react";
 import { CellContext } from "@tanstack/react-table";
 import { useMemo } from "react";
-import { RowData } from "~/routes/pyrites";
+import { RowData } from "~/routes/stats";
 import {
   compareDaycount,
   formatTurncount,

@@ -239,7 +239,7 @@ export default function Index() {
         <Card.Root>
           <Card.Body>
             <Button asChild>
-              <Link to="/pyrites">Pyrite Plugs</Link>
+              <Link to="/stats">Stats for Nerds</Link>
             </Button>
           </Card.Body>
         </Card.Root>
