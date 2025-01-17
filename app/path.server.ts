@@ -94,6 +94,12 @@ export async function getPathData(
       special,
       "SOFTCORE",
     )) as SoftcoreLeaderboards),
+    totalRuns: await db.ascension.count({ where: { pathName: path.name } }),
+    totalRunsInSeason: path.end
+      ? await db.ascension.count({
+          where: { pathName: path.name, date: { lt: path.end } },
+        })
+      : 0,
   };
 }
 

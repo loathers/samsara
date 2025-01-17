@@ -49,6 +49,7 @@ export default function NoPath() {
     scDedication,
     hcDedication,
     casualDedication,
+    totalRuns,
   } = useLoaderData<typeof loader>();
 
   return (
@@ -57,6 +58,7 @@ export default function NoPath() {
         path={path}
         frequency={frequency}
         recordBreaking={recordBreaking}
+        totalRuns={totalRuns}
       />
       <LeaderboardAccordion>
         <LeaderboardAccordionItem

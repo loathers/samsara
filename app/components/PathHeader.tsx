@@ -15,6 +15,7 @@ import { RecordDatum, RecordGraph } from "./RecordGraph/RecordGraph";
 import { PathIcon } from "./PathIcon";
 import { Path } from "./Path";
 import { useMemo } from "react";
+import { getDifferenceInMonths, numberFormatter } from "~/utils";
 
 type Datum = { date: Date; count: number };
 type Props = {
@@ -25,16 +26,52 @@ type Props = {
     end: Date | null;
     image: string | null;
   };
+  totalRuns: number;
+  totalRunsInSeason?: number;
   frequency: Datum[];
   recordBreaking: RecordDatum[];
   extra?: string;
 };
 
-export function PathHeader({ path, frequency, recordBreaking, extra }: Props) {
+export function PathHeader({
+  path,
+  frequency,
+  recordBreaking,
+  extra,
+  totalRuns,
+  totalRunsInSeason,
+}: Props) {
   const lines = useMemo(() => {
     if (!path.seasonal || !path.end) return [];
     return [{ time: new Date(path.end).getTime(), label: "Season end" }];
   }, [path]);
+
+  function Stats() {
+    return (
+      <Stack
+        direction="row"
+        gap={2}
+        textStyle="md"
+        separator={<Text borderStyle="none">•</Text>}
+      >
+        <Text>
+          {numberFormatter.format(totalRuns)} total run
+          {totalRuns !== 1 ? "s" : ""}
+        </Text>
+        {totalRunsInSeason && (
+          <Text>{numberFormatter.format(totalRunsInSeason)} in season</Text>
+        )}
+        {totalRuns && frequency.length && (
+          <Text>
+            {numberFormatter.format(
+              totalRuns / getDifferenceInMonths(frequency[0].date),
+            )}{" "}
+            runs per month
+          </Text>
+        )}
+      </Stack>
+    );
+  }
 
   return (
     <Stack alignItems="center">
@@ -42,7 +79,7 @@ export function PathHeader({ path, frequency, recordBreaking, extra }: Props) {
         <Heading size="4xl">
           <Path path={path} />
         </Heading>
-        <PathIcon path={path} />
+        {path.image !== "blank" && <PathIcon path={path} />}
       </HStack>
       {path.start && path.end && (
         <Text textStyle="md">
@@ -50,6 +87,7 @@ export function PathHeader({ path, frequency, recordBreaking, extra }: Props) {
           <FormattedDate date={path.end} />
         </Text>
       )}
+      <Stats />
       <Group justifyContent="center">
         <Button asChild>
           <Link to="/">home</Link>

@@ -47,6 +47,7 @@ export default function BadMoonPath() {
     path,
     recordBreaking,
     scLeaderboard,
+    totalRuns,
   } = useLoaderData<typeof loader>();
 
   return (
@@ -55,6 +56,7 @@ export default function BadMoonPath() {
         path={path}
         frequency={frequency}
         recordBreaking={recordBreaking}
+        totalRuns={totalRuns}
       />
       <LeaderboardAccordion>
         <LeaderboardAccordionItem

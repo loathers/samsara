@@ -55,6 +55,8 @@ export default function PathPage() {
     scDedication,
     scLeaderboard,
     scPyrite,
+    totalRuns,
+    totalRunsInSeason,
   } = useLoaderData<typeof loader>();
 
   const showClass = path.class.length !== 1;
@@ -66,6 +68,8 @@ export default function PathPage() {
         path={path}
         frequency={frequency}
         recordBreaking={recordBreaking}
+        totalRuns={totalRuns}
+        totalRunsInSeason={totalRunsInSeason}
       />
       <LeaderboardAccordion>
         <LeaderboardAccordionItem

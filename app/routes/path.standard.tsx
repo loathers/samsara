@@ -47,6 +47,7 @@ export default function PathPage() {
     scLeaderboard,
     scPyrite,
     years,
+    totalRuns,
   } = useLoaderData<typeof loader>();
 
   const yearBoards = useMemo(
@@ -80,6 +81,7 @@ export default function PathPage() {
         path={path}
         frequency={frequency}
         recordBreaking={recordBreaking}
+        totalRuns={totalRuns}
       />
       <LeaderboardAccordion>
         <LeaderboardAccordionItem

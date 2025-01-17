@@ -50,6 +50,8 @@ export default function OCRSPath() {
     scPyrite,
     scSpecialLeaderboard,
     scSpecialPyrite,
+    totalRuns,
+    totalRunsInSeason,
   } = useLoaderData<typeof loader>();
 
   return (
@@ -59,6 +61,8 @@ export default function OCRSPath() {
         frequency={frequency}
         recordBreaking={recordBreaking}
         extra="Fun"
+        totalRuns={totalRuns}
+        totalRunsInSeason={totalRunsInSeason}
       />
       <LeaderboardAccordion>
         <LeaderboardAccordionItem

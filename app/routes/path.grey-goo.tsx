@@ -41,6 +41,8 @@ export default function GreyGooPath() {
     recordBreaking,
     scSpecialLeaderboard,
     scSpecialPyrite,
+    totalRuns,
+    totalRunsInSeason,
   } = useLoaderData<typeof loader>();
 
   return (
@@ -50,6 +52,8 @@ export default function GreyGooPath() {
         frequency={frequency}
         recordBreaking={recordBreaking}
         extra="Goo Score"
+        totalRuns={totalRuns}
+        totalRunsInSeason={totalRunsInSeason}
       />
       <LeaderboardAccordion>
         <LeaderboardAccordionItem

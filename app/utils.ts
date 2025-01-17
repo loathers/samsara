@@ -88,3 +88,11 @@ export const SPECIAL_RANKINGS = new Map<string, string>([
   ["Grey Goo", "Goo Score"],
   ["One Crazy Random Summer", "Fun"],
 ]);
+
+export const getDifferenceInMonths = (start: Date, end = new Date()) =>
+  Math.max(
+    (end.getFullYear() - start.getFullYear()) * 12 +
+      end.getMonth() -
+      start.getMonth(),
+    0,
+  );
