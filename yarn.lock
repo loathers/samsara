@@ -10167,44 +10167,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remix-utils@npm:^7.7.0":
-  version: 7.7.0
-  resolution: "remix-utils@npm:7.7.0"
-  dependencies:
-    type-fest: "npm:^4.18.1"
-  peerDependencies:
-    "@remix-run/cloudflare": ^2.0.0
-    "@remix-run/node": ^2.0.0
-    "@remix-run/react": ^2.0.0
-    "@remix-run/router": ^1.7.2
-    crypto-js: ^4.1.1
-    intl-parse-accept-language: ^1.0.0
-    is-ip: ^5.0.1
-    react: ^18.0.0
-    zod: ^3.22.4
-  peerDependenciesMeta:
-    "@remix-run/cloudflare":
-      optional: true
-    "@remix-run/node":
-      optional: true
-    "@remix-run/react":
-      optional: true
-    "@remix-run/router":
-      optional: true
-    crypto-js:
-      optional: true
-    intl-parse-accept-language:
-      optional: true
-    is-ip:
-      optional: true
-    react:
-      optional: true
-    zod:
-      optional: true
-  checksum: 10c0/09789e9565b6d2171022b3a6ba70cbdd84d8bf6d57338f8ad727ad9f8d90f6b81dc48cf946a14150d2594a2aa23255326b4809b1452e3a36dda3c833522cf12e
-  languageName: node
-  linkType: hard
-
 "require-like@npm:>= 0.1.1":
   version: 0.1.2
   resolution: "require-like@npm:0.1.2"
@@ -10495,7 +10457,6 @@ __metadata:
     react-icons: "npm:^5.4.0"
     react-is: "npm:19.0.0"
     recharts: "npm:^2.15.0"
-    remix-utils: "npm:^7.7.0"
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.7.3"
     typescript-eslint: "npm:^8.20.0"
@@ -11480,13 +11441,6 @@ __metadata:
   dependencies:
     prelude-ls: "npm:^1.2.1"
   checksum: 10c0/7b3fd0ed43891e2080bf0c5c504b418fbb3e5c7b9708d3d015037ba2e6323a28152ec163bcb65212741fa5d2022e3075ac3c76440dbd344c9035f818e8ecee58
-  languageName: node
-  linkType: hard
-
-"type-fest@npm:^4.18.1":
-  version: 4.26.1
-  resolution: "type-fest@npm:4.26.1"
-  checksum: 10c0/d2719ff8d380befe8a3c61068f37f28d6fa2849fd140c5d2f0f143099e371da6856aad7c97e56b83329d45bfe504afe9fd936a7cff600cc0d46aa9ffb008d6c6
   languageName: node
   linkType: hard
 
