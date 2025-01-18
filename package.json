@@ -14,7 +14,7 @@
     "recent": "node --import tsx --env-file .env scripts/recent.ts"
   },
   "dependencies": {
-    "@chakra-ui/react": "^3.3.3",
+    "@chakra-ui/react": "^3.4.0",
     "@emotion/react": "^11.14.0",
     "@emotion/server": "^11.11.0",
     "@remix-run/node": "^2.15.2",
@@ -52,7 +52,7 @@
     "typescript-eslint": "^8.20.0",
     "vite": "^6.0.7",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.0.1"
+    "vitest": "^3.0.2"
   },
   "resolutions": {
     "@types/react": "npm:types-react@rc",
