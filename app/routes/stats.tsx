@@ -150,34 +150,68 @@ export const loader = async () => {
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
-  const tortoiseQueries = [
-    LifestyleEnum.CASUAL,
-    LifestyleEnum.SOFTCORE,
-    LifestyleEnum.HARDCORE,
-  ].map((l) =>
-    db.ascension.findFirst({
-      where: {
-        pathName: "None",
-        abandoned: false,
-        dropped: false,
-        date: { gt: NS13 },
-        lifestyle: l,
-      },
-      orderBy: [{ turns: "asc" }, { days: "asc" }],
-      include: { player: true },
-      take: 1,
-    }),
-  );
+  const tortoisecore = (
+    await Promise.all(
+      [
+        LifestyleEnum.CASUAL,
+        LifestyleEnum.SOFTCORE,
+        LifestyleEnum.HARDCORE,
+      ].map((l) =>
+        db.ascension.findFirst({
+          where: {
+            pathName: "None",
+            abandoned: false,
+            dropped: false,
+            date: { gt: NS13 },
+            lifestyle: l,
+          },
+          orderBy: [{ turns: "asc" }, { days: "asc" }],
+          select: {
+            player: true,
+            days: true,
+            turns: true,
+            playerId: true,
+            ascensionNumber: true,
+            lifestyle: true,
+            date: true,
+          },
+          take: 1,
+        }),
+      ),
+    )
+  ).filter((t) => t !== null);
 
-  const tortoisecore = (await Promise.all(tortoiseQueries)).filter(
-    (t) => t !== null,
-  );
+  const longest = (
+    await Promise.all(
+      ["turns" as const, "days" as const].map((u) =>
+        db.ascension.findFirst({
+          where: {
+            abandoned: false,
+            dropped: false,
+            date: { gt: NS13 },
+          },
+          orderBy: [{ [u]: "desc" }],
+          select: {
+            player: true,
+            days: true,
+            turns: true,
+            playerId: true,
+            ascensionNumber: true,
+            lifestyle: true,
+            date: true,
+          },
+          take: 1,
+        }),
+      ),
+    )
+  ).filter((r) => r !== null);
 
-  return { leaderboard, paths, tortoisecore };
+  return { leaderboard, paths, tortoisecore, longest };
 };
 
 export default function Stats() {
-  const { leaderboard, paths, tortoisecore } = useLoaderData<typeof loader>();
+  const { leaderboard, paths, tortoisecore, longest } =
+    useLoaderData<typeof loader>();
 
   return (
     <Stack gap={10} alignItems="center">
@@ -260,6 +294,52 @@ export default function Stats() {
               </Table.Header>
               <Table.Body>
                 {tortoisecore.map((asc) => (
+                  <Table.Row key={`${asc.playerId}${asc.ascensionNumber}`}>
+                    <Table.Cell>
+                      <Lifestyle
+                        lifestyle={asc.lifestyle}
+                        shorten="full-symbols"
+                      />
+                    </Table.Cell>
+                    <Table.Cell>
+                      {formatTurncount(asc.days, asc.turns)}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <AscensionDate ascension={asc} />
+                    </Table.Cell>
+                    <Table.Cell>
+                      <PlayerLink player={asc.player} />
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table.Root>
+          </Table.ScrollArea>
+        </Card.Body>
+      </Card.Root>
+      <Card.Root width={["100%", null, "80%"]}>
+        <Card.Header>
+          <Heading size="md">Longest Runs</Heading>
+        </Card.Header>
+        <Card.Body gap={4}>
+          <Text>
+            And finally, we track the longest runs by days and turns separately.
+            Remember, a run doesn't truly have a length until it's over.
+          </Text>
+          <Table.ScrollArea>
+            <Table.Root>
+              <Table.Header>
+                <Table.Row>
+                  <Table.ColumnHeader>Lifestyle</Table.ColumnHeader>
+                  <Table.ColumnHeader>
+                    <ResponsiveContent narrow="D / T" wide="Days / Turns" />
+                  </Table.ColumnHeader>
+                  <Table.ColumnHeader>Date</Table.ColumnHeader>
+                  <Table.ColumnHeader>Player</Table.ColumnHeader>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {longest.map((asc) => (
                   <Table.Row key={`${asc.playerId}${asc.ascensionNumber}`}>
                     <Table.Cell>
                       <Lifestyle
