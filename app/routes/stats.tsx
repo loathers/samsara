@@ -197,7 +197,6 @@ export const loader = async () => {
             turns: true,
             playerId: true,
             ascensionNumber: true,
-            lifestyle: true,
             date: true,
           },
           take: 1,
@@ -330,7 +329,6 @@ export default function Stats() {
             <Table.Root>
               <Table.Header>
                 <Table.Row>
-                  <Table.ColumnHeader>Lifestyle</Table.ColumnHeader>
                   <Table.ColumnHeader>
                     <ResponsiveContent narrow="D / T" wide="Days / Turns" />
                   </Table.ColumnHeader>
@@ -341,12 +339,6 @@ export default function Stats() {
               <Table.Body>
                 {longest.map((asc) => (
                   <Table.Row key={`${asc.playerId}${asc.ascensionNumber}`}>
-                    <Table.Cell>
-                      <Lifestyle
-                        lifestyle={asc.lifestyle}
-                        shorten="full-symbols"
-                      />
-                    </Table.Cell>
                     <Table.Cell>
                       {formatTurncount(asc.days, asc.turns)}
                     </Table.Cell>
