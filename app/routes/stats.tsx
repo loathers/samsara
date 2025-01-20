@@ -183,24 +183,28 @@ export const loader = async () => {
 
   const longest = (
     await Promise.all(
-      ["turns" as const, "days" as const].map((u) =>
-        db.ascension.findFirst({
-          where: {
-            abandoned: false,
-            dropped: false,
-            date: { gt: NS13 },
-          },
-          orderBy: [{ [u]: "desc" }],
-          select: {
-            player: true,
-            days: true,
-            turns: true,
-            playerId: true,
-            ascensionNumber: true,
-            date: true,
-          },
-          take: 1,
-        }),
+      ["turns" as const, "days" as const].flatMap((u) =>
+        [LifestyleEnum.SOFTCORE, LifestyleEnum.HARDCORE].flatMap((l) =>
+          db.ascension.findFirst({
+            where: {
+              lifestyle: l,
+              abandoned: false,
+              dropped: false,
+              date: { gt: NS13 },
+            },
+            orderBy: [{ [u]: "desc" }],
+            select: {
+              player: true,
+              days: true,
+              turns: true,
+              playerId: true,
+              ascensionNumber: true,
+              lifestyle: true,
+              date: true,
+            },
+            take: 1,
+          }),
+        ),
       ),
     )
   ).filter((r) => r !== null);
@@ -329,6 +333,8 @@ export default function Stats() {
             <Table.Root>
               <Table.Header>
                 <Table.Row>
+                  <Table.ColumnHeader></Table.ColumnHeader>
+                  <Table.ColumnHeader>Lifestyle</Table.ColumnHeader>
                   <Table.ColumnHeader>
                     <ResponsiveContent narrow="D / T" wide="Days / Turns" />
                   </Table.ColumnHeader>
@@ -337,8 +343,19 @@ export default function Stats() {
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {longest.map((asc) => (
+                {longest.map((asc, i) => (
                   <Table.Row key={`${asc.playerId}${asc.ascensionNumber}`}>
+                    {i % 2 === 0 && (
+                      <Table.Cell rowSpan={2}>
+                        {i < 2 ? "Turns" : "Days"}
+                      </Table.Cell>
+                    )}
+                    <Table.Cell>
+                      <Lifestyle
+                        lifestyle={asc.lifestyle}
+                        shorten="full-symbols"
+                      />
+                    </Table.Cell>
                     <Table.Cell>
                       {formatTurncount(asc.days, asc.turns)}
                     </Table.Cell>
