@@ -12,7 +12,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Pagination } from "./Pagination";
-import { HStack, Table, Text } from "@chakra-ui/react";
+import { HStack, Table } from "@chakra-ui/react";
 import { PlayerTableHeader } from "./PlayerTableHeader";
 import { FormattedDate } from "./FormattedDate";
 import { ResponsiveContent } from "./ResponsiveContent";
@@ -20,9 +20,9 @@ import { Class } from "./Class";
 import { RowData } from "~/routes/player.$id";
 import { PathLink } from "./PathLink";
 import { formatLifestyle } from "./Lifestyle";
-import { formatTurncount } from "~/utils";
 import { TagMedal } from "./TagMedal";
 import { useEffect, useRef, useState } from "react";
+import { Turncount } from "./Turncount";
 
 declare module "@tanstack/react-table" {
   // @ts-expect-error This should work but TS is wrong here
@@ -89,7 +89,7 @@ const columns = [
     header: () => <ResponsiveContent narrow="D / T" wide="Days / Turns" />,
     cell: (info) => (
       <HStack>
-        <Text>{formatTurncount(info.getValue(), info.row.original.turns)}</Text>
+        <Turncount days={info.getValue()} turns={info.row.original.turns} />
         {info.row.original.tags.map((t) => (
           <TagMedal key={t.type} tag={t} path={info.row.original.path} />
         ))}

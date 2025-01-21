@@ -1,14 +1,14 @@
 import { HStack, Text } from "@chakra-ui/react";
 import { CellContext } from "@tanstack/react-table";
-import { useMemo } from "react";
+import { JSX, useMemo } from "react";
 import { RowData } from "~/routes/stats";
 import {
   compareDaycount,
-  formatTurncount,
   getExtra,
   numberFormatter,
   SPECIAL_RANKINGS,
 } from "~/utils";
+import { Turncount } from "./Turncount";
 
 type Props = {
   info: CellContext<RowData, number>;
@@ -19,20 +19,20 @@ export function SpeedCell({ info, type }: Props) {
   const data = info.row.original[type];
   if (!data) return null;
 
-  const [value, slow] = useMemo<[value: string | number, slow: boolean]>(() => {
+  const [turncount, slow] = useMemo<[value: JSX.Element, slow: boolean]>(() => {
     const special = SPECIAL_RANKINGS.get(info.row.original.path.name);
 
     if (special) {
       const getter = getExtra(special);
       const value = getter(data);
       return [
-        numberFormatter.format(value),
+        <Text>{numberFormatter.format(value)}</Text>,
         type === "softcore" && value < getter(info.row.original.hardcore),
       ];
     }
 
     return [
-      formatTurncount(info.getValue(), data.turns),
+      <Turncount days={info.getValue()} turns={data.turns} />,
       type === "softcore" &&
         compareDaycount(data, info.row.original.hardcore) >= 0,
     ];
@@ -40,7 +40,7 @@ export function SpeedCell({ info, type }: Props) {
 
   return (
     <HStack>
-      <Text>{value}</Text>
+      {turncount}
       {slow && (
         <Text
           title="Slower than or equal to the hardcore equivalent"

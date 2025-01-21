@@ -1,10 +1,11 @@
 import { Heading, Table, Container } from "@chakra-ui/react";
 import { LeaderboardEntry } from "~/db.server";
 import { Class } from "./Class";
-import { awardBg, formatTurncount, numberFormatter } from "~/utils";
+import { awardBg, numberFormatter } from "~/utils";
 import { ResponsiveContent } from "./ResponsiveContent";
 import { PlayerLink } from "./PlayerLink";
 import { AscensionDate } from "./AscensionDate";
+import { Turncount } from "./Turncount";
 
 type Props = {
   title?: string;
@@ -50,31 +51,33 @@ export function Leaderboard({
             </Table.Row>
           </Table.Header>
           <Table.Body>
-            {ascensions.map((a, i) => (
+            {ascensions.map((asc, i) => (
               <Table.Row
-                key={`${a.player.id}/${a.ascensionNumber}`}
+                key={`${asc.player.id}/${asc.ascensionNumber}`}
                 bg={awardBg(i + 1)}
               >
                 <Table.Cell>{i + 1}</Table.Cell>
                 <Table.Cell>
-                  <PlayerLink player={a.player} />
+                  <PlayerLink player={asc.player} />
                 </Table.Cell>
                 <Table.Cell>
-                  <AscensionDate ascension={a} />
+                  <AscensionDate ascension={asc} />
                 </Table.Cell>
                 {alternativeScore && (
                   <Table.Cell>
-                    {numberFormatter.format(alternativeScore[1](a))}
+                    {numberFormatter.format(alternativeScore[1](asc))}
                   </Table.Cell>
                 )}
-                <Table.Cell>{formatTurncount(a.days, a.turns)}</Table.Cell>
-                <Table.Cell>{a.level}</Table.Cell>
+                <Table.Cell>
+                  <Turncount days={asc.days} turns={asc.turns} />
+                </Table.Cell>
+                <Table.Cell>{asc.level}</Table.Cell>
                 {showClass && (
                   <Table.Cell>
-                    <Class class={a.class} shorten="acronyms" />
+                    <Class class={asc.class} shorten="acronyms" />
                   </Table.Cell>
                 )}
-                <Table.Cell>{a.sign}</Table.Cell>
+                <Table.Cell>{asc.sign}</Table.Cell>
               </Table.Row>
             ))}
           </Table.Body>

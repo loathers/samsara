@@ -56,10 +56,6 @@ export function calculateRange(a: Date | { date: Date }[], b?: Date): number {
   return differenceInDays(end, start);
 }
 
-export const formatTurncount = (days: number, turns: number) => {
-  return `${numberFormatter.format(days)} / ${numberFormatter.format(turns)}`;
-};
-
 export const compareDaycount = (
   a?: { days: number; turns: number },
   b?: { days: number; turns: number },

@@ -22,8 +22,8 @@ import { Lifestyle } from "~/components/Lifestyle";
 import { PlayerLink } from "~/components/PlayerLink";
 import { ResponsiveContent } from "~/components/ResponsiveContent";
 import { StatsTable } from "~/components/StatsTable";
+import { Turncount } from "~/components/Turncount";
 import { db, NS13 } from "~/db.server";
-import { formatTurncount } from "~/utils";
 
 type AscensionData = Ascension & {
   date: Date;
@@ -305,7 +305,7 @@ export default function Stats() {
                       />
                     </Table.Cell>
                     <Table.Cell>
-                      {formatTurncount(asc.days, asc.turns)}
+                      <Turncount days={asc.days} turns={asc.turns} />
                     </Table.Cell>
                     <Table.Cell>
                       <AscensionDate ascension={asc} />
@@ -357,7 +357,7 @@ export default function Stats() {
                       />
                     </Table.Cell>
                     <Table.Cell>
-                      {formatTurncount(asc.days, asc.turns)}
+                      <Turncount days={asc.days} turns={asc.turns} />
                     </Table.Cell>
                     <Table.Cell>
                       <AscensionDate ascension={asc} />
