@@ -1,11 +1,12 @@
-import { Heading, Table, Container } from "@chakra-ui/react";
+import { Container, Heading, Table } from "@chakra-ui/react";
+
+import { AscensionDate } from "~/components/AscensionDate";
+import { Class } from "~/components/Class";
+import { PlayerLink } from "~/components/PlayerLink";
+import { ResponsiveContent } from "~/components/ResponsiveContent";
+import { Turncount } from "~/components/Turncount";
 import { LeaderboardEntry } from "~/db.server";
-import { Class } from "./Class";
 import { awardBg, numberFormatter } from "~/utils";
-import { ResponsiveContent } from "./ResponsiveContent";
-import { PlayerLink } from "./PlayerLink";
-import { AscensionDate } from "./AscensionDate";
-import { Turncount } from "./Turncount";
 
 type Props = {
   title?: string;

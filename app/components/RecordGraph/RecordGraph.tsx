@@ -10,9 +10,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { TogglableLegend } from "../TogglableLegend";
-import { DaysDot } from "./DaysDot";
-import { formatLifestyle } from "../Lifestyle";
+
+import { formatLifestyle } from "~/components/Lifestyle";
+import { DaysDot } from "~/components/RecordGraph/DaysDot";
+import { TogglableLegend } from "~/components/TogglableLegend";
 import {
   calculateRange,
   compactNumberFormatter,

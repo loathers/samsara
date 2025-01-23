@@ -1,4 +1,4 @@
-import { KoLImage } from "./KoLImage";
+import { KoLImage } from "~/components/KoLImage";
 
 type Props = {
   path: { name: string; image: string | null };

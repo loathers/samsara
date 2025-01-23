@@ -1,28 +1,33 @@
+import { Counter } from "../components/Counter.js";
+import { FrequencyGraph } from "../components/FrequencyGraph.js";
 import {
-  Text,
-  Stack,
-  Heading,
-  Card,
   Button,
+  Card,
+  Group,
+  Heading,
   Image,
   Input,
-  Group,
   InputAddon,
-  createListCollection,
   SimpleGrid,
+  Stack,
+  Text,
+  createListCollection,
 } from "@chakra-ui/react";
-import { data, Link, useLoaderData, useNavigate } from "@remix-run/react";
-
-import { FrequencyGraph } from "../components/FrequencyGraph.js";
-import { Counter } from "../components/Counter.js";
-import { db } from "~/db.server";
-import { PopularityGraph } from "~/components/PopularityGraph";
-import { PathLink } from "~/components/PathLink";
-import { CoolStat } from "~/components/CoolStat";
 import { FormEventHandler, useCallback } from "react";
+import {
+  type HeadersFunction,
+  Link,
+  data,
+  useLoaderData,
+  useNavigate,
+} from "react-router";
+
+import { CoolStat } from "~/components/CoolStat";
 import { formatPathName, getPathAcronym } from "~/components/Path";
-import { HeadersFunction } from "@remix-run/node";
+import { PathLink } from "~/components/PathLink";
+import { PopularityGraph } from "~/components/PopularityGraph";
 import { Select } from "~/components/Select.js";
+import { db } from "~/db.server";
 
 export const meta = () => {
   return [
@@ -131,7 +136,7 @@ export default function Index() {
   );
 
   const pathCollection = createListCollection({
-    items: paths,
+    items: paths ?? [],
     itemToString: formatPathName,
     itemToValue: (p) => p.slug,
   });
@@ -220,7 +225,7 @@ export default function Index() {
         <Card.Body>
           <FrequencyGraph
             data={frequency}
-            lines={paths
+            lines={(paths ?? [])
               .filter((p) => p.start && p.name !== "Standard")
               .map((p) => ({
                 time: new Date(p.start!).getTime(),

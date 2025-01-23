@@ -1,21 +1,22 @@
+import { HStack, Table, Text } from "@chakra-ui/react";
 import {
+  SortingState,
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
-  SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { HStack, Table, Text } from "@chakra-ui/react";
-import { ResponsiveContent } from "./ResponsiveContent";
-import { RowData } from "~/routes/stats";
-import { PathLink } from "./PathLink";
-import { compareDaycount, numberFormatter } from "~/utils";
 import { useState } from "react";
-import { PlayerLink } from "./PlayerLink";
 import { LuArrowDown, LuArrowUp } from "react-icons/lu";
-import { AscensionDate } from "./AscensionDate";
-import { SpeedCell } from "./StatsTableSpeedCell";
+
+import { AscensionDate } from "~/components/AscensionDate";
+import { PathLink } from "~/components/PathLink";
+import { PlayerLink } from "~/components/PlayerLink";
+import { ResponsiveContent } from "~/components/ResponsiveContent";
+import { SpeedCell } from "~/components/StatsTableSpeedCell";
+import { RowData } from "~/routes/stats";
+import { compareDaycount, numberFormatter } from "~/utils";
 
 declare module "@tanstack/react-table" {
   // @ts-expect-error This should work but TS is wrong here

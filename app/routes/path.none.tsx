@@ -1,14 +1,13 @@
 import { Stack } from "@chakra-ui/react";
-import { json } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { data, useLoaderData } from "react-router";
 
+import { Dedication } from "~/components/Dedication";
 import { Leaderboard } from "~/components/Leaderboard";
+import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
+import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
+import { PathHeader } from "~/components/PathHeader";
 import { db } from "~/db.server";
 import { getPathData } from "~/path.server";
-import { PathHeader } from "~/components/PathHeader";
-import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
-import { Dedication } from "~/components/Dedication";
-import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 
 export const loader = async () => {
   const path = await db.path.findFirst({
@@ -16,7 +15,7 @@ export const loader = async () => {
     include: { class: true },
   });
 
-  if (!path) throw json({ message: "Invalid path name" }, { status: 400 });
+  if (!path) throw data({ message: "Invalid path name" }, { status: 400 });
 
   return {
     ...(await getPathData(path)),

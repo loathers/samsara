@@ -1,9 +1,10 @@
-import { Button, createListCollection, Link, Stack } from "@chakra-ui/react";
+import { Button, Link, Stack, createListCollection } from "@chakra-ui/react";
 import { Column } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
-import { FilterIcon } from "./FilterIcon";
-import { Popover } from "./Popover";
-import { Select } from "./Select";
+
+import { FilterIcon } from "~/components/FilterIcon";
+import { Popover } from "~/components/Popover";
+import { Select } from "~/components/Select";
 
 function FacetedSelect<RowData>({
   column,

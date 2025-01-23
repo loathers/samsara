@@ -1,7 +1,7 @@
 import { Link } from "@chakra-ui/react";
-import { Link as RemixLink } from "@remix-run/react";
+import { Link as RRLink } from "react-router";
 
-import { FormattedDate } from "./FormattedDate";
+import { FormattedDate } from "~/components/FormattedDate";
 
 type Props = {
   ascension: { date: Date; player: { id: number }; ascensionNumber: number };
@@ -10,11 +10,11 @@ type Props = {
 export function AscensionDate({ ascension }: Props) {
   return (
     <Link asChild>
-      <RemixLink
+      <RRLink
         to={`/player/${ascension.player.id}#${ascension.ascensionNumber}`}
       >
         <FormattedDate date={ascension.date} />
-      </RemixLink>
+      </RRLink>
     </Link>
   );
 }

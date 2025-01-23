@@ -1,5 +1,5 @@
 import { Lifestyle, TagType } from "@prisma/client";
-import { data, LoaderFunctionArgs, redirect } from "@remix-run/node";
+import { type LoaderFunctionArgs, data, redirect } from "react-router";
 
 import { db, getMaxAge } from "~/db.server";
 

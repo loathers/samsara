@@ -1,16 +1,17 @@
-import { db } from "~/db.server.js";
 import { type Player } from "@prisma/client";
+
+import { parseWorkers } from "./Worker.js";
+import { fetchClasses, fetchPaths } from "./data.js";
+import { tagAscensions } from "./tagger.js";
 import {
+  type Ascension,
   parseAscensions,
   parsePlayer,
   rolloverSafeFetch,
   slugify,
   wait,
-  type Ascension,
 } from "./utils.js";
-import { parseWorkers } from "./Worker.js";
-import { fetchClasses, fetchPaths } from "./data.js";
-import { tagAscensions } from "./tagger.js";
+import { db } from "~/db.server.js";
 
 // KoL used to purge accounts from inactivity and even now, sometimes accounts are purged. This is a sufficiently late known account
 // to let us know when to stop skipping gaps. If we ever encounter a future gap, this should be updated to have a greater value.

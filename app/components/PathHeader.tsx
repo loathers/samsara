@@ -1,20 +1,20 @@
 import {
-  HStack,
-  Stack,
-  Heading,
-  Text,
   Box,
-  Group,
   Button,
+  Group,
+  HStack,
+  Heading,
+  Stack,
+  Text,
 } from "@chakra-ui/react";
-
-import { FrequencyGraph } from "./FrequencyGraph";
-import { FormattedDate } from "./FormattedDate";
-import { Link } from "@remix-run/react";
-import { RecordDatum, RecordGraph } from "./RecordGraph/RecordGraph";
-import { PathIcon } from "./PathIcon";
-import { Path } from "./Path";
 import { useMemo } from "react";
+import { Link } from "react-router";
+
+import { FormattedDate } from "~/components/FormattedDate";
+import { FrequencyGraph } from "~/components/FrequencyGraph";
+import { Path } from "~/components/Path";
+import { PathIcon } from "~/components/PathIcon";
+import { RecordDatum, RecordGraph } from "~/components/RecordGraph/RecordGraph";
 import { getDifferenceInMonths, numberFormatter } from "~/utils";
 
 type Datum = { date: Date; count: number };

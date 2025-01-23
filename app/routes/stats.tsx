@@ -2,8 +2,8 @@ import {
   Button,
   Card,
   Group,
-  Heading,
   HStack,
+  Heading,
   Link,
   Stack,
   Table,
@@ -11,11 +11,12 @@ import {
 } from "@chakra-ui/react";
 import {
   type Ascension,
-  type Player,
   Lifestyle as LifestyleEnum,
   Path,
+  type Player,
 } from "@prisma/client";
-import { useLoaderData, Link as RemixLink } from "@remix-run/react";
+import { Link as RRLink, useLoaderData } from "react-router";
+
 import { AscensionDate } from "~/components/AscensionDate";
 import { KoLImage } from "~/components/KoLImage";
 import { Lifestyle } from "~/components/Lifestyle";
@@ -23,7 +24,7 @@ import { PlayerLink } from "~/components/PlayerLink";
 import { ResponsiveContent } from "~/components/ResponsiveContent";
 import { StatsTable } from "~/components/StatsTable";
 import { Turncount } from "~/components/Turncount";
-import { db, NS13 } from "~/db.server";
+import { NS13, db } from "~/db.server";
 
 type AscensionData = Ascension & {
   date: Date;
@@ -224,7 +225,7 @@ export default function Stats() {
         </Heading>
         <Group justifyContent="center">
           <Button asChild>
-            <RemixLink to="/">home</RemixLink>
+            <RRLink to="/">home</RRLink>
           </Button>
         </Group>
       </Stack>

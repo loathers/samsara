@@ -1,7 +1,8 @@
-import { Heading, Table, Container } from "@chakra-ui/react";
+import { Container, Heading, Table } from "@chakra-ui/react";
+
+import { PlayerLink } from "~/components/PlayerLink";
 import { DedicationEntry } from "~/db.server";
 import { awardBg, numberFormatter } from "~/utils";
-import { PlayerLink } from "./PlayerLink";
 
 type Props = {
   title?: string;

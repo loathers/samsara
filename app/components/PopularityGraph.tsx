@@ -1,3 +1,6 @@
+import { HStack, Text } from "@chakra-ui/react";
+import { Lifestyle } from "@prisma/client";
+import createColor from "create-color";
 import { useMemo } from "react";
 import {
   Legend,
@@ -7,10 +10,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import createColor from "create-color";
-import { HStack, Text } from "@chakra-ui/react";
-import { Lifestyle } from "@prisma/client";
-import { PathLink } from "./PathLink";
+
+import { PathLink } from "~/components/PathLink";
 import { formatTick } from "~/utils";
 
 type Datum = {

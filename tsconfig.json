@@ -1,34 +1,24 @@
 {
-  "include": [
-    "vite.config.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    "**/.server/**/*.ts",
-    "**/.server/**/*.tsx",
-    "**/.client/**/*.ts",
-    "**/.client/**/*.tsx"
-  ],
+  "include": [".react-router/types/**/*", "app/**/*.ts", "app/**/*.tsx"],
   "compilerOptions": {
-    "lib": ["DOM", "DOM.Iterable", "ES2024"],
-    "types": ["@remix-run/node", "vite/client"],
-    "isolatedModules": true,
-    "experimentalDecorators": true,
+    "allowJs": true,
+    "baseUrl": ".",
     "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
     "jsx": "react-jsx",
+    "lib": ["DOM", "DOM.Iterable", "ES2024"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "resolveJsonModule": true,
-    "target": "ESNext",
-    "strict": true,
-    "allowJs": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
+    "noEmit": true,
     "paths": {
       "~/*": ["./app/*"]
     },
-
-    // Vite takes care of building everything, not tsc.
-    "noEmit": true
+    "resolveJsonModule": true,
+    "rootDirs": [".", "./.react-router/types"],
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2019",
+    "types": ["@react-router/node", "vite/client"]
   }
 }

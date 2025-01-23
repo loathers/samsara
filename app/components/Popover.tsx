@@ -1,6 +1,7 @@
 import { Popover as ChakraPopover, Portal } from "@chakra-ui/react";
-import { CloseButton } from "./CloseButton";
 import * as React from "react";
+
+import { CloseButton } from "~/components/CloseButton";
 
 interface PopoverContentProps extends ChakraPopover.ContentProps {
   portalled?: boolean;

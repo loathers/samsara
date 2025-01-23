@@ -1,5 +1,6 @@
 import { Text } from "@chakra-ui/react";
-import { ClassIcon } from "./ClassIcon";
+
+import { ClassIcon } from "~/components/ClassIcon";
 
 type SymbolsProps = {
   class: { name: string; image: string | null };

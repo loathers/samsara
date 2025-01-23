@@ -1,6 +1,6 @@
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { parse } from "graphql";
-import { gql, GraphQLClient } from "graphql-request";
+import { GraphQLClient, gql } from "graphql-request";
 
 const client = new GraphQLClient("https://data.loathers.net/graphql");
 

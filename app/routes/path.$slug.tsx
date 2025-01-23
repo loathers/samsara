@@ -1,15 +1,20 @@
 import { Stack } from "@chakra-ui/react";
-import { data, LoaderFunctionArgs } from "@remix-run/node";
-import { MetaArgs, redirect, useLoaderData } from "@remix-run/react";
+import {
+  type LoaderFunctionArgs,
+  type MetaArgs,
+  data,
+  redirect,
+  useLoaderData,
+} from "react-router";
 
+import { Dedication } from "~/components/Dedication";
 import { Leaderboard } from "~/components/Leaderboard";
+import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
+import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { formatPathName } from "~/components/Path";
 import { PathHeader } from "~/components/PathHeader";
-import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
-import { Dedication } from "~/components/Dedication";
 import { db } from "~/db.server";
 import { getPathData } from "~/path.server";
-import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   let { slug } = params;

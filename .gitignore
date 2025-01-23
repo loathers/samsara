@@ -1,14 +1,19 @@
+node_modules
+.DS_Store
+.vscode
+
+/.cache
+/build
+/public/build
+.env
+.react-router
+
+# Yarn (not using Zero-Installs)
+.yarn-error.log
+.pnp.*
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
-
-
-node_modules
-
-/.cache
-/build
-.env
-.vscode

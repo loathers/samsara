@@ -1,13 +1,13 @@
 import { Stack } from "@chakra-ui/react";
-import { data, useLoaderData } from "@remix-run/react";
+import { data, useLoaderData } from "react-router";
 
+import { Dedication } from "~/components/Dedication";
 import { Leaderboard } from "~/components/Leaderboard";
+import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
+import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
+import { PathHeader } from "~/components/PathHeader";
 import { db, getKittycoreLeaderboard } from "~/db.server";
 import { getPathData } from "~/path.server";
-import { PathHeader } from "~/components/PathHeader";
-import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
-import { Dedication } from "~/components/Dedication";
-import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 
 export const loader = async () => {
   const path = await db.path.findFirst({

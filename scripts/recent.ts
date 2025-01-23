@@ -1,5 +1,6 @@
 import { Player } from "@prisma/client";
-import { processAscensions, nextUpdateIn, workers } from "./utils/client.js";
+
+import { nextUpdateIn, processAscensions, workers } from "./utils/client.js";
 import { parseRecentAscenders } from "./utils/utils.js";
 
 const client = workers[0];

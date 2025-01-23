@@ -1,8 +1,9 @@
-import { LuArrowDown, LuArrowUp, LuX } from "react-icons/lu";
 import { HStack, Icon, Link, Table, Text } from "@chakra-ui/react";
-import { flexRender, Header } from "@tanstack/react-table";
+import { Header, flexRender } from "@tanstack/react-table";
+import { LuArrowDown, LuArrowUp, LuX } from "react-icons/lu";
+
+import { TableFilter } from "~/components/TableFilter";
 import { RowData } from "~/routes/player.$id";
-import { TableFilter } from "./TableFilter";
 
 type Props = {
   header: Header<RowData, unknown>;

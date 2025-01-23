@@ -1,6 +1,6 @@
 import { Stack } from "@chakra-ui/react";
-import { data } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { data, useLoaderData } from "react-router";
+
 import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";

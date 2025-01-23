@@ -1,9 +1,10 @@
 import { HStack, Link } from "@chakra-ui/react";
-import { Link as RemixLink } from "@remix-run/react";
 import { Lifestyle as LifestyleEnum } from "@prisma/client";
+import { Link as RRLink } from "react-router";
+
+import { Lifestyle, formatLifestyle } from "~/components/Lifestyle";
+import { Path, formatPathName } from "~/components/Path";
 import { ShortenStyle } from "~/utils";
-import { formatLifestyle, Lifestyle } from "./Lifestyle";
-import { formatPathName, Path } from "./Path";
 
 type Props = {
   lifestyle?: LifestyleEnum;
@@ -23,7 +24,7 @@ export function PathLink({ lifestyle, path, shorten }: Props) {
 
   return (
     <Link asChild gap={0}>
-      <RemixLink to={`/path/${path.slug}`} title={title}>
+      <RRLink to={`/path/${path.slug}`} title={title}>
         {["symbols", "full-symbols"].includes(shorten!) ? (
           <HStack minWidth={15} gap={shorten === "symbols" ? 0 : 1}>
             {child}
@@ -31,7 +32,7 @@ export function PathLink({ lifestyle, path, shorten }: Props) {
         ) : (
           child
         )}
-      </RemixLink>
+      </RRLink>
     </Link>
   );
 }

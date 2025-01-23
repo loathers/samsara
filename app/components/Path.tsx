@@ -1,6 +1,7 @@
-import { ShortenStyle } from "~/utils";
 import { Text } from "@chakra-ui/react";
-import { PathIcon } from "./PathIcon";
+
+import { PathIcon } from "~/components/PathIcon";
+import { ShortenStyle } from "~/utils";
 
 type Props = {
   path: { name: string; image: string | null };

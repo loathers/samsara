@@ -1,13 +1,14 @@
+import { Ascension } from "@prisma/client";
 import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
+
 import {
   parseAscensions,
   parsePlayer,
   parseRecentAscenders,
   slugify,
 } from "./utils.js";
-import { join } from "node:path";
-import { Ascension } from "@prisma/client";
 
 async function loadFixture(path: string) {
   return await readFile(

@@ -1,7 +1,8 @@
-import { Tag as FullTag, Path, TagType } from "@prisma/client";
-import { KoLImage } from "./KoLImage";
 import { Link } from "@chakra-ui/react";
-import { Link as RemixLink } from "@remix-run/react";
+import { Tag as FullTag, Path, TagType } from "@prisma/client";
+import { Link as RRLink } from "react-router";
+
+import { KoLImage } from "~/components/KoLImage";
 
 type Tag = Pick<FullTag, "type" | "value" | "year">;
 
@@ -60,12 +61,9 @@ export function TagMedal({ tag, path }: Props) {
 
   return (
     <Link asChild>
-      <RemixLink
-        to={`/path/${path.slug}#${getHash(tag)}`}
-        title={formatTag(tag)}
-      >
+      <RRLink to={`/path/${path.slug}#${getHash(tag)}`} title={formatTag(tag)}>
         {image}
-      </RemixLink>
+      </RRLink>
     </Link>
   );
 }

@@ -1,13 +1,15 @@
+import { ChakraProvider, Container, defaultSystem } from "@chakra-ui/react";
 import {
+  type HeadersFunction,
   Links,
+  type LinksFunction,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
-} from "@remix-run/react";
-import { ChakraProvider, Container, defaultSystem } from "@chakra-ui/react";
-import { HeadersFunction, LinksFunction } from "@remix-run/node";
-import { getMaxAge } from "./db.server";
+} from "react-router";
+
+import { getMaxAge } from "~/db.server";
 
 export const links: LinksFunction = () => [
   {

@@ -1,7 +1,8 @@
-import { Lifestyle as LifestyleEnum } from "@prisma/client";
-import { ShortenStyle } from "~/utils";
-import { KoLImage } from "./KoLImage";
 import { HStack } from "@chakra-ui/react";
+import { Lifestyle as LifestyleEnum } from "@prisma/client";
+
+import { KoLImage } from "~/components/KoLImage";
+import { ShortenStyle } from "~/utils";
 
 type Props = {
   lifestyle: LifestyleEnum;

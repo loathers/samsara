@@ -1,5 +1,6 @@
 import { Prisma, TagType } from "@prisma/client";
-import { db, NS13, pastYearsOfStandard } from "~/db.server";
+
+import { NS13, db, pastYearsOfStandard } from "~/db.server";
 import { SPECIAL_RANKINGS } from "~/utils";
 
 /**

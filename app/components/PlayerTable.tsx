@@ -1,4 +1,7 @@
+import { HStack, Table } from "@chakra-ui/react";
 import {
+  PaginationState,
+  SortingState,
   createColumnHelper,
   flexRender,
   getCoreRowModel,
@@ -7,22 +10,20 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  PaginationState,
-  SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { Pagination } from "./Pagination";
-import { HStack, Table } from "@chakra-ui/react";
-import { PlayerTableHeader } from "./PlayerTableHeader";
-import { FormattedDate } from "./FormattedDate";
-import { ResponsiveContent } from "./ResponsiveContent";
-import { Class } from "./Class";
-import { RowData } from "~/routes/player.$id";
-import { PathLink } from "./PathLink";
-import { formatLifestyle } from "./Lifestyle";
-import { TagMedal } from "./TagMedal";
 import { useEffect, useRef, useState } from "react";
-import { Turncount } from "./Turncount";
+
+import { Class } from "~/components/Class";
+import { FormattedDate } from "~/components/FormattedDate";
+import { formatLifestyle } from "~/components/Lifestyle";
+import { Pagination } from "~/components/Pagination";
+import { PathLink } from "~/components/PathLink";
+import { PlayerTableHeader } from "~/components/PlayerTableHeader";
+import { ResponsiveContent } from "~/components/ResponsiveContent";
+import { TagMedal } from "~/components/TagMedal";
+import { Turncount } from "~/components/Turncount";
+import { RowData } from "~/routes/player.$id";
 
 declare module "@tanstack/react-table" {
   // @ts-expect-error This should work but TS is wrong here

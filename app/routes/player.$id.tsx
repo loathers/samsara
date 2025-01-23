@@ -1,19 +1,19 @@
-import { Heading, Stack, Button, Group, Box } from "@chakra-ui/react";
-import { data, LoaderFunctionArgs } from "@remix-run/node";
+import { db } from "../db.server.js";
+import { Box, Button, Group, Heading, Stack } from "@chakra-ui/react";
+import { Ascension, Class, Path, Tag } from "@prisma/client";
 import {
-  MetaArgs,
+  type LoaderFunctionArgs,
+  type MetaArgs,
+  Link as RRLink,
+  data,
   redirect,
   useLoaderData,
-  Link as RemixLink,
   useLocation,
-} from "@remix-run/react";
+} from "react-router";
 
-import { db } from "../db.server.js";
-
-import { numberFormatter } from "~/utils.js";
 import { FrequencyGraph } from "~/components/FrequencyGraph";
 import { PlayerTable } from "~/components/PlayerTable";
-import { Ascension, Class, Path, Tag } from "@prisma/client";
+import { numberFormatter } from "~/utils.js";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const { id } = params;
@@ -82,7 +82,7 @@ export default function Player() {
         </Heading>
         <Group justifyContent="center">
           <Button asChild>
-            <RemixLink to="/">home</RemixLink>
+            <RRLink to="/">home</RRLink>
           </Button>
         </Group>
       </Stack>

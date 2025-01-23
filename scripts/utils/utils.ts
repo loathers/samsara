@@ -1,6 +1,6 @@
 import {
-  type Lifestyle,
   type Ascension as AscensionModel,
+  type Lifestyle,
   type Player,
 } from "@prisma/client";
 import { Client } from "kol.js";

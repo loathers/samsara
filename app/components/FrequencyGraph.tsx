@@ -11,7 +11,8 @@ import {
   YAxis,
 } from "recharts";
 import { CartesianViewBox } from "recharts/types/util/types";
-import { formatTick, calculateRange, compactNumberFormatter } from "~/utils";
+
+import { calculateRange, compactNumberFormatter, formatTick } from "~/utils";
 
 type Datum = { date: Date; count: number };
 type Props = {

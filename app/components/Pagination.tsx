@@ -1,14 +1,15 @@
 import {
   Button,
-  Group,
   Flex,
+  Group,
   HStack,
   Text,
   createListCollection,
 } from "@chakra-ui/react";
 import { PaginationState, Table } from "@tanstack/react-table";
 import { Dispatch, SetStateAction, useMemo } from "react";
-import { Select } from "./Select";
+
+import { Select } from "~/components/Select";
 
 type Props<T> = {
   table: Table<T>;

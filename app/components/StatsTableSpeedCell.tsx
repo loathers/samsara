@@ -1,14 +1,15 @@
 import { HStack, Text } from "@chakra-ui/react";
 import { CellContext } from "@tanstack/react-table";
 import { JSX, useMemo } from "react";
+
+import { Turncount } from "~/components/Turncount";
 import { RowData } from "~/routes/stats";
 import {
+  SPECIAL_RANKINGS,
   compareDaycount,
   getExtra,
   numberFormatter,
-  SPECIAL_RANKINGS,
 } from "~/utils";
-import { Turncount } from "./Turncount";
 
 type Props = {
   info: CellContext<RowData, number>;

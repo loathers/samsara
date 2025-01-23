@@ -1,4 +1,5 @@
 import { slugify } from "scripts/utils/utils";
+
 import { db } from "~/db.server";
 
 await db.$transaction(async (tx) => {

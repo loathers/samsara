@@ -1,4 +1,5 @@
 import { updateClasses } from "scripts/utils/client";
+
 import { db } from "~/db.server";
 
 await db.$transaction(async (tx) => {

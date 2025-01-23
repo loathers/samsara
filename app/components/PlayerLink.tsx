@@ -1,6 +1,6 @@
 import { Link } from "@chakra-ui/react";
-import { Link as RemixLink } from "@remix-run/react";
 import { Player } from "@prisma/client";
+import { Link as RRLink } from "react-router";
 
 type Props = {
   player: Player;
@@ -9,9 +9,9 @@ type Props = {
 export function PlayerLink({ player }: Props) {
   return (
     <Link asChild>
-      <RemixLink to={`/player/${player.id}`}>
+      <RRLink to={`/player/${player.id}`}>
         {player.name} (#{player.id})
-      </RemixLink>
+      </RRLink>
     </Link>
   );
 }

@@ -1,7 +1,8 @@
 import { AccordionValueChangeDetails } from "@chakra-ui/react";
 import { useCallback } from "react";
-import { useLocation, useNavigate } from "@remix-run/react";
-import { Accordion } from "./Accordion";
+import { useLocation, useNavigate } from "react-router";
+
+import { Accordion } from "~/components/Accordion";
 
 type Props = {
   children?: React.ReactNode;

@@ -1,6 +1,7 @@
-import { Heading, HStack, Stack, Text } from "@chakra-ui/react";
+import { HStack, Heading, Stack, Text } from "@chakra-ui/react";
 import React from "react";
-import { Accordion } from "./Accordion";
+
+import { Accordion } from "~/components/Accordion";
 
 type Props = {
   title: string;

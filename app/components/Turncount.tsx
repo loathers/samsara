@@ -1,4 +1,5 @@
 import { Text } from "@chakra-ui/react";
+
 import { numberFormatter } from "~/utils";
 
 type Props = {

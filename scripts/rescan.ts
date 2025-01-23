@@ -1,6 +1,7 @@
-import { db } from "~/db.server.js";
-import { processAscensions } from "./utils/client.js";
 import { program } from "commander";
+
+import { processAscensions } from "./utils/client.js";
+import { db } from "~/db.server.js";
 
 type OptionValues = {
   startingId: number;

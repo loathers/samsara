@@ -1,6 +1,7 @@
 import { Stack } from "@chakra-ui/react";
 import { SetStateAction } from "react";
-import { Checkbox } from "./Checkbox";
+
+import { Checkbox } from "~/components/Checkbox";
 
 type Props<T extends Record<string, boolean>> = {
   value: T;
