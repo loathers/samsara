@@ -1,5 +1,3 @@
-import { Icon } from "@chakra-ui/react";
-
 type Props = {
   days: number;
   cx: number;
@@ -24,32 +22,17 @@ export function DaysDot({ days, cx, cy, r, ...rest }: Props) {
   switch (days) {
     case 2:
       return (
-        <Icon color="bg">
-          <rect
-            x={cx - r / 3}
-            y={cy - r}
-            width={r / 1.5}
-            height={r * 2}
-            {...rest}
-            fill="currentColor"
-          />
-        </Icon>
+        <rect
+          x={cx - r / 3}
+          y={cy - r}
+          width={r / 1.5}
+          height={r * 2}
+          {...rest}
+        />
       );
     case 1:
-      return (
-        <Icon color="bg">
-          <circle cx={cx} cy={cy} r={r} {...rest} fill="currentColor" />
-        </Icon>
-      );
+      return <circle cx={cx} cy={cy} r={r} {...rest} />;
     default:
-      return (
-        <Icon color="bg">
-          <polygon
-            points={polygon([cx, cy], days, r)}
-            {...rest}
-            fill="currentColor"
-          />
-        </Icon>
-      );
+      return <polygon points={polygon([cx, cy], days, r)} />;
   }
 }

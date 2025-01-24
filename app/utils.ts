@@ -92,3 +92,21 @@ export const getDifferenceInMonths = (start: Date, end = new Date()) =>
       start.getMonth(),
     0,
   );
+
+/**
+ *
+ * @param array Array to search
+ * @param index Starting index
+ * @param predicate Matching predicate
+ * @returns First element of the `array` to pass the `predicate` counting backwards from the `index`
+ */
+export function backwardsSearchFrom<T>(
+  array: T[],
+  index: number,
+  predicate: (value: T, index: number) => boolean,
+) {
+  for (let i = index; i >= 0; i--) {
+    if (predicate(array[i], i)) return array[i];
+  }
+  return undefined;
+}

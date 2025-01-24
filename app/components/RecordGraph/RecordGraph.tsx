@@ -1,3 +1,4 @@
+import { useToken } from "@chakra-ui/react";
 import { Lifestyle } from "@prisma/client";
 import { JsonObject, JsonValue } from "@prisma/client/runtime/library";
 import { useState } from "react";
@@ -15,6 +16,7 @@ import { formatLifestyle } from "~/components/Lifestyle";
 import { DaysDot } from "~/components/RecordGraph/DaysDot";
 import { TogglableLegend } from "~/components/TogglableLegend";
 import {
+  backwardsSearchFrom,
   calculateRange,
   compactNumberFormatter,
   formatTick,
@@ -34,17 +36,6 @@ type Props = {
   data: RecordDatum[];
   extra?: string;
 };
-
-function backwardsSearchFrom<T>(
-  array: T[],
-  index: number,
-  cb: (value: T, index: number) => boolean,
-) {
-  for (let i = index; i >= 0; i--) {
-    if (cb(array[i], i)) return array[i];
-  }
-  return undefined;
-}
 
 const LIFESTYLE_COLOUR = {
   HARDCORE: "#F56565", // red.400
@@ -74,6 +65,8 @@ export function RecordGraph({ data, extra }: Props) {
       return `${compactNumberFormatter.format(parseInt((run.extra as JsonObject)[extra] as string))} ${extra} ${run.player.name} (#${run.player.id})`;
     return `${run.days}/${run.turns} ${run.player.name} (#${run.player.id})`;
   };
+
+  const [bg] = useToken("colors", ["bg"]);
 
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -110,7 +103,6 @@ export function RecordGraph({ data, extra }: Props) {
                     cx,
                     cy,
                     stroke,
-                    fill,
                     r,
                     strokeWidth,
                     key,
@@ -124,12 +116,11 @@ export function RecordGraph({ data, extra }: Props) {
                       (d) => d.lifestyle === lifestyle,
                     );
                     if (last && last.days <= days) return <svg key={key} />;
-                    console.log(fill, stroke);
                     return (
                       <DaysDot
                         days={days}
                         r={r}
-                        fill={fill}
+                        fill={bg}
                         stroke={stroke}
                         strokeWidth={strokeWidth}
                         cx={cx}
@@ -149,6 +140,9 @@ export function RecordGraph({ data, extra }: Props) {
             formatRunForTooltip(payload),
             null,
           ]}
+          contentStyle={{
+            backgroundColor: bg,
+          }}
         />
         {lifestyles.length > 1 && (
           <Legend
