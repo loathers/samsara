@@ -6030,6 +6030,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"next-themes@npm:^0.4.4":
+  version: 0.4.4
+  resolution: "next-themes@npm:0.4.4"
+  peerDependencies:
+    react: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
+    react-dom: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
+  checksum: 10c0/45d82f968ccfc90f6e6e3cdb95962132f6d1e19eaf614c4e824fc5d079ec522dd50cc196c58da2f000d755b81dbb0caf378c4f512a9e6b6c0a0daa3f99f1a2c7
+  languageName: node
+  linkType: hard
+
 "node-gyp@npm:latest":
   version: 11.0.0
   resolution: "node-gyp@npm:11.0.0"
@@ -7074,6 +7084,7 @@ __metadata:
     graphql-request: "npm:^7.1.2"
     isbot: "npm:^5.1.21"
     kol.js: "npm:^0.1.7"
+    next-themes: "npm:^0.4.4"
     prettier: "npm:^3.4.2"
     prisma: "npm:^6.2.1"
     react: "npm:19.0.0"

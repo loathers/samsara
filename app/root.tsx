@@ -1,4 +1,5 @@
-import { ChakraProvider, Container, defaultSystem } from "@chakra-ui/react";
+import { ChakraProvider, Container } from "@chakra-ui/react";
+import { ThemeProvider } from "next-themes";
 import {
   type HeadersFunction,
   Links,
@@ -9,6 +10,7 @@ import {
   ScrollRestoration,
 } from "react-router";
 
+import { theme } from "./theme";
 import { getMaxAge } from "~/db.server";
 
 export const links: LinksFunction = () => [
@@ -51,9 +53,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <ChakraProvider value={defaultSystem}>
+    <ChakraProvider value={theme}>
       <Container maxW={["100%", null, "container.xl"]} py={12}>
-        <Outlet />
+        <ThemeProvider attribute="class" disableTransitionOnChange>
+          <Outlet />
+        </ThemeProvider>
       </Container>
     </ChakraProvider>
   );

@@ -124,6 +124,7 @@ export function RecordGraph({ data, extra }: Props) {
                       (d) => d.lifestyle === lifestyle,
                     );
                     if (last && last.days <= days) return <svg key={key} />;
+                    console.log(fill, stroke);
                     return (
                       <DaysDot
                         days={days}

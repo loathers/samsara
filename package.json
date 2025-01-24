@@ -21,6 +21,7 @@
     "@tanstack/react-table": "^8.20.6",
     "create-color": "^2.0.6",
     "isbot": "^5.1.21",
+    "next-themes": "^0.4.4",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-icons": "^5.4.0",

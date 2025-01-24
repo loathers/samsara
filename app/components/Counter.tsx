@@ -13,7 +13,9 @@ function Numbers({ index, lineHeight }: { index: number; lineHeight: number }) {
       height={`${lineHeight}px`}
       key={i}
       px={1}
-      borderLeft={index > 0 ? `1px solid black` : undefined}
+      borderLeftWidth="1px"
+      borderLeftStyle={index > 0 ? "solid" : "none"}
+      borderLeftColor="fg"
     >
       {i % 10}
     </Box>
@@ -65,7 +67,9 @@ export function Counter({ value, lineHeight = 35, duration = 1 }: Props) {
         display="inline-flex"
         direction="row"
         overflow="hidden"
-        border="1px solid black"
+        borderWidth="1px"
+        borderStyle="solid"
+        borderColor="fg"
         height={`${lineHeight}px`}
         lineHeight={`${lineHeight}px`}
         justifyContent="center"

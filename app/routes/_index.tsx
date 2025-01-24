@@ -5,6 +5,7 @@ import {
   Card,
   Group,
   Heading,
+  IconButton,
   Image,
   Input,
   InputAddon,
@@ -13,7 +14,9 @@ import {
   Text,
   createListCollection,
 } from "@chakra-ui/react";
+import { useTheme } from "next-themes";
 import { FormEventHandler, useCallback } from "react";
+import { LuMoon, LuSun } from "react-icons/lu";
 import {
   type HeadersFunction,
   Link,
@@ -90,6 +93,18 @@ export const headers: HeadersFunction = ({ loaderHeaders }) => {
   return loaderHeaders;
 };
 
+function useColorMode() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const toggleColorMode = () => {
+    setTheme(resolvedTheme === "light" ? "dark" : "light");
+  };
+  return {
+    colorMode: resolvedTheme,
+    setColorMode: setTheme,
+    toggleColorMode,
+  };
+}
+
 export default function Index() {
   const {
     paths,
@@ -104,6 +119,7 @@ export default function Index() {
   } = useLoaderData<typeof loader>();
 
   const navigate = useNavigate();
+  const { toggleColorMode, colorMode } = useColorMode();
 
   const goToPath = useCallback<FormEventHandler<HTMLFormElement>>(
     (event) => {
@@ -143,12 +159,28 @@ export default function Index() {
 
   return (
     <SimpleGrid gap={8} alignItems="stretch">
+      <IconButton
+        position="absolute"
+        top={5}
+        right={5}
+        onClick={toggleColorMode}
+        variant="subtle"
+        title={
+          colorMode === "light" ? "Switch to dark mode" : "Switch to light mode"
+        }
+      >
+        {colorMode === "light" ? <LuSun /> : <LuMoon />}
+      </IconButton>
       <Stack gap={8} alignItems="center">
         <Link to="/">
           <Heading size="4xl" alignSelf="center">
             <Stack direction="row">
               <Text>Saṃsāra</Text>
-              <Image height="1lh" src="/gash.webp" />
+              <Image
+                height="1lh"
+                src="/gash.webp"
+                filter={{ _dark: "invert(1)" }}
+              />
             </Stack>
           </Heading>
         </Link>
