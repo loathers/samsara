@@ -1,7 +1,7 @@
 import { HStack, Text } from "@chakra-ui/react";
 import { Lifestyle } from "@prisma/client";
 import createColor from "create-color";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Legend,
   Line,
@@ -82,6 +82,8 @@ export function PopularityGraph({ data }: Props) {
     ];
   }, [data]);
 
+  const [active, setActive] = useState<string | null>(null);
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart
@@ -99,7 +101,15 @@ export function PopularityGraph({ data }: Props) {
         />
         <YAxis tick={{ fontSize: 8 }} domain={[0, "auto"]} width={25} />
         {seriesKeys.map((line) => (
-          <Line key={line.dataKey} type="monotone" {...line} dot={false} />
+          <Line
+            key={line.dataKey}
+            type="monotone"
+            dataKey={line.dataKey}
+            strokeWidth={line.dataKey === active ? 2 : 1}
+            stroke={!active || line.dataKey === active ? line.stroke : "grey"}
+            dot={false}
+            strokeOpacity={!active || line.dataKey === active ? 1 : 0.3}
+          />
         ))}
         <Legend
           iconType="circle"
@@ -107,7 +117,12 @@ export function PopularityGraph({ data }: Props) {
           content={({ payload }) => (
             <HStack gap={2} fontSize="xs" textAlign="center" flexWrap="wrap">
               {payload?.map((entry) => (
-                <HStack gap={1} key={entry.value}>
+                <HStack
+                  gap={1}
+                  key={entry.value}
+                  onMouseEnter={() => setActive(entry.value)}
+                  onMouseLeave={() => setActive(null)}
+                >
                   <Text as="span" color={entry.color}>
                     &#x25CF;
                   </Text>{" "}
