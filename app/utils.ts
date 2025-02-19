@@ -122,6 +122,7 @@ export const isTitleCase = (word: string) => word[0] === word[0].toUpperCase();
  * @returns Acronym for the provided path according to an attempt at a pattern of logic
  */
 export function getPathAcronym(name: string) {
+  // First consider some special cases for community favourites or otherwise non-standard shortenings
   switch (name) {
     case "Actually Ed the Undying":
       return "Ed";
@@ -137,11 +138,13 @@ export function getPathAcronym(name: string) {
 
   const parts = name.replace("-", " ").split(" ");
 
+  // If it's one word long, grab all the capital letters
   if (parts.length === 1) {
     const caps = [...name].filter((c) => c === c.toUpperCase());
     if (caps.length > 1) return caps.join("");
   }
 
+  // If we have a sequence of two lowercase words followed by a titlecase word, use the first four letters of the latter word
   if (parts.length >= 4) {
     let lower = 0;
     for (const part of parts) {
@@ -159,6 +162,7 @@ export function getPathAcronym(name: string) {
     }
   }
 
+  // Otherwise just use the first letter of each word
   const acronym = parts
     .map((word) => (parseInt(word) ? word : word[0]))
     .join("");
