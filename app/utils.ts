@@ -110,3 +110,68 @@ export function backwardsSearchFrom<T>(
   }
   return undefined;
 }
+
+/**
+ * @param word Word to check
+ * @returns Whether word is titlecase (i.e. first character is uppercase)
+ */
+export const isTitleCase = (word: string) => word[0] === word[0].toUpperCase();
+
+/**
+ * @param name Full path name
+ * @returns Acronym for the provided path according to an attempt at a pattern of logic
+ */
+export function getPathAcronym(name: string) {
+  switch (name) {
+    case "Actually Ed the Undying":
+      return "Ed";
+    case "A Shrunken Adventurer am I":
+      return "Smol";
+    case "Standard":
+      return "Std";
+    case "Class Act II":
+      return "CA2";
+    case "Wildfire":
+      return "WF";
+  }
+
+  const parts = name.replace("-", " ").split(" ");
+
+  if (parts.length === 1) {
+    const caps = [...name].filter((c) => c === c.toUpperCase());
+    if (caps.length > 1) return caps.join("");
+  }
+
+  if (parts.length >= 4) {
+    let lower = 0;
+    for (const part of parts) {
+      if (!isTitleCase(part)) {
+        lower += 1;
+        continue;
+      }
+
+      if (lower < 2) {
+        lower = 0;
+        continue;
+      }
+
+      return part.substring(0, 4);
+    }
+  }
+
+  const acronym = parts
+    .map((word) => (parseInt(word) ? word : word[0]))
+    .join("");
+
+  return acronym.length === 1 ? name.slice(0, 3) : acronym;
+}
+
+/**
+ * @param path Path to format
+ * @returns Formatted name
+ */
+export function formatPathName(path?: { name: string }) {
+  if (!path) return "Unknown";
+  if (path.name === "None") return "No Path";
+  return path.name;
+}

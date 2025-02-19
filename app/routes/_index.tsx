@@ -26,11 +26,11 @@ import {
 } from "react-router";
 
 import { CoolStat } from "~/components/CoolStat";
-import { formatPathName, getPathAcronym } from "~/components/Path";
 import { PathLink } from "~/components/PathLink";
 import { PopularityGraph } from "~/components/PopularityGraph";
 import { Select } from "~/components/Select.js";
 import { db } from "~/db.server";
+import { formatPathName, getPathAcronym } from "~/utils.js";
 
 export const meta = () => {
   return [
