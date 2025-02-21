@@ -11,10 +11,10 @@ import { Dedication } from "~/components/Dedication";
 import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
-import { formatPathName } from "~/components/Path";
 import { PathHeader } from "~/components/PathHeader";
 import { db } from "~/db.server";
 import { getPathData } from "~/path.server";
+import { formatPathName } from "~/utils";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   let { slug } = params;
