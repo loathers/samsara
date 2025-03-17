@@ -94,7 +94,7 @@ export async function processPlayers(
       if (playerAscensions.length === 0) {
         console.timeLog(
           "etl",
-          `  Skipped ${player.name} (${player.id}) as they have never ascended`,
+          `  Skipped ${player.name} (#${player.id}) as they have never ascended`,
         );
         return;
       }
