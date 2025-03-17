@@ -1,7 +1,6 @@
+import { NS13, db, pastYearsOfStandard } from "../../app/db.server.js";
+import { SPECIAL_RANKINGS } from "../../app/utils.js";
 import { Prisma, TagType } from "@prisma/client";
-
-import { NS13, db, pastYearsOfStandard } from "~/db.server";
-import { SPECIAL_RANKINGS } from "~/utils";
 
 /**
  * These paths should never be ranked by Days / Turns, only by their special ranking.

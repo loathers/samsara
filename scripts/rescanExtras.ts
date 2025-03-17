@@ -1,7 +1,7 @@
+import { db } from "../app/db.server.js";
 import { JsonObject, JsonValue } from "@prisma/client/runtime/library";
 
 import { processAscensions } from "./utils/client.js";
-import { db } from "~/db.server.js";
 
 function* players(p: { playerId: number }[]) {
   for (const player of p) yield player.playerId;

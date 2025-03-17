@@ -19,7 +19,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   };
 
   if (!isTagType(tagType))
-    throw data({ message: "Invalid tag type" }, { status: 400, headers });
+    return data({ message: "Invalid tag type" }, { status: 400, headers });
 
   const id = Number.isNaN(Number(slug)) ? undefined : Number(slug);
   const path = await db.path.findFirst({
@@ -27,10 +27,10 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   });
 
   if (!path)
-    throw data({ message: "Invalid path name" }, { status: 400, headers });
+    return data({ message: "Invalid path name" }, { status: 400, headers });
 
   if (slug !== String(path.id)) {
-    throw redirect(`/api/path/${path.id}/${tagType.toLowerCase()}`);
+    return redirect(`/api/path/${path.id}/${tagType.toLowerCase()}`);
   }
 
   const leaderboards = Object.fromEntries(

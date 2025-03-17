@@ -1,3 +1,4 @@
+import { db } from "../../app/db.server.js";
 import { type Player } from "@prisma/client";
 
 import { parseWorkers } from "./Worker.js";
@@ -11,7 +12,6 @@ import {
   slugify,
   wait,
 } from "./utils.js";
-import { db } from "../../app/db.server.js";
 
 // KoL used to purge accounts from inactivity and even now, sometimes accounts are purged. This is a sufficiently late known account
 // to let us know when to stop skipping gaps. If we ever encounter a future gap, this should be updated to have a greater value.

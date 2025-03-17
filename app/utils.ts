@@ -64,9 +64,16 @@ export const compareDaycount = (
   return dayComp !== 0 ? dayComp : (a?.turns ?? 0) - (b?.turns ?? 0);
 };
 
+export const hasExtra = (a: {
+  extra: JsonValue;
+}): a is { extra: Record<string, JsonValue> } =>
+  typeof a.extra === "object" &&
+  a.extra !== null &&
+  !Array.isArray(a.extra) &&
+  Object.keys(a.extra).length > 0;
+
 export const getExtra = (key: string) => (a: { extra: JsonValue }) => {
-  if (typeof a.extra !== "object" || a.extra === null || Array.isArray(a.extra))
-    return 0;
+  if (!hasExtra(a)) return 0;
   return Number(a.extra[key] ?? 0);
 };
 

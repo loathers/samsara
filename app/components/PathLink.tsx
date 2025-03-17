@@ -4,7 +4,7 @@ import { Link as RRLink } from "react-router";
 
 import { Lifestyle, formatLifestyle } from "~/components/Lifestyle";
 import { Path } from "~/components/Path";
-import { formatPathName, ShortenStyle } from "~/utils";
+import { ShortenStyle, formatPathName } from "~/utils";
 
 type Props = {
   lifestyle?: LifestyleEnum;
