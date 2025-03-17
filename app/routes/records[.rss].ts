@@ -1,6 +1,7 @@
 import { Feed } from "feed";
 import { data } from "react-router";
 
+import { formatLifestyle } from "~/components/Lifestyle";
 import { db, getMaxAge } from "~/db.server";
 import { hasExtra } from "~/utils";
 
@@ -43,7 +44,7 @@ export const loader = async () => {
           .map(([key, value]) => `${value} ${key}`)
           .join(", ")
       : `${record.turns}/${record.days}`;
-    const description = `${record.player.name} (#${record.player.id}) has achieved the best ${record.lifestyle} ${record.path.name} with ${score}`;
+    const description = `${record.player.name} (#${record.player.id}) has achieved the best ${formatLifestyle(record.lifestyle)} ${record.path.name} with ${score}`;
     feed.addItem({
       title: description,
       id: `https://samsara.loathers.net/player/${record.player.id}#${record.ascensionNumber}`,
