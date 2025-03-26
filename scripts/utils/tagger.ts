@@ -160,8 +160,8 @@ async function tagRecordBreaking() {
     `;
     },
     {
-      maxWait: 10000,
-      timeout: 30000,
+      maxWait: 10_000,
+      timeout: 60_000,
     },
   );
   console.timeLog("etl", "Finished tagging record-breaking ascensions");
@@ -244,8 +244,8 @@ async function tagPersonalBest() {
     `;
     },
     {
-      maxWait: 10000,
-      timeout: 30000,
+      maxWait: 10_000,
+      timeout: 60_000,
     },
   );
   console.timeLog("etl", `Finished tagging personal bests`);
@@ -394,8 +394,8 @@ async function tagPyrites(sendWebhook: boolean) {
       );
     },
     {
-      maxWait: 10000,
-      timeout: 30000,
+      maxWait: 10_000,
+      timeout: 60_000,
     },
   );
   console.timeLog("etl", `Finished tagging pyrites`);
@@ -468,8 +468,8 @@ async function tagLeaderboard() {
       );
     },
     {
-      maxWait: 10000,
-      timeout: 30000,
+      maxWait: 10_000,
+      timeout: 60_000,
     },
   );
   console.timeLog("etl", `Finished tagging leaderboards`);
