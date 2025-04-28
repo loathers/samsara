@@ -14,6 +14,7 @@ import {
 } from "@tanstack/react-table";
 import { useEffect, useRef, useState } from "react";
 
+import { FamiliarIcon } from "./FamiliarIcon";
 import { Class } from "~/components/Class";
 import { FormattedDate } from "~/components/FormattedDate";
 import { formatLifestyle } from "~/components/Lifestyle";
@@ -101,6 +102,24 @@ const columns = [
       return dayComp !== 0 ? dayComp : a.original.turns - b.original.turns;
     },
     enableColumnFilter: false,
+  }),
+  columnHelper.accessor("familiarPercentage", {
+    header: "Familiar",
+    cell: (info) => {
+      const familiarPercentage = info.getValue();
+      const familiar = info.row.original.familiar;
+
+      return (
+        <HStack>
+          <FamiliarIcon familiar={familiar} />
+          {familiarPercentage > 0 && (
+            <span style={{ fontSize: "0.8em" }}>
+              {` (${familiarPercentage}%)`}
+            </span>
+          )}
+        </HStack>
+      );
+    },
   }),
 ];
 

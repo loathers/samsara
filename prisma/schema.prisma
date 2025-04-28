@@ -37,7 +37,8 @@ model Ascension {
   sign               String
   turns              Int
   days               Int
-  familiar           String
+  familiarName       String?
+  familiar           Familiar? @relation(fields: [familiarName], references: [name])
   familiarPercentage Float
   lifestyle          Lifestyle
   pathName           String
@@ -96,4 +97,10 @@ model Tag {
   playerId        Int
 
   @@id([type, ascensionNumber, playerId])
+}
+
+model Familiar {
+  name       String      @id
+  image      String
+  ascensions Ascension[]
 }

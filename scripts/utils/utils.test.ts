@@ -46,11 +46,28 @@ describe("Utils", () => {
       expect(dropped).toHaveProperty("sign", "None");
     });
 
+    it("can parse a run with an regular familiar", async () => {
+      const camel = gausieAscensions.find((a) => a.ascensionNumber === 20);
+
+      expect(camel).toHaveProperty("familiarName", "XO Skeleton");
+      expect(camel).toHaveProperty("familiarImage", "xoskeleton");
+      expect(camel).toHaveProperty("familiarPercentage", 99.8);
+    });
+
     it("can parse a run with an extra-wide familiar icon", async () => {
       const camel = gausieAscensions.find((a) => a.ascensionNumber === 288);
 
-      expect(camel).toHaveProperty("familiar", "Melodramedary");
+      expect(camel).toHaveProperty("familiarName", "Melodramedary");
+      expect(camel).toHaveProperty("familiarImage", "camelcalf");
       expect(camel).toHaveProperty("familiarPercentage", 17.5);
+    });
+
+    it("can parse a run with a png familiar icon", async () => {
+      const lhm = gausieAscensions.find((a) => a.ascensionNumber === 493);
+
+      expect(lhm).toHaveProperty("familiarName", "Left-Hand Man");
+      expect(lhm).toHaveProperty("familiarImage", "lhmlarva");
+      expect(lhm).toHaveProperty("familiarPercentage", 23.6);
     });
 
     it.each(["before", "after"])(

@@ -1,6 +1,6 @@
 import { db } from "../db.server.js";
 import { Box, Button, Group, Heading, Stack } from "@chakra-ui/react";
-import { Ascension, Class, Path, Tag } from "@prisma/client";
+import { Ascension, Class, Familiar, Path, Tag } from "@prisma/client";
 import {
   type LoaderFunctionArgs,
   type MetaArgs,
@@ -37,6 +37,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
           path: { select: { slug: true, name: true, image: true } },
           class: { select: { name: true, image: true } },
           tags: { select: { type: true, value: true, year: true } },
+          familiar: true,
         },
         orderBy: { ascensionNumber: "asc" },
       },
@@ -66,6 +67,7 @@ export type RowData = Ascension & {
   path: Pick<Path, "slug" | "name" | "image">;
   class: Pick<Class, "name" | "image">;
   tags: Pick<Tag, "type" | "value" | "year">[];
+  familiar: Familiar | null;
 };
 
 export default function Player() {

@@ -7,6 +7,7 @@ import { Client } from "kol.js";
 
 export interface Ascension extends AscensionModel {
   extra: Record<string, number>;
+  familiarImage: string | null;
 }
 
 function trim(s: string) {
@@ -21,6 +22,21 @@ function parseDate(d: string) {
 const textContent = (s: string) => s.match(/<span.*?>(.*?)<\/span>/)?.[1] ?? s;
 
 const extractTitle = (s: string) => s?.match(/title="(.*?)"/s)?.[1];
+
+const parseFamiliarImage = (s: string | null) => {
+  if (!s) return null;
+
+  const filename = (s.split("/").pop() ?? "nopic.gif").slice(0, -4);
+
+  switch (filename) {
+    case "camelfam_left":
+      return "camelcalf";
+    case "righthandbody":
+      return "lhmlarva";
+    default:
+      return filename;
+  }
+};
 
 const parseLifestyle = (restrictions: string): Lifestyle => {
   if (restrictions.includes("beanbag.gif")) return "CASUAL";
@@ -88,7 +104,8 @@ function parseAscensionRow(playerId: number, row: string): Ascension {
       sign: "None",
       turns: 0,
       days: 0,
-      familiar: "None",
+      familiarName: null,
+      familiarImage: null,
       familiarPercentage: 0,
       lifestyle: "SOFTCORE",
       pathName: "None",
@@ -97,6 +114,10 @@ function parseAscensionRow(playerId: number, row: string): Ascension {
   }
 
   const familiar = (extractTitle(cells[7]) ?? "").match(/^(.*?) \(([\d.]+)%\)/);
+  const familiarImage = parseFamiliarImage(
+    cells[7]?.match(/<img.*?src="(.*?)"/)?.[1] ?? null,
+  );
+
   const restrictions = cells[8].split("<img");
   const path = parsePath(extractTitle(restrictions[2]) ?? "None");
 
@@ -108,7 +129,8 @@ function parseAscensionRow(playerId: number, row: string): Ascension {
     sign: parseSign(cells[4]),
     turns: parseInteger(textContent(cells[5])),
     days: parseInteger(textContent(cells[6])),
-    familiar: familiar?.[1] ?? "None",
+    familiarName: familiar?.[1] ?? null,
+    familiarImage: familiarImage,
     familiarPercentage: parseFloat(familiar?.[2] ?? "0"),
     lifestyle: parseLifestyle(restrictions[1]),
     pathName: path[0],

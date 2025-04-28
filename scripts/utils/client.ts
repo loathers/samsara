@@ -45,6 +45,16 @@ export async function processPlayers(
     (c) => c.name,
   );
 
+  const familiars = (
+    await db.familiar.findMany({ select: { name: true } })
+  ).map((f) => f.name);
+
+  const familiarsWithImage = (
+    await db.familiar.findMany({
+      where: { image: { not: "nopic" } },
+    })
+  ).map((f) => f.name);
+
   const players: Player[] = [];
   const ascensions: Ascension[] = [];
 
@@ -122,13 +132,10 @@ export async function processPlayers(
 
   if (newPaths.length > 0) {
     const firstPerNewPath = Object.values(
-      newPaths.reduce(
-        (acc, a) => {
-          if (a.pathName in acc) return acc;
-          return { ...acc, [a.pathName]: a };
-        },
-        {} as Record<string, Ascension>,
-      ),
+      newPaths.reduce<Record<string, Ascension>>((acc, a) => {
+        if (a.pathName in acc) return acc;
+        return { ...acc, [a.pathName]: a };
+      }, {}),
     );
 
     await db.path.createMany({
@@ -144,13 +151,10 @@ export async function processPlayers(
   const newClasses = ascensions.filter((a) => !classes.includes(a.className));
   if (newClasses.length > 0) {
     const firstPerNewPerClass = Object.values(
-      newClasses.reduce(
-        (acc, a) => {
-          if (a.className in acc) return acc;
-          return { ...acc, [a.className]: a };
-        },
-        {} as Record<string, Ascension>,
-      ),
+      newClasses.reduce<Record<string, Ascension>>((acc, a) => {
+        if (a.className in acc) return acc;
+        return { ...acc, [a.className]: a };
+      }, {}),
     );
 
     await db.class.createMany({
@@ -159,7 +163,58 @@ export async function processPlayers(
       })),
       skipDuplicates: true,
     });
-    classes.push(...newClasses.map((a) => a.className));
+    classes.push(...firstPerNewPerClass.map((a) => a.className));
+  }
+
+  type FamiliarAscension = Ascension & {
+    familiarName: string;
+    familiarImage: string;
+  };
+  const familiarAscensions = ascensions.filter(
+    (a) => a.familiarName !== null && a.familiarImage !== null,
+  ) as FamiliarAscension[];
+
+  const newFamiliars = familiarAscensions.filter(
+    (a) => !familiars.includes(a.familiarName),
+  );
+  if (newFamiliars.length > 0) {
+    const firstPerNewFamiliar = Object.values(
+      newFamiliars.reduce<Record<string, FamiliarAscension>>((acc, a) => {
+        if (a.familiarName in acc) return acc;
+        return { ...acc, [a.familiarName]: a };
+      }, {}),
+    );
+    await db.familiar.createMany({
+      data: firstPerNewFamiliar.map((a) => ({
+        name: a.familiarName,
+        image: a.familiarImage,
+      })),
+      skipDuplicates: true,
+    });
+    familiars.push(...firstPerNewFamiliar.map((a) => a.familiarName));
+  }
+
+  const missingImages = familiarAscensions.filter(
+    (a) => !familiarsWithImage.includes(a.familiarName),
+  );
+  if (missingImages.length > 0) {
+    const firstPerMissingImage = Object.values(
+      missingImages.reduce<Record<string, FamiliarAscension>>((acc, a) => {
+        if (a.familiarName in acc) return acc;
+        return { ...acc, [a.familiarName]: a };
+      }, {}),
+    );
+    for (const a of firstPerMissingImage) {
+      await db.familiar.upsert({
+        where: { name: a.familiarName },
+        update: { image: a.familiarImage },
+        create: {
+          name: a.familiarName,
+          image: a.familiarImage,
+        },
+      });
+    }
+    familiarsWithImage.push(...firstPerMissingImage.map((a) => a.familiarName));
   }
 
   console.timeLog("etl", `  Inserting ascensions to database`);
@@ -172,7 +227,9 @@ export async function processPlayers(
   } else {
     // Ascensions never change, so we can skip duplicates
     const { count } = await db.ascension.createMany({
-      data: ascensions,
+      // Remove familiarImage from the data
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      data: ascensions.map(({ familiarImage, ...a }) => a),
       skipDuplicates: true,
     });
     added = count;
