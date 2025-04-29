@@ -275,7 +275,7 @@ export async function getKittycoreLeaderboard() {
       WHERE
         "pathName" = 'Bad Moon'
         AND "lifestyle" = 'HARDCORE'
-        AND "familiar" = 'Black Cat'
+        AND "familiarName" = 'Black Cat'
         AND "familiarPercentage" = 100
         AND "dropped" = False
         AND "abandoned" = False
