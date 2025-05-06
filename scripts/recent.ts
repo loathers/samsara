@@ -25,12 +25,17 @@ async function main() {
 
   const ascenders = parseRecentAscenders(recent);
 
-  console.timeLog("etl", `Found ${ascenders.length} ascenders`);
+  if (ascenders.length === 0) {
+    console.timeLog("etl", "No ascenders found, this is weird");
+    console.log(recent);
+  } else {
+    console.timeLog("etl", `Found ${ascenders.length} ascenders`);
 
-  await processAscensions(players(ascenders), {
-    stopOnBlank: false,
-    sendWebhook: true,
-  });
+    await processAscensions(players(ascenders), {
+      stopOnBlank: false,
+      sendWebhook: true,
+    });
+  }
 
   await nextUpdateIn(Number(process.env.SCHEDULE || 1800));
   console.timeLog("etl", "Done");
