@@ -14,8 +14,8 @@ async function main() {
   console.timeLog("etl", "Begin");
 
   let recent = "";
-  let i = -1;
-  while(recent === "" && i < 10) {
+  let i = 0;
+  while (recent === "" && i < 10) {
     recent = await workers[i++ % workers.length].fetchText(
       "museum.php?place=leaderboards&whichboard=999&showhist=500",
     );
