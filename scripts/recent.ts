@@ -13,9 +13,13 @@ async function main() {
   console.time("etl");
   console.timeLog("etl", "Begin");
 
-  const recent = await client.fetchText(
-    "museum.php?place=leaderboards&whichboard=999&showhist=500",
-  );
+  let recent = "";
+  let i = -1;
+  while(recent === "" && i < 10) {
+    recent = await workers[i++ % workers.length].fetchText(
+      "museum.php?place=leaderboards&whichboard=999&showhist=500",
+    );
+  }
 
   if (client.isRollover()) {
     console.timeLog("etl", "Rollover detected, exiting");
@@ -27,7 +31,6 @@ async function main() {
 
   if (ascenders.length === 0) {
     console.timeLog("etl", "No ascenders found, this is weird");
-    console.log(recent);
   } else {
     console.timeLog("etl", `Found ${ascenders.length} ascenders`);
 
