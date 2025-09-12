@@ -81,7 +81,8 @@ async function tagRecordBreaking() {
       await tx.$executeRaw`DELETE FROM "Tag" WHERE "type" = ${TagType.RECORD_BREAKING}::"TagType";`;
 
       for (const [path, extra] of SPECIAL_RANKINGS) {
-        await tx.$executeRaw(getRecordBreakingByExtraQuery(path, extra));
+        if (extra)
+          await tx.$executeRaw(getRecordBreakingByExtraQuery(path, extra));
       }
 
       await tx.$executeRaw`
@@ -209,7 +210,8 @@ async function tagPersonalBest() {
     `;
 
       for (const [path, extra] of SPECIAL_RANKINGS) {
-        await tx.$executeRaw(getPersonalBestByExtraQuery(path, extra));
+        if (extra)
+          await tx.$executeRaw(getPersonalBestByExtraQuery(path, extra));
       }
 
       await tx.$executeRaw`
@@ -258,6 +260,7 @@ function getLeaderboardQuery(
     inSeason,
     excludePaths,
     extra,
+    special = false,
     limit = 35,
     year,
   }: {
@@ -265,6 +268,7 @@ function getLeaderboardQuery(
     excludePaths?: string[];
     inSeason?: boolean;
     extra?: string;
+    special?: boolean;
     limit?: number;
     year?: number;
   } = {},
@@ -272,6 +276,18 @@ function getLeaderboardQuery(
   const order = extra
     ? Prisma.sql`("extra"->>${extra})::integer DESC`
     : Prisma.sql`"days" ASC, "turns" ASC`;
+
+  // 11,037 Leagues Under the Sea runs are split into two seasons, before and after the mulligan.
+  const sea = path === "11,037 Leagues Under the Sea";
+  const start =
+    !sea || special
+      ? Prisma.sql`"Path"."start"`
+      : Prisma.sql`'2025-09-01 00:00:00'::date`;
+  const end =
+    !sea || !special
+      ? Prisma.sql`"Path"."end"`
+      : Prisma.sql`'2025-08-31 00:00:00'::date`;
+
   return Prisma.sql`
     WITH "ranked" AS (
       SELECT 
@@ -290,7 +306,7 @@ function getLeaderboardQuery(
       WHERE
       "dropped" IS FALSE
       AND "abandoned" IS FALSE
-      ${inSeason ? Prisma.sql`AND "date" >= "Path"."start" AND "date" <= "Path"."end"` : Prisma.empty}
+      ${inSeason ? Prisma.sql`AND "date" >= ${start} AND "date" <= ${end}` : Prisma.empty}
       ${excludePaths ? Prisma.sql`AND "pathName" NOT IN (${Prisma.join(excludePaths)})` : Prisma.empty}
       ${path ? Prisma.sql`AND "pathName" = ${path}` : Prisma.empty}
       ${year ? Prisma.sql`AND DATE_PART('year', "date") = ${year}` : Prisma.sql`AND "date" >= ${NS13}::date`}),
@@ -456,6 +472,7 @@ async function tagLeaderboard() {
             path,
             inSeason: true,
             extra,
+            special: true,
           }),
         );
       }
@@ -463,6 +480,7 @@ async function tagLeaderboard() {
       await tx.$executeRaw(
         getLeaderboardQuery(TagType.LEADERBOARD, {
           inSeason: true,
+          special: false,
           excludePaths: NEVER_RANK_BY_TURNCOUNT,
         }),
       );

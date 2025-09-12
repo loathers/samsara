@@ -87,9 +87,10 @@ export function awardBg(rank: number, [gold, silver, bronze] = [1, 12, 35]) {
 /**
  * These paths have a special score for which a leaderboard should be generated. This score exists as metadata in the "extra" field.
  */
-export const SPECIAL_RANKINGS = new Map<string, string>([
+export const SPECIAL_RANKINGS = new Map<string, string | undefined>([
   ["Grey Goo", "Goo Score"],
   ["One Crazy Random Summer", "Fun"],
+  ["11,037 Leagues Under the Sea", undefined],
 ]);
 
 export const getDifferenceInMonths = (start: Date, end = new Date()) =>
