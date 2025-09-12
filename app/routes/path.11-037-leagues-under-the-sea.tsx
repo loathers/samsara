@@ -32,7 +32,7 @@ export const meta = () => {
   ];
 };
 
-export default function OCRSPath() {
+export default function SeaPath() {
   const {
     frequency,
     hcDedication,
@@ -55,7 +55,6 @@ export default function OCRSPath() {
         path={path}
         frequency={frequency}
         recordBreaking={recordBreaking}
-        extra="Fun"
         totalRuns={totalRuns}
         totalRunsInSeason={totalRunsInSeason}
       />
