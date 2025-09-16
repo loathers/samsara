@@ -46,7 +46,7 @@ async function leaderboardsForLifestyle(
     [`${prefix}Leaderboard`]: await db.ascension.getLeaderboard({
       path,
       lifestyle: lifestyle,
-      inSeason: pyrites,
+      inSeason: path.seasonal,
     }),
     [`${prefix}Pyrite`]: pyrites
       ? await db.ascension.getLeaderboard({
@@ -59,7 +59,7 @@ async function leaderboardsForLifestyle(
           path,
           lifestyle: lifestyle,
           special,
-          inSeason: pyrites,
+          inSeason: path.seasonal,
         })
       : [],
     [`${prefix}SpecialPyrite`]:

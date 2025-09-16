@@ -5899,9 +5899,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kol.js@npm:^0.1.8":
-  version: 0.1.8
-  resolution: "kol.js@npm:0.1.8"
+"kol.js@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "kol.js@npm:0.2.0"
   dependencies:
     async-mutex: "npm:^0.5.0"
     css-select: "npm:^5.1.0"
@@ -5916,7 +5916,7 @@ __metadata:
     tough-cookie: "npm:^5.1.2"
     ts-dedent: "npm:^2.2.0"
     typed-emitter: "npm:^2.1.0"
-  checksum: 10c0/571655ff7a1387331bf5d46f3b166739ea7a152447841cc7c77525c3ee8c5942b3998c90c78972650f7cd160414ba3291f6572f7749bc57db3cfe7cbe4ff20b2
+  checksum: 10c0/5180f82c3d4a7b2c90598b489d93b2f11ce0d76488b5900ac242bc54e17c465768b6b56ca4a57a14a4e7bd60b93a8f3a6dfd19de5709e4cdb547df22bbb33aa6
   languageName: node
   linkType: hard
 
@@ -7405,7 +7405,7 @@ __metadata:
     graphql: "npm:^16.11.0"
     graphql-request: "npm:^7.1.2"
     isbot: "npm:^5.1.27"
-    kol.js: "npm:^0.1.8"
+    kol.js: "npm:^0.2.0"
     next-themes: "npm:^0.4.6"
     prettier: "npm:^3.5.3"
     prisma: "npm:^6.6.0"
