@@ -49,6 +49,8 @@ export default function SeaPath() {
     totalRunsInSeason,
   } = useLoaderData<typeof loader>();
 
+  const showPyrites = scPyrite.length + hcPyrite.length > 0;
+
   return (
     <Stack gap={10}>
       <PathHeader
@@ -93,14 +95,16 @@ export default function SeaPath() {
             ascensions={hcSpecialLeaderboard}
           />
         </LeaderboardAccordionItem>
-        <LeaderboardAccordionItem
-          slug="pyrites"
-          title="Pyrites"
-          description="{PYRITE}"
-        >
-          <Leaderboard title="Softcore Pyrites" ascensions={scPyrite} />
-          <Leaderboard title="Hardcore Pyrites" ascensions={hcPyrite} />
-        </LeaderboardAccordionItem>
+        {showPyrites && (
+          <LeaderboardAccordionItem
+            slug="pyrites"
+            title="Pyrites"
+            description="{PYRITE}"
+          >
+            <Leaderboard title="Softcore Pyrites" ascensions={scPyrite} />
+            <Leaderboard title="Hardcore Pyrites" ascensions={hcPyrite} />
+          </LeaderboardAccordionItem>
+        )}
         <LeaderboardAccordionItem
           title="Dedication"
           description="Players who have completed the most ascensions for this path"

@@ -11,66 +11,78 @@ export async function tagAscensions(sendWebhook: boolean) {
   await tagRecordBreaking();
   await tagPersonalBest();
   await tagPyrites(sendWebhook);
-  await tagLeaderboard();
   await tagStandard();
+  await tagLeaderboard();
 }
 
-function getRecordBreakingByExtraQuery(pathName: string, extra: string) {
+function getRecordBreakingQuery() {
   return Prisma.sql`
-    WITH "filtered_ascensions" AS (
+    WITH "filteredAscensions" AS (
       SELECT
-          "ascensionNumber",
-          "playerId",
-          "date",
-          "pathName",
-          "lifestyle",
-          ("extra" ->> ${extra})::integer AS "score"
-          FROM
-              "Ascension"
-          WHERE
-              "dropped" = FALSE
-              AND "abandoned" = FALSE
-              AND "date" >= ${NS13}::date
-              AND "pathName" = ${pathName}),
-          "preceding_score" AS (
-              SELECT
-                  "ascensionNumber",
-                  "playerId",
-                  "date",
-                  "score",
-                  "pathName",
-                  "lifestyle",
-                  max("score") OVER (PARTITION BY "pathName",
-                      "lifestyle" ORDER BY "date" ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS "preceding_max_score"
-          FROM
-              "filtered_ascensions"),
-          "ranked_records" AS (
-              SELECT
-                  "ascensionNumber",
-                  "playerId",
-                  "date",
-                  "score",
-                  "pathName",
-                  "lifestyle",
-                  "preceding_max_score",
-                  ROW_NUMBER() OVER (PARTITION BY "pathName",
-                      "lifestyle",
-                      "date" ORDER BY "score") AS "rank_for_date"
-          FROM
-              "preceding_score"
-          WHERE
-              "preceding_max_score" IS NULL
-              OR "score" > "preceding_max_score")
-          INSERT INTO "Tag" ("type", "value", "ascensionNumber", "playerId")
-          SELECT
-            ${TagType.RECORD_BREAKING}::"TagType" AS "type",
-            NULL AS "value",
-            "ascensionNumber",
-            "playerId"
-          FROM
-            "ranked_records"
-          WHERE
-            "rank_for_date" = 1;
+        "ascensionNumber",
+        "playerId",
+        "date",
+        "days",
+        "turns",
+        "pathName",
+        "lifestyle",
+        CASE "pathName"
+          WHEN 'Grey Goo' THEN ("extra" ->> 'Goo Score')::bigint
+          WHEN 'One Crazy Random Summer' THEN ("extra" ->> 'Fun')::bigint
+          ELSE -1 * ("days"::bigint * 1000000::bigint + "turns"::bigint)
+        END AS "score"
+      FROM
+        "Ascension"
+      WHERE
+        "dropped" = FALSE
+        AND "abandoned" = FALSE
+        AND "date" >= ${NS13}::date
+        AND (
+          ("pathName" = '11,037 Leagues Under the Sea' AND "date" >= '2025-09-01 00:00:00'::date)
+          OR ("pathName" <> '11,037 Leagues Under the Sea')
+        )
+    ),
+    "precedingScore" AS (
+      SELECT
+        "ascensionNumber",
+        "playerId",
+        "date",
+        "days",
+        "turns",
+        "pathName",
+        "lifestyle",
+        "score",
+        max("score") OVER (PARTITION BY "pathName", "lifestyle" ORDER BY "date" ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS "precedingMaxScore"
+      FROM
+        "filteredAscensions"),
+    "rankedRecords" AS (
+      SELECT
+        "ascensionNumber",
+        "playerId",
+        "date",
+        "days",
+        "turns",
+        "pathName",
+        "lifestyle",
+        "score",
+        "precedingMaxScore",
+        ROW_NUMBER() OVER (PARTITION BY "pathName", "lifestyle", "date" ORDER BY "score") AS "rankForDate"
+      FROM
+        "precedingScore"
+      WHERE
+        "precedingMaxScore" IS NULL
+        OR ("score" > "precedingMaxScore")
+    )
+    INSERT INTO "Tag" ("type", "value", "ascensionNumber", "playerId")
+    SELECT
+      ${TagType.RECORD_BREAKING}::"TagType" AS "type",
+      NULL AS "value",
+      "ascensionNumber",
+      "playerId"
+    FROM
+      "rankedRecords"
+    WHERE
+      "rankForDate" = 1;
   `;
 }
 
@@ -79,86 +91,7 @@ async function tagRecordBreaking() {
   await db.$transaction(
     async (tx) => {
       await tx.$executeRaw`DELETE FROM "Tag" WHERE "type" = ${TagType.RECORD_BREAKING}::"TagType";`;
-
-      for (const [path, extra] of SPECIAL_RANKINGS) {
-        if (extra)
-          await tx.$executeRaw(getRecordBreakingByExtraQuery(path, extra));
-      }
-
-      await tx.$executeRaw`
-      WITH "filtered_ascensions" AS (
-        SELECT
-          "ascensionNumber",
-          "playerId",
-          "date",
-          "days",
-          "turns",
-          "pathName",
-          "lifestyle"
-        FROM
-          "Ascension"
-        WHERE
-          "dropped" = FALSE
-          AND "abandoned" = FALSE
-          AND "date" >= ${NS13}::date
-          AND "pathName" NOT IN (${Prisma.join([...SPECIAL_RANKINGS.keys()])})),
-      "preceding_days" AS (
-        SELECT
-          "ascensionNumber",
-          "playerId",
-          "date",
-          "days",
-          "turns",
-          "pathName",
-          "lifestyle",
-          min("days") OVER (PARTITION BY "pathName", "lifestyle" ORDER BY "date" ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS "preceding_min_days"
-        FROM
-          "filtered_ascensions"),
-      "preceding_turns" AS (
-        SELECT
-          "ascensionNumber",
-          "playerId",
-          "date",
-          "days",
-          "turns",
-          "pathName",
-          "lifestyle",
-          "preceding_min_days",
-          min("turns") OVER (PARTITION BY "pathName", "lifestyle" ORDER BY "date" ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS "preceding_min_turns"
-        FROM
-          "preceding_days"
-        WHERE
-          "days" <= "preceding_min_days"),
-      "ranked_records" AS (
-        SELECT
-          "ascensionNumber",
-          "playerId",
-          "date",
-          "days",
-          "turns",
-          "pathName",
-          "lifestyle",
-          "preceding_min_days",
-          "preceding_min_turns",
-          ROW_NUMBER() OVER (PARTITION BY "pathName", "lifestyle", "date" ORDER BY "days", "turns") AS "rank_for_date"
-        FROM
-          "preceding_turns"
-        WHERE
-          "preceding_min_days" IS NULL
-          OR ("days" < "preceding_min_days")
-          OR ("days" = "preceding_min_days"
-            AND "turns" < "preceding_min_turns"))
-      INSERT INTO "Tag" ("type", "value", "ascensionNumber", "playerId")
-      SELECT
-        ${TagType.RECORD_BREAKING}::"TagType" AS "type",
-        NULL AS "value",
-        "ascensionNumber",
-        "playerId"
-      FROM
-        "ranked_records"
-      WHERE
-        "rank_for_date" = 1;
-    `;
+      await tx.$executeRaw(getRecordBreakingQuery());
     },
     {
       maxWait: 10_000,
@@ -168,7 +101,7 @@ async function tagRecordBreaking() {
   console.timeLog("etl", "Finished tagging record-breaking ascensions");
 }
 
-function getPersonalBestByExtraQuery(pathName: string, extra: string) {
+function getPersonalBestQuery() {
   return Prisma.sql`
     WITH "ranked" AS (
       SELECT
@@ -180,14 +113,19 @@ function getPersonalBestByExtraQuery(pathName: string, extra: string) {
         "turns",
         ROW_NUMBER() OVER (
           PARTITION BY "playerId", "pathName", "lifestyle"
-          ORDER BY ("extra"->>${extra})::integer DESC
+          ORDER BY
+            CASE "pathName"
+              WHEN 'Grey Goo' THEN ("extra" ->> 'Goo Score')::bigint
+              WHEN 'One Crazy Random Summer' THEN ("extra" ->> 'Fun')::bigint
+              ELSE -1 * ("days"::bigint * 1000000::bigint + "turns"::bigint)
+            END DESC
         ) AS "rank"
       FROM
         "Ascension"
       WHERE
         "dropped" = FALSE
         AND "abandoned" = FALSE
-        AND "pathName" = ${pathName})
+    )
     INSERT INTO "Tag" ("type", "value", "ascensionNumber", "playerId")
     SELECT
       ${TagType.PERSONAL_BEST}::"TagType" AS "type",
@@ -206,44 +144,9 @@ async function tagPersonalBest() {
   await db.$transaction(
     async (tx) => {
       await tx.$executeRaw`
-      DELETE FROM "Tag" WHERE "type" = ${TagType.PERSONAL_BEST}::"TagType";
-    `;
-
-      for (const [path, extra] of SPECIAL_RANKINGS) {
-        if (extra)
-          await tx.$executeRaw(getPersonalBestByExtraQuery(path, extra));
-      }
-
-      await tx.$executeRaw`
-      WITH "ranked" AS (
-        SELECT
-          "ascensionNumber",
-          "playerId",
-          "pathName",
-          "lifestyle",
-          "days",
-          "turns",
-          ROW_NUMBER() OVER (
-            PARTITION BY "playerId", "pathName", "lifestyle"
-            ORDER BY "days" ASC, "turns" ASC
-          ) AS "rank"
-        FROM
-          "Ascension"
-        WHERE
-          "dropped" = FALSE
-          AND "abandoned" = FALSE
-          AND "pathName" NOT IN (${Prisma.join([...SPECIAL_RANKINGS.keys()])}))
-      INSERT INTO "Tag" ("type", "value", "ascensionNumber", "playerId")
-      SELECT
-        ${TagType.PERSONAL_BEST}::"TagType" AS "type",
-        NULL AS "value",
-        "ascensionNumber",
-        "playerId"
-      FROM
-        "ranked"
-      WHERE
-        "rank" = 1;
-    `;
+        DELETE FROM "Tag" WHERE "type" = ${TagType.PERSONAL_BEST}::"TagType";
+      `;
+      tx.$executeRaw(getPersonalBestQuery());
     },
     {
       maxWait: 10_000,
@@ -277,17 +180,6 @@ function getLeaderboardQuery(
     ? Prisma.sql`("extra"->>${extra})::integer DESC`
     : Prisma.sql`"days" ASC, "turns" ASC`;
 
-  // 11,037 Leagues Under the Sea runs are split into two seasons, before and after the mulligan.
-  const sea = path === "11,037 Leagues Under the Sea";
-  const start =
-    !sea || special
-      ? Prisma.sql`"Path"."start"`
-      : Prisma.sql`'2025-09-01 00:00:00'::date`;
-  const end =
-    !sea || !special
-      ? Prisma.sql`"Path"."end"`
-      : Prisma.sql`'2025-08-31 00:00:00'::date`;
-
   return Prisma.sql`
     WITH "ranked" AS (
       SELECT 
@@ -306,9 +198,14 @@ function getLeaderboardQuery(
       WHERE
       "dropped" IS FALSE
       AND "abandoned" IS FALSE
-      ${inSeason ? Prisma.sql`AND "date" >= ${start} AND "date" <= ${end}` : Prisma.empty}
-      ${excludePaths ? Prisma.sql`AND "pathName" NOT IN (${Prisma.join(excludePaths)})` : Prisma.empty}
       ${path ? Prisma.sql`AND "pathName" = ${path}` : Prisma.empty}
+      AND (
+        ("pathName" = '11,037 Leagues Under the Sea' AND ${special} is TRUE AND "date" <= '2025-08-31 00:00:00'::date)
+        OR ("pathName" = '11,037 Leagues Under the Sea' AND ${special} is FALSE AND "date" >= '2025-09-01 00:00:00'::date)
+        OR ("pathName" <> '11,037 Leagues Under the Sea')
+      )
+      ${inSeason ? Prisma.sql`AND "date" >= "Path"."start" AND "date" <= "Path"."end"` : Prisma.empty}
+      ${excludePaths ? Prisma.sql`AND "pathName" NOT IN (${Prisma.join(excludePaths)})` : Prisma.empty}
       ${year ? Prisma.sql`AND DATE_PART('year', "date") = ${year}` : Prisma.sql`AND "date" >= ${NS13}::date`}),
     "best" AS (
       SELECT 
