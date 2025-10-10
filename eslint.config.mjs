@@ -8,6 +8,6 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   react.configs.flat["jsx-runtime"],
   {
-    ignores: ["build"],
+    ignores: ["build", ".react-router"],
   },
 );

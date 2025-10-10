@@ -1,6 +1,6 @@
 import { HStack, Icon, Link, Table, Text } from "@chakra-ui/react";
 import { Header, flexRender } from "@tanstack/react-table";
-import { LuArrowDown, LuArrowUp, LuX } from "react-icons/lu";
+import { LuArrowUp, LuX } from "react-icons/lu";
 
 import { TableFilter } from "~/components/TableFilter";
 import { RowData } from "~/routes/player.$id";

@@ -32,6 +32,7 @@ export const AccordionItemTrigger = React.forwardRef<
   );
 });
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface AccordionItemContentProps extends ChakraAccordion.ItemContentProps {}
 
 export const AccordionItemContent = React.forwardRef<
