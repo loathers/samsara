@@ -193,7 +193,7 @@ export function PlayerTable({ ascensions, jumpTo }: Props) {
                 <Table.Row
                   id={row.id}
                   key={row.id}
-                  bg={selected ? "yellow.50" : undefined}
+                  bg={selected ? { base: "yellow.50", _dark: "yellow.900" }  : undefined}
                   scrollMarginTop={20}
                 >
                   {cells
