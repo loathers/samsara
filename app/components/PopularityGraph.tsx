@@ -108,6 +108,7 @@ export function PopularityGraph({ data }: Props) {
             strokeWidth={line.dataKey === active ? 2 : 1}
             stroke={!active || line.dataKey === active ? line.stroke : "grey"}
             dot={false}
+            activeDot={false}
             strokeOpacity={!active || line.dataKey === active ? 1 : 0.3}
           />
         ))}
@@ -116,23 +117,27 @@ export function PopularityGraph({ data }: Props) {
           layout="vertical"
           content={({ payload }) => (
             <HStack gap={2} fontSize="xs" textAlign="center" flexWrap="wrap">
-              {payload?.map((entry) => (
-                <HStack
-                  gap={1}
-                  key={entry.value}
-                  onMouseEnter={() => setActive(entry.value)}
-                  onMouseLeave={() => setActive(null)}
-                >
-                  <Text as="span" color={entry.color}>
-                    &#x25CF;
-                  </Text>{" "}
-                  <PathLink
-                    path={paths[entry.value].path}
-                    lifestyle={paths[entry.value].lifestyle}
-                    shorten="acronyms"
-                  />
-                </HStack>
-              ))}
+              {payload?.map((entry) => {
+                const value = entry.value;
+                if (!value) return null;
+                return (
+                  <HStack
+                    gap={1}
+                    key={entry.value}
+                    onMouseEnter={() => setActive(value)}
+                    onMouseLeave={() => setActive(null)}
+                  >
+                    <Text as="span" color={entry.color}>
+                      &#x25CF;
+                    </Text>{" "}
+                    <PathLink
+                      path={paths[value].path}
+                      lifestyle={paths[value].lifestyle}
+                      shorten="acronyms"
+                    />
+                  </HStack>
+                );
+              })}
             </HStack>
           )}
         />

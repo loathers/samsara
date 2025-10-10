@@ -81,7 +81,7 @@ export function FrequencyGraph({ data, lines = [], untilNow }: Props) {
           tickFormatter={(num: number) => compactNumberFormatter.format(num)}
           width={25}
         />
-        <Line type="monotone" dataKey="count" dot={false} />
+        <Line type="monotone" dataKey="count" dot={false} activeDot={false} />
         {lines.length < maxReferenceLines &&
           lines.map((l) => (
             <ReferenceLine
