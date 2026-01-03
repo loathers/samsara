@@ -1,7 +1,7 @@
 import { Class, Lifestyle, Path, TagType } from "@prisma/client";
 
-import { db, pastYearsOfStandard } from "./db.server";
-import { calculateRange } from "./utils";
+import { db } from "./db.server";
+import { calculateRange, pastYearsOfStandard } from "./utils";
 
 export function inSeason(path: Path) {
   return (

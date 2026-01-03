@@ -14,6 +14,11 @@ function* players(p: Player[]) {
 }
 
 async function main() {
+  if (workers.length === 0) {
+    console.error("No workers available, exiting");
+    return;
+  }
+
   console.time("etl");
   console.timeLog("etl", "Begin");
 

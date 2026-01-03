@@ -1,5 +1,4 @@
-import { db } from "../../app/db.server.js";
-import { type Player } from "@prisma/client";
+import { type Player, PrismaClient } from "@prisma/client";
 
 import { parseWorkers } from "./Worker.js";
 import { fetchClasses, fetchPaths } from "./data.js";
@@ -12,6 +11,8 @@ import {
   slugify,
   wait,
 } from "./utils.js";
+
+export const db = new PrismaClient();
 
 // KoL used to purge accounts from inactivity and even now, sometimes accounts are purged. This is a sufficiently late known account
 // to let us know when to stop skipping gaps. If we ever encounter a future gap, this should be updated to have a greater value.

@@ -24,7 +24,8 @@ import { PlayerLink } from "~/components/PlayerLink";
 import { ResponsiveContent } from "~/components/ResponsiveContent";
 import { StatsTable } from "~/components/StatsTable";
 import { Turncount } from "~/components/Turncount";
-import { NS13, db } from "~/db.server";
+import { db } from "~/db.server.js";
+import { NS13 } from "~/utils.js";
 
 type AscensionData = Ascension & {
   date: Date;

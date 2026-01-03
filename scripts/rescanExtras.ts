@@ -1,7 +1,6 @@
-import { db } from "../app/db.server.js";
 import { JsonObject, JsonValue } from "@prisma/client/runtime/library";
 
-import { processAscensions } from "./utils/client.js";
+import { db, processAscensions, workers } from "./utils/client.js";
 
 function* players(p: { playerId: number }[]) {
   for (const player of p) yield player.playerId;
@@ -12,6 +11,11 @@ function isObject(obj: JsonValue): obj is JsonObject {
 }
 
 async function main() {
+  if (workers.length === 0) {
+    console.error("No workers available, exiting");
+    return;
+  }
+
   const needRechecked = await db.$queryRaw<{ playerId: number }[]>`
     SELECT DISTINCT "playerId" FROM "Ascension"
     WHERE

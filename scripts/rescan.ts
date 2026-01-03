@@ -1,7 +1,6 @@
-import { db } from "../app/db.server.js";
 import { program } from "commander";
 
-import { processAscensions } from "./utils/client.js";
+import { db, processAscensions, workers } from "./utils/client.js";
 
 type OptionValues = {
   startingId: number;
@@ -26,6 +25,11 @@ function* counter(startFrom = 1, skip: number[] = []) {
 }
 
 async function main() {
+  if (workers.length === 0) {
+    console.error("No workers available, exiting");
+    return;
+  }
+
   const { startingId, force } = cli.opts<OptionValues>();
 
   console.time("etl");

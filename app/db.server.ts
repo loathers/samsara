@@ -7,12 +7,7 @@ import {
   TagType,
 } from "@prisma/client";
 
-export const NS13 = "2007-06-25T00:00:00Z";
-export const STANDARD = 2015;
-export const pastYearsOfStandard = () =>
-  [...Array(new Date().getFullYear() - STANDARD).keys()].map(
-    (y) => y + STANDARD,
-  );
+import { NS13 } from "./utils";
 
 declare global {
   var globalPrisma: PrismaClient;
