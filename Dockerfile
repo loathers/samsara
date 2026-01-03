@@ -55,7 +55,6 @@ ENV NODE_ENV=production
 # Copy only what we need at runtime:
 COPY --from=builder /app/package.json /app/yarn.lock ./
 COPY --from=builder /app/.yarnrc.yml ./
-COPY --from=builder /app/.yarn/ ./.yarn/
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/prisma ./prisma
