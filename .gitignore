@@ -12,6 +12,7 @@ node_modules
 .yarn-error.log
 .pnp.*
 .yarn/*
+!.yarn/.gitkeep
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases

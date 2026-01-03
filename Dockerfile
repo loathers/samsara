@@ -16,8 +16,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Enable yarn via corepack (supports yarn classic + berry)
 RUN corepack enable
 
+# Install deps first for better caching
 COPY package.json yarn.lock ./
+# If you're on Yarn Berry, you may also have these:
 COPY .yarnrc.yml ./
+COPY .yarn/ ./.yarn/
 
 # Install dependencies (include dev deps for build)
 RUN yarn install --immutable || yarn install --frozen-lockfile
@@ -52,6 +55,7 @@ ENV NODE_ENV=production
 # Copy only what we need at runtime:
 COPY --from=builder /app/package.json /app/yarn.lock ./
 COPY --from=builder /app/.yarnrc.yml ./
+COPY --from=builder /app/.yarn/ ./.yarn/
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/prisma ./prisma
