@@ -1,28 +1,20 @@
-import { TypedDocumentNode } from "@graphql-typed-document-node/core";
-import { parse } from "graphql";
-import { GraphQLClient, gql } from "graphql-request";
+import { createClient } from "data-of-loathing";
 
-const client = new GraphQLClient("https://data.loathers.net/graphql");
+const client = createClient();
 
 export async function fetchPaths() {
   try {
-    const query: TypedDocumentNode<{
-      allPaths: { nodes: { id: number; image: string; name: string }[] };
-    }> = parse(gql`
-      query GetAllPaths {
-        allPaths {
-          nodes {
-            id
-            image
-            name
-          }
-        }
-      }
-    `);
+    const data = await client.query({
+      allPaths: {
+        nodes: {
+          id: true,
+          image: true,
+          name: true,
+        },
+      },
+    });
 
-    const data = await client.request(query);
-
-    return data.allPaths.nodes;
+    return data.allPaths?.nodes.filter((n) => n !== null) ?? [];
   } catch (error) {
     console.error(error);
     return null;
@@ -31,31 +23,18 @@ export async function fetchPaths() {
 
 export async function fetchClasses() {
   try {
-    const query: TypedDocumentNode<{
+    const data = await client.query({
       allClasses: {
         nodes: {
-          id: number;
-          image: string;
-          name: string;
-          path: number | null;
-        }[];
-      };
-    }> = parse(gql`
-      query GetAllClasses {
-        allClasses {
-          nodes {
-            id
-            image
-            name
-            path
-          }
-        }
-      }
-    `);
+          id: true,
+          image: true,
+          name: true,
+          path: true,
+        },
+      },
+    });
 
-    const data = await client.request(query);
-
-    return data.allClasses.nodes;
+    return data.allClasses?.nodes.filter((n) => n !== null) ?? [];
   } catch (error) {
     console.error(error);
     return null;
