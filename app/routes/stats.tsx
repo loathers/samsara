@@ -52,8 +52,16 @@ export const meta = () => {
 };
 
 export const loader = async () => {
-  const separatePyrites = (
-    await db.tag.findMany({
+  // Run all independent queries in parallel
+  const [
+    separatePyrites,
+    totalRunsPerPathRaw,
+    totalRunsInSeasonPerPathRaw,
+    tortoisecoreRaw,
+    longestRaw,
+  ] = await Promise.all([
+    // Pyrites query
+    db.tag.findMany({
       include: {
         ascension: {
           include: { player: true, path: true },
@@ -64,6 +72,12 @@ export const loader = async () => {
           in: ["PYRITE", "PYRITE_SPECIAL"],
         },
         value: 1,
+        NOT: {
+          ascension: {
+            path: { id: 999 },
+            lifestyle: "SOFTCORE",
+          },
+        },
       },
       orderBy: {
         ascension: {
@@ -72,9 +86,94 @@ export const loader = async () => {
           },
         },
       },
-    })
-  ).filter(
-    (a) => a.ascension.path.id !== 999 || a.ascension.lifestyle !== "SOFTCORE",
+    }),
+    // Total runs per path
+    db.ascension.groupBy({
+      by: ["pathName"],
+      _count: true,
+    }),
+    // Total runs in season per path
+    db.$queryRaw<{ pathName: string; _count: number }[]>`
+      SELECT
+        COUNT(*)::int as "_count",
+        "Ascension"."pathName"
+      FROM
+        "Ascension"
+      INNER JOIN
+        "Path"
+      ON
+        "Ascension"."pathName" = "Path"."name"
+      WHERE
+        "Ascension"."date" <= "Path"."end"
+      GROUP BY "Ascension"."pathName"
+    `,
+    // Tortoisecore queries
+    Promise.all(
+      [
+        LifestyleEnum.CASUAL,
+        LifestyleEnum.SOFTCORE,
+        LifestyleEnum.HARDCORE,
+      ].map((l) =>
+        db.ascension.findFirst({
+          where: {
+            pathName: "None",
+            abandoned: false,
+            dropped: false,
+            date: { gt: NS13 },
+            lifestyle: l,
+          },
+          orderBy: [{ turns: "asc" }, { days: "asc" }],
+          select: {
+            player: true,
+            days: true,
+            turns: true,
+            playerId: true,
+            ascensionNumber: true,
+            lifestyle: true,
+            date: true,
+          },
+          take: 1,
+        }),
+      ),
+    ),
+    // Longest runs queries
+    Promise.all(
+      ["turns" as const, "days" as const].flatMap((u) =>
+        [LifestyleEnum.SOFTCORE, LifestyleEnum.HARDCORE].flatMap((l) =>
+          db.ascension.findFirst({
+            where: {
+              lifestyle: l,
+              abandoned: false,
+              dropped: false,
+              date: { gt: NS13 },
+            },
+            orderBy: [{ [u]: "desc" }],
+            select: {
+              player: true,
+              days: true,
+              turns: true,
+              playerId: true,
+              ascensionNumber: true,
+              lifestyle: true,
+              date: true,
+            },
+            take: 1,
+          }),
+        ),
+      ),
+    ),
+  ]);
+
+  // Process results
+  const totalRunsPerPath = Object.fromEntries(
+    totalRunsPerPathRaw.map(({ pathName, _count }) => [pathName, _count]),
+  );
+
+  const totalRunsInSeasonPerPath = Object.fromEntries(
+    totalRunsInSeasonPerPathRaw.map(({ pathName, _count }) => [
+      pathName,
+      _count,
+    ]),
   );
 
   type PyriteAscension = (typeof separatePyrites)[number];
@@ -85,34 +184,6 @@ export const loader = async () => {
     hardcore: PyriteAscension["ascension"];
     softcore?: PyriteAscension["ascension"];
   };
-
-  const totalRunsPerPath = Object.fromEntries(
-    (
-      await db.ascension.groupBy({
-        by: ["pathName"],
-        _count: true,
-      })
-    ).map(({ pathName, _count }) => [pathName, _count]),
-  );
-
-  const totalRunsInSeasonPerPath = Object.fromEntries(
-    (
-      await db.$queryRaw<{ pathName: string; _count: number }[]>`
-    SELECT
-      COUNT(*)::int as "_count",
-      "Ascension"."pathName"
-    FROM
-      "Ascension"
-    INNER JOIN 
-      "Path"
-    ON
-      "Ascension"."pathName" = "Path"."name"
-    WHERE
-      "Ascension"."date" <= "Path"."end"
-    GROUP BY "Ascension"."pathName"
-  `
-    ).map(({ pathName, _count }) => [pathName, _count]),
-  );
 
   const paths = Object.values(
     separatePyrites.reduce<Record<string, PathPyrites>>(
@@ -152,64 +223,8 @@ export const loader = async () => {
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
-  const tortoisecore = (
-    await Promise.all(
-      [
-        LifestyleEnum.CASUAL,
-        LifestyleEnum.SOFTCORE,
-        LifestyleEnum.HARDCORE,
-      ].map((l) =>
-        db.ascension.findFirst({
-          where: {
-            pathName: "None",
-            abandoned: false,
-            dropped: false,
-            date: { gt: NS13 },
-            lifestyle: l,
-          },
-          orderBy: [{ turns: "asc" }, { days: "asc" }],
-          select: {
-            player: true,
-            days: true,
-            turns: true,
-            playerId: true,
-            ascensionNumber: true,
-            lifestyle: true,
-            date: true,
-          },
-          take: 1,
-        }),
-      ),
-    )
-  ).filter((t) => t !== null);
-
-  const longest = (
-    await Promise.all(
-      ["turns" as const, "days" as const].flatMap((u) =>
-        [LifestyleEnum.SOFTCORE, LifestyleEnum.HARDCORE].flatMap((l) =>
-          db.ascension.findFirst({
-            where: {
-              lifestyle: l,
-              abandoned: false,
-              dropped: false,
-              date: { gt: NS13 },
-            },
-            orderBy: [{ [u]: "desc" }],
-            select: {
-              player: true,
-              days: true,
-              turns: true,
-              playerId: true,
-              ascensionNumber: true,
-              lifestyle: true,
-              date: true,
-            },
-            take: 1,
-          }),
-        ),
-      ),
-    )
-  ).filter((r) => r !== null);
+  const tortoisecore = tortoisecoreRaw.filter((t) => t !== null);
+  const longest = longestRaw.filter((r) => r !== null);
 
   return { leaderboard, paths, tortoisecore, longest };
 };
