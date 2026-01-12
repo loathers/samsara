@@ -49,6 +49,10 @@ model Ascension {
   @@id(name: "id", [ascensionNumber, playerId])
   @@index([pathName], type: Hash)
   @@index([days, turns])
+  // Performance indexes for common query patterns
+  @@index([date]) // getFrequency, getPopularity, getStat date filtering
+  @@index([pathName, lifestyle, date]) // getLeaderboard, getDedication filtering
+  @@index([playerId, pathName, lifestyle]) // getDedication grouping
 }
 
 enum Lifestyle {
@@ -97,6 +101,7 @@ model Tag {
   playerId        Int
 
   @@id([type, ascensionNumber, playerId])
+  @@index([type, year]) // getLeaderboard filtering by tag type and year
 }
 
 model Familiar {
