@@ -41,35 +41,44 @@ async function leaderboardsForLifestyle(
 ) {
   const pyrites = hasPyrites(path);
   const prefix = lifestyle === "HARDCORE" ? "hc" : "sc";
-  return {
-    [`${prefix}Dedication`]: await db.player.getDedication(path, lifestyle),
-    [`${prefix}Leaderboard`]: await db.ascension.getLeaderboard({
-      path,
-      lifestyle: lifestyle,
-      inSeason: path.seasonal,
-    }),
-    [`${prefix}Pyrite`]: pyrites
-      ? await db.ascension.getLeaderboard({
-          path,
-          lifestyle: lifestyle,
-        })
-      : [],
-    [`${prefix}SpecialLeaderboard`]: special
-      ? await db.ascension.getLeaderboard({
-          path,
-          lifestyle: lifestyle,
-          special,
-          inSeason: path.seasonal,
-        })
-      : [],
-    [`${prefix}SpecialPyrite`]:
+
+  const [dedication, leaderboard, pyrite, specialLeaderboard, specialPyrite] =
+    await Promise.all([
+      db.player.getDedication(path, lifestyle),
+      db.ascension.getLeaderboard({
+        path,
+        lifestyle: lifestyle,
+        inSeason: path.seasonal,
+      }),
+      pyrites
+        ? db.ascension.getLeaderboard({
+            path,
+            lifestyle: lifestyle,
+          })
+        : Promise.resolve([]),
+      special
+        ? db.ascension.getLeaderboard({
+            path,
+            lifestyle: lifestyle,
+            special,
+            inSeason: path.seasonal,
+          })
+        : Promise.resolve([]),
       special && pyrites
-        ? await db.ascension.getLeaderboard({
+        ? db.ascension.getLeaderboard({
             path,
             lifestyle: lifestyle,
             special: true,
           })
-        : [],
+        : Promise.resolve([]),
+    ]);
+
+  return {
+    [`${prefix}Dedication`]: dedication,
+    [`${prefix}Leaderboard`]: leaderboard,
+    [`${prefix}Pyrite`]: pyrite,
+    [`${prefix}SpecialLeaderboard`]: specialLeaderboard,
+    [`${prefix}SpecialPyrite`]: specialPyrite,
   };
 }
 
@@ -77,30 +86,38 @@ export async function getPathData(
   path: Path & { class: Class[] },
   special = false,
 ) {
-  return {
-    current: inSeason(path),
-    frequency: await db.ascension.getFrequency({
+  const [
+    frequency,
+    recordBreaking,
+    hardcoreLeaderboards,
+    softcoreLeaderboards,
+    totalRuns,
+    totalRunsInSeason,
+  ] = await Promise.all([
+    db.ascension.getFrequency({
       path,
       range: calculateRange(path.start ?? new Date(0), new Date()),
     }),
-    path,
-    recordBreaking: await db.ascension.getRecordBreaking(path),
-    ...((await leaderboardsForLifestyle(
-      path,
-      special,
-      "HARDCORE",
-    )) as HardcoreLeaderboards),
-    ...((await leaderboardsForLifestyle(
-      path,
-      special,
-      "SOFTCORE",
-    )) as SoftcoreLeaderboards),
-    totalRuns: await db.ascension.count({ where: { pathName: path.name } }),
-    totalRunsInSeason: path.end
-      ? await db.ascension.count({
+    db.ascension.getRecordBreaking(path),
+    leaderboardsForLifestyle(path, special, "HARDCORE"),
+    leaderboardsForLifestyle(path, special, "SOFTCORE"),
+    db.ascension.count({ where: { pathName: path.name } }),
+    path.end
+      ? db.ascension.count({
           where: { pathName: path.name, date: { lt: path.end } },
         })
-      : 0,
+      : Promise.resolve(0),
+  ]);
+
+  return {
+    current: inSeason(path),
+    frequency,
+    path,
+    recordBreaking,
+    ...(hardcoreLeaderboards as HardcoreLeaderboards),
+    ...(softcoreLeaderboards as SoftcoreLeaderboards),
+    totalRuns,
+    totalRunsInSeason,
   };
 }
 
@@ -109,26 +126,24 @@ export async function getPastStandardLeaderboards(
 ) {
   return Object.fromEntries(
     await Promise.all(
-      pastYearsOfStandard().map(
-        async (year) =>
-          [
+      pastYearsOfStandard().map(async (year) => {
+        // Run softcore and hardcore queries in parallel for each year
+        const [softcore, hardcore] = await Promise.all([
+          db.ascension.getLeaderboard({
+            path,
+            lifestyle: Lifestyle.SOFTCORE,
+            type: TagType.STANDARD,
             year,
-            {
-              softcore: await db.ascension.getLeaderboard({
-                path,
-                lifestyle: Lifestyle.SOFTCORE,
-                type: TagType.STANDARD,
-                year,
-              }),
-              hardcore: await db.ascension.getLeaderboard({
-                path,
-                lifestyle: Lifestyle.HARDCORE,
-                type: TagType.STANDARD,
-                year,
-              }),
-            },
-          ] as const,
-      ),
+          }),
+          db.ascension.getLeaderboard({
+            path,
+            lifestyle: Lifestyle.HARDCORE,
+            type: TagType.STANDARD,
+            year,
+          }),
+        ]);
+        return [year, { softcore, hardcore }] as const;
+      }),
     ),
   );
 }
