@@ -1,11 +1,11 @@
 type Props = {
   days: number;
-  cx: number;
-  cy: number;
-  r: number;
-  stroke: string;
+  cx?: number;
+  cy?: number;
+  r?: string | number;
+  stroke?: string;
   fill: string;
-  strokeWidth: number;
+  strokeWidth?: string | number;
 };
 
 function polygon([cx, cy]: [number, number], sides: number, radius: number) {
@@ -18,7 +18,8 @@ function polygon([cx, cy]: [number, number], sides: number, radius: number) {
     .join(" ");
 }
 
-export function DaysDot({ days, cx, cy, r, ...rest }: Props) {
+export function DaysDot({ days, cx = 0, cy = 0, r = 0, ...rest }: Props) {
+  if (typeof r === "string") return null;
   switch (days) {
     case 2:
       return (
