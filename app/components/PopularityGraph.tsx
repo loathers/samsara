@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { ClientOnly } from "~/components/ClientOnly";
 import { PathLink } from "~/components/PathLink";
 import { formatTick } from "~/utils";
 
@@ -85,63 +86,65 @@ export function PopularityGraph({ data }: Props) {
   const [active, setActive] = useState<string | null>(null);
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <LineChart
-        data={seriesData}
-        title="Popularity of different paths over the last week"
-        margin={{ top: 0, bottom: 0 }}
-      >
-        <XAxis
-          type="number"
-          dataKey={(d: Datum) => d.date.getTime()}
-          tick={{ fontSize: 8 }}
-          tickFormatter={(ts: number) => formatTick(ts, seriesData.length)}
-          tickCount={8}
-          domain={["dataMin", "dataMax"]}
-        />
-        <YAxis tick={{ fontSize: 8 }} domain={[0, "auto"]} width={25} />
-        {seriesKeys.map((line) => (
-          <Line
-            key={line.dataKey}
-            type="monotone"
-            dataKey={line.dataKey}
-            strokeWidth={line.dataKey === active ? 2 : 1}
-            stroke={!active || line.dataKey === active ? line.stroke : "grey"}
-            dot={false}
-            activeDot={false}
-            strokeOpacity={!active || line.dataKey === active ? 1 : 0.3}
+    <ClientOnly>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart
+          data={seriesData}
+          title="Popularity of different paths over the last week"
+          margin={{ top: 0, bottom: 0 }}
+        >
+          <XAxis
+            type="number"
+            dataKey={(d: Datum) => d.date.getTime()}
+            tick={{ fontSize: 8 }}
+            tickFormatter={(ts: number) => formatTick(ts, seriesData.length)}
+            tickCount={8}
+            domain={["dataMin", "dataMax"]}
           />
-        ))}
-        <Legend
-          iconType="circle"
-          layout="vertical"
-          content={({ payload }) => (
-            <HStack gap={2} fontSize="xs" textAlign="center" flexWrap="wrap">
-              {payload?.map((entry) => {
-                const value = entry.value;
-                if (!value) return null;
-                return (
-                  <HStack
-                    gap={1}
-                    key={entry.value}
-                    onMouseEnter={() => setActive(value)}
-                    onMouseLeave={() => setActive(null)}
-                  >
-                    <Text as="span" color={entry.color}>
-                      &#x25CF;
-                    </Text>{" "}
-                    <PathLink
-                      path={paths[value].path}
-                      lifestyle={paths[value].lifestyle}
-                      shorten="acronyms"
-                    />
-                  </HStack>
-                );
-              })}
-            </HStack>
-          )}
-        />
-      </LineChart>
-    </ResponsiveContainer>
+          <YAxis tick={{ fontSize: 8 }} domain={[0, "auto"]} width={25} />
+          {seriesKeys.map((line) => (
+            <Line
+              key={line.dataKey}
+              type="monotone"
+              dataKey={line.dataKey}
+              strokeWidth={line.dataKey === active ? 2 : 1}
+              stroke={!active || line.dataKey === active ? line.stroke : "grey"}
+              dot={false}
+              activeDot={false}
+              strokeOpacity={!active || line.dataKey === active ? 1 : 0.3}
+            />
+          ))}
+          <Legend
+            iconType="circle"
+            layout="vertical"
+            content={({ payload }) => (
+              <HStack gap={2} fontSize="xs" textAlign="center" flexWrap="wrap">
+                {payload?.map((entry) => {
+                  const value = entry.value;
+                  if (!value) return null;
+                  return (
+                    <HStack
+                      gap={1}
+                      key={entry.value}
+                      onMouseEnter={() => setActive(value)}
+                      onMouseLeave={() => setActive(null)}
+                    >
+                      <Text as="span" color={entry.color}>
+                        &#x25CF;
+                      </Text>{" "}
+                      <PathLink
+                        path={paths[value].path}
+                        lifestyle={paths[value].lifestyle}
+                        shorten="acronyms"
+                      />
+                    </HStack>
+                  );
+                })}
+              </HStack>
+            )}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </ClientOnly>
   );
 }
