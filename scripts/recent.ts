@@ -1,6 +1,11 @@
 import { Player } from "@prisma/client";
 
-import { nextUpdateIn, processAscensions, workers } from "./utils/client.js";
+import {
+  db,
+  nextUpdateIn,
+  processAscensions,
+  workers,
+} from "./utils/client.js";
 import { parseRecentAscenders } from "./utils/utils.js";
 
 function* players(p: Player[]) {
@@ -49,4 +54,8 @@ async function main() {
   console.timeEnd("etl");
 }
 
-main();
+try {
+  await main();
+} finally {
+  await db.$disconnect();
+}
