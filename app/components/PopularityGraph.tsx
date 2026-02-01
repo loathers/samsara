@@ -1,6 +1,6 @@
 import { HStack, Text } from "@chakra-ui/react";
 import { Lifestyle } from "@prisma/client";
-import createColor from "create-color";
+import { useTheme } from "next-themes";
 import { useMemo, useState } from "react";
 import {
   Legend,
@@ -14,6 +14,7 @@ import {
 import { ClientOnly } from "~/components/ClientOnly";
 import { PathLink } from "~/components/PathLink";
 import { formatTick } from "~/utils";
+import { createConstrainedColor } from "~/utils/color";
 
 type Datum = {
   date: Date;
@@ -29,6 +30,9 @@ const toKey = (d: Datum) => `${shortenLifestyle(d.lifestyle)} ${d.path.name}`;
 
 export function PopularityGraph({ data }: Props) {
   const dateData = data.map((d) => ({ ...d, date: new Date(d.date) }));
+  const { resolvedTheme } = useTheme();
+  const [minLightness, maxLightness] =
+    resolvedTheme === "dark" ? [30, 75] : [25, 70];
   const [seriesData, seriesKeys, paths] = useMemo(() => {
     const paths = dateData.reduce(
       (acc, d) => {
@@ -76,12 +80,23 @@ export function PopularityGraph({ data }: Props) {
         ),
     );
 
+    // Sort by rightmost position (value at last data point) descending
+    const lastDataPoint = dataObjects[dataObjects.length - 1];
+    const sortedTop10 = [...top10].sort((a, b) => {
+      const aVal = (lastDataPoint?.[a] as number) ?? 0;
+      const bVal = (lastDataPoint?.[b] as number) ?? 0;
+      return bVal - aVal;
+    });
+
     return [
       dataObjects,
-      top10.map((dataKey) => ({ dataKey, stroke: createColor(dataKey) })),
+      sortedTop10.map((dataKey) => ({
+        dataKey,
+        stroke: createConstrainedColor(dataKey, minLightness, maxLightness),
+      })),
       paths,
     ];
-  }, [data]);
+  }, [data, minLightness, maxLightness]);
 
   const [active, setActive] = useState<string | null>(null);
 

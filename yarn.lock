@@ -4137,13 +4137,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"create-color@npm:^2.0.6":
-  version: 2.0.6
-  resolution: "create-color@npm:2.0.6"
-  checksum: 10c0/20c66b658ee992b8e3d81a401657bbcf74ee3247c0e4d3ec2b60cbc0c9dc4a007bea090f4a720fcaabbc2aab3229e5e0cf994922e2efa61bbc763c0aa6c7860d
-  languageName: node
-  linkType: hard
-
 "cross-spawn@npm:^7.0.0, cross-spawn@npm:^7.0.6":
   version: 7.0.6
   resolution: "cross-spawn@npm:7.0.6"
@@ -7851,7 +7844,6 @@ __metadata:
     "@types/react-dom": "npm:^19.2.3"
     autoprefixer: "npm:^10.4.23"
     commander: "npm:^14.0.2"
-    create-color: "npm:^2.0.6"
     data-of-loathing: "npm:^2.6.2"
     eslint: "npm:^9.39.2"
     eslint-plugin-react: "npm:^7.37.5"
