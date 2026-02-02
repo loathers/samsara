@@ -299,17 +299,18 @@ async function tagPyrites(sendWebhook: boolean) {
         DELETE FROM "Tag" WHERE "type" IN (${TagType.PYRITE}::"TagType", ${TagType.PYRITE_SPECIAL}::"TagType");
       `;
 
-      for (const [path, extra] of SPECIAL_RANKINGS) {
-        await tx.$executeRaw(
-          getLeaderboardQuery(TagType.PYRITE_SPECIAL, { path, extra }),
-        );
-      }
-
-      await tx.$executeRaw(
-        getLeaderboardQuery(TagType.PYRITE, {
-          excludePaths: NEVER_RANK_BY_TURNCOUNT,
-        }),
-      );
+      await Promise.all([
+        ...[...SPECIAL_RANKINGS].map(([path, extra]) =>
+          tx.$executeRaw(
+            getLeaderboardQuery(TagType.PYRITE_SPECIAL, { path, extra }),
+          ),
+        ),
+        tx.$executeRaw(
+          getLeaderboardQuery(TagType.PYRITE, {
+            excludePaths: NEVER_RANK_BY_TURNCOUNT,
+          }),
+        ),
+      ]);
     },
     {
       maxWait: 10_000,
@@ -368,24 +369,25 @@ async function tagLeaderboard() {
         DELETE FROM "Tag" WHERE "type" IN (${TagType.LEADERBOARD}::"TagType", ${TagType.LEADERBOARD_SPECIAL}::"TagType");
       `;
 
-      for (const [path, extra] of SPECIAL_RANKINGS) {
-        await tx.$executeRaw(
-          getLeaderboardQuery(TagType.LEADERBOARD_SPECIAL, {
-            path,
+      await Promise.all([
+        ...[...SPECIAL_RANKINGS].map(([path, extra]) =>
+          tx.$executeRaw(
+            getLeaderboardQuery(TagType.LEADERBOARD_SPECIAL, {
+              path,
+              inSeason: true,
+              extra,
+              special: true,
+            }),
+          ),
+        ),
+        tx.$executeRaw(
+          getLeaderboardQuery(TagType.LEADERBOARD, {
             inSeason: true,
-            extra,
-            special: true,
+            special: false,
+            excludePaths: NEVER_RANK_BY_TURNCOUNT,
           }),
-        );
-      }
-
-      await tx.$executeRaw(
-        getLeaderboardQuery(TagType.LEADERBOARD, {
-          inSeason: true,
-          special: false,
-          excludePaths: NEVER_RANK_BY_TURNCOUNT,
-        }),
-      );
+        ),
+      ]);
     },
     {
       maxWait: 10_000,
