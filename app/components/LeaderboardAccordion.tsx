@@ -12,11 +12,11 @@ export function LeaderboardAccordion({ children }: Props) {
   const { hash } = useLocation();
   const navigate = useNavigate();
 
-  const defaultValue = hash.slice(1);
+  const value = hash.slice(1);
 
   const onChange = useCallback(
     (details: AccordionValueChangeDetails) => {
-      navigate({ hash: details.value[0] });
+      navigate({ hash: details.value[0] ?? "" }, { replace: true });
     },
     [navigate],
   );
@@ -24,7 +24,7 @@ export function LeaderboardAccordion({ children }: Props) {
   return (
     <Accordion.Root
       onValueChange={onChange}
-      defaultValue={[defaultValue]}
+      value={value ? [value] : []}
       collapsible
     >
       {children}
