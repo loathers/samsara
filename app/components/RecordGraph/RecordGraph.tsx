@@ -135,8 +135,8 @@ export function RecordGraph({ data, extra }: Props) {
             />
           ))}
           <Tooltip
-            labelFormatter={(ts: number) =>
-              fullDateFormatter.format(new Date(ts))
+            labelFormatter={(_ts, payload) =>
+              fullDateFormatter.format(payload[0]?.payload?.date)
             }
             formatter={(value, name, { payload }) => [
               formatRunForTooltip(payload),

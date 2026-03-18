@@ -220,7 +220,7 @@ export async function processPlayers(
 
   console.timeLog("etl", `  Inserting ascensions to database`);
   // Now add all the ascensions
-  let added = 0;
+  let added: number;
 
   if (ascensionUpdater) {
     // We are correcting a parsing issue, so we can't skip duplicates
