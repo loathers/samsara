@@ -14,6 +14,7 @@ describe("getPathAcronym", () => {
     ["A Shrunken Adventurer am I", "Smol"],
     ["Pocket Familiars", "PF"],
     ["11,037 Leagues Under the Sea", "Sea"],
+    ["Adventurer Meats World", "Meat"],
   ])("Correctly shortens %s", (path, expected) => {
     expect(getPathAcronym(path)).toBe(expected);
   });

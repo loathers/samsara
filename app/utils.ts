@@ -151,6 +151,8 @@ export function getPathAcronym(name: string) {
       return "WF";
     case "11,037 Leagues Under the Sea":
       return "Sea";
+    case "Adventurer Meats World":
+      return "Meat";
   }
 
   const parts = name.replace("-", " ").split(" ");
