@@ -1,5 +1,5 @@
 import { Link } from "@chakra-ui/react";
-import { Player } from "@prisma/client";
+import { Player } from "~/db";
 import { Link as RRLink } from "react-router";
 
 type Props = {

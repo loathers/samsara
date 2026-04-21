@@ -1,6 +1,5 @@
 import { useToken } from "@chakra-ui/react";
-import { Lifestyle } from "@prisma/client";
-import { JsonObject, JsonValue } from "@prisma/client/runtime/library";
+import { JsonObject, JsonValue, Lifestyle } from "~/db";
 import { useState } from "react";
 import {
   Legend,

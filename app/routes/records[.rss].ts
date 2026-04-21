@@ -2,7 +2,7 @@ import { Feed } from "feed";
 import { data } from "react-router";
 
 import { formatLifestyle } from "~/components/Lifestyle";
-import { db, getMaxAge } from "~/db.server";
+import { getMaxAge, getRecordsForRSS } from "~/db.server";
 import { hasExtra } from "~/utils";
 
 export const loader = async () => {
@@ -11,22 +11,7 @@ export const loader = async () => {
     "Content-Type": "application/rss+xml",
   };
 
-  const records = await db.ascension.findMany({
-    select: {
-      path: { select: { name: true } },
-      days: true,
-      turns: true,
-      date: true,
-      lifestyle: true,
-      extra: true,
-      player: { select: { name: true, id: true } },
-      ascensionNumber: true,
-    },
-    where: {
-      tags: { some: { type: "RECORD_BREAKING" } },
-    },
-    orderBy: [{ date: "desc" }],
-  });
+  const records = await getRecordsForRSS();
 
   const feed = new Feed({
     title: "Record-Breaking Ascensions",

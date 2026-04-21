@@ -5,15 +5,12 @@ import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
-import { db } from "~/db.server";
+import { findPathWithClasses } from "~/db.server";
 import { getPathData } from "~/path.server";
 import { getExtra } from "~/utils";
 
 export const loader = async () => {
-  const path = await db.path.findFirst({
-    where: { slug: "grey-goo" },
-    include: { class: true },
-  });
+  const path = await findPathWithClasses({ slug: "grey-goo" });
 
   if (!path) throw data({ message: "Invalid path name" }, { status: 400 });
 

@@ -29,7 +29,7 @@ import { CoolStat } from "~/components/CoolStat";
 import { PathLink } from "~/components/PathLink";
 import { PopularityGraph } from "~/components/PopularityGraph";
 import { Select } from "~/components/Select.js";
-import { db } from "~/db.server";
+import { countAscensions, getFrequency, getPopularity, getPaths, getStat } from "~/db.server";
 import { formatPathName, getPathAcronym } from "~/utils.js";
 
 export const meta = () => {
@@ -40,17 +40,15 @@ export const meta = () => {
 };
 
 export const loader = async () => {
-  const totalTracked = await db.ascension.count();
+  const totalTracked = await countAscensions();
 
-  const frequency = await db.ascension.getFrequency();
-  const popularity = await db.ascension.getPopularity();
+  const frequency = await getFrequency();
+  const popularity = await getPopularity();
 
-  // If we could add raw SQL, `ORDER BY id = 999, id DESC, name ASC` would do this
-  const paths = (
-    await db.path.findMany({
-      orderBy: [{ id: { nulls: "last", sort: "desc" } }, { name: "asc" }],
-    })
-  ).sort((a, b) => (a.id === 999 ? 1 : b.id === 999 ? -1 : 0));
+  // `ORDER BY id = 999, id DESC NULLS LAST, name ASC` — the JS sort moves id=999 to the end
+  const paths = (await getPaths()).sort((a, b) =>
+    a.id === 999 ? 1 : b.id === 999 ? -1 : 0,
+  );
 
   // This works because the list of paths is ordered such that the most recent seasonal is first.
   const currentPath =
@@ -58,12 +56,8 @@ export const loader = async () => {
       ? paths[0]
       : { name: "Standard", slug: "standard", image: "standard11" };
 
-  const [currentPathers, currentPathersChange] = await db.ascension.getStat({
-    path: currentPath,
-  });
-  const [loopers, loopersChange] = await db.ascension.getStat({
-    numberOfAscensions: 7,
-  });
+  const [currentPathers, currentPathersChange] = await getStat({ path: currentPath });
+  const [loopers, loopersChange] = await getStat({ numberOfAscensions: 7 });
 
   const rollover = new Date();
   rollover.setUTCHours(24 + 3, 30, 0, 0);

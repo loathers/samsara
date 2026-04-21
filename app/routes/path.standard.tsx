@@ -7,14 +7,11 @@ import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
-import { db } from "~/db.server";
+import { findPathWithClasses } from "~/db.server";
 import { getPastStandardLeaderboards, getPathData } from "~/path.server";
 
 export const loader = async () => {
-  const path = await db.path.findFirst({
-    where: { slug: "standard" },
-    include: { class: true },
-  });
+  const path = await findPathWithClasses({ slug: "standard" });
 
   if (!path) throw data({ message: "Invalid path name" }, { status: 400 });
 

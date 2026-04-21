@@ -1,10 +1,7 @@
-import {
-  NS13,
-  SPECIAL_RANKINGS,
-  pastYearsOfStandard,
-} from "../../app/utils.js";
-import { Prisma, TagType } from "@prisma/client";
+import { sql } from "kysely";
 
+import { TagType } from "../../app/db.js";
+import { NS13, SPECIAL_RANKINGS, pastYearsOfStandard } from "../../app/utils.js";
 import { db } from "./client.js";
 
 /**
@@ -21,7 +18,7 @@ export async function tagAscensions(sendWebhook: boolean) {
 }
 
 function getRecordBreakingQuery() {
-  return Prisma.sql`
+  return sql`
     WITH "filteredAscensions" AS (
       SELECT
         "ascensionNumber",
@@ -93,21 +90,15 @@ function getRecordBreakingQuery() {
 
 async function tagRecordBreaking() {
   console.timeLog("etl", "Tagging record-breaking ascensions");
-  await db.$transaction(
-    async (tx) => {
-      await tx.$executeRaw`DELETE FROM "Tag" WHERE "type" = ${TagType.RECORD_BREAKING}::"TagType";`;
-      await tx.$executeRaw(getRecordBreakingQuery());
-    },
-    {
-      maxWait: 10_000,
-      timeout: 180_000,
-    },
-  );
+  await db.transaction().execute(async (trx) => {
+    await trx.deleteFrom("Tag").where("type", "=", TagType.RECORD_BREAKING).execute();
+    await getRecordBreakingQuery().execute(trx);
+  });
   console.timeLog("etl", "Finished tagging record-breaking ascensions");
 }
 
 function getPersonalBestQuery() {
-  return Prisma.sql`
+  return sql`
     WITH "ranked" AS (
       SELECT
         "ascensionNumber",
@@ -146,18 +137,10 @@ function getPersonalBestQuery() {
 
 async function tagPersonalBest() {
   console.timeLog("etl", `Tagging personal bests`);
-  await db.$transaction(
-    async (tx) => {
-      await tx.$executeRaw`
-        DELETE FROM "Tag" WHERE "type" = ${TagType.PERSONAL_BEST}::"TagType";
-      `;
-      await tx.$executeRaw(getPersonalBestQuery());
-    },
-    {
-      maxWait: 10_000,
-      timeout: 180_000,
-    },
-  );
+  await db.transaction().execute(async (trx) => {
+    await trx.deleteFrom("Tag").where("type", "=", TagType.PERSONAL_BEST).execute();
+    await getPersonalBestQuery().execute(trx);
+  });
   console.timeLog("etl", `Finished tagging personal bests`);
 }
 
@@ -182,12 +165,12 @@ function getLeaderboardQuery(
   } = {},
 ) {
   const order = extra
-    ? Prisma.sql`("extra"->>${extra})::integer DESC`
-    : Prisma.sql`"days" ASC, "turns" ASC`;
+    ? sql`("extra"->>${extra})::integer DESC`
+    : sql`"days" ASC, "turns" ASC`;
 
-  return Prisma.sql`
+  return sql`
     WITH "ranked" AS (
-      SELECT 
+      SELECT
         "pathName",
         "lifestyle",
         "playerId",
@@ -197,23 +180,23 @@ function getLeaderboardQuery(
         "extra",
         "date",
         ROW_NUMBER() OVER (PARTITION BY "pathName", "lifestyle", "playerId" ORDER BY ${order}, "date" ASC) AS "rankPerPlayer"
-      FROM 
+      FROM
         "Ascension"
       LEFT JOIN "Path" on "Ascension"."pathName" = "Path"."name"
       WHERE
       "dropped" IS FALSE
       AND "abandoned" IS FALSE
-      ${path ? Prisma.sql`AND "pathName" = ${path}` : Prisma.empty}
+      ${path ? sql`AND "pathName" = ${path}` : sql``}
       AND (
         ("pathName" = '11,037 Leagues Under the Sea' AND ${special} is TRUE AND "date" <= '2025-08-31 00:00:00'::date)
         OR ("pathName" = '11,037 Leagues Under the Sea' AND ${special} is FALSE AND "date" >= '2025-09-01 00:00:00'::date)
         OR ("pathName" <> '11,037 Leagues Under the Sea')
       )
-      ${inSeason ? Prisma.sql`AND "date" >= "Path"."start" AND "date" <= "Path"."end"` : Prisma.empty}
-      ${excludePaths ? Prisma.sql`AND "pathName" NOT IN (${Prisma.join(excludePaths)})` : Prisma.empty}
-      ${year ? Prisma.sql`AND DATE_PART('year', "date") = ${year}` : Prisma.sql`AND "date" >= ${NS13}::date`}),
+      ${inSeason ? sql`AND "date" >= "Path"."start" AND "date" <= "Path"."end"` : sql``}
+      ${excludePaths ? sql`AND "pathName" NOT IN (${sql.join(excludePaths)})` : sql``}
+      ${year ? sql`AND DATE_PART('year', "date") = ${year}` : sql`AND "date" >= ${NS13}::date`}),
     "best" AS (
-      SELECT 
+      SELECT
         "pathName",
         "lifestyle",
         "playerId",
@@ -222,9 +205,9 @@ function getLeaderboardQuery(
         "ascensionNumber",
         "extra",
         "date"
-      FROM 
+      FROM
         "ranked"
-      WHERE 
+      WHERE
         "rankPerPlayer" = 1),
     "leaderboard" AS (
       SELECT
@@ -238,48 +221,60 @@ function getLeaderboardQuery(
         ROW_NUMBER() OVER (PARTITION BY "pathName", "lifestyle" ORDER BY ${order}, "date" ASC) AS "rank"
       FROM
         "best")
-    INSERT INTO "Tag" ("type", "value", "ascensionNumber", "playerId"${year ? Prisma.sql`, "year"` : Prisma.empty})
+    INSERT INTO "Tag" ("type", "value", "ascensionNumber", "playerId"${year ? sql`, "year"` : sql``})
     SELECT
       ${tagType}::"TagType" as "type",
       "rank" as "value",
       "ascensionNumber",
       "playerId"
-      ${year ? Prisma.sql`, ${year} as "year"` : Prisma.empty}
+      ${year ? sql`, ${year} as "year"` : sql``}
     FROM
       "leaderboard"
-    ${limit ? Prisma.sql`WHERE "rank" <= ${limit}` : Prisma.empty}
+    ${limit ? sql`WHERE "rank" <= ${limit}` : sql``}
   `;
 }
 
 async function getBestRuns() {
-  const golds = await db.tag.findMany({
-    where: {
-      type: TagType.PYRITE,
-      value: 1,
-    },
-    select: {
-      ascension: {
-        select: {
-          ascensionNumber: true,
-          player: true,
-          days: true,
-          turns: true,
-          lifestyle: true,
-          pathName: true,
-        },
-      },
-    },
-  });
+  const rows = await db
+    .selectFrom("Tag")
+    .innerJoin("Ascension", (join) =>
+      join
+        .onRef("Ascension.ascensionNumber", "=", "Tag.ascensionNumber")
+        .onRef("Ascension.playerId", "=", "Tag.playerId"),
+    )
+    .innerJoin("Player", "Player.id", "Ascension.playerId")
+    .select([
+      "Ascension.ascensionNumber",
+      "Ascension.days",
+      "Ascension.turns",
+      "Ascension.lifestyle",
+      "Ascension.pathName",
+      "Player.id as playerId",
+      "Player.name as playerName",
+    ])
+    .where("Tag.type", "=", TagType.PYRITE)
+    .where("Tag.value", "=", 1)
+    .execute();
 
-  return golds
-    .map(({ ascension }) => ascension)
-    .reduce(
-      (acc, { pathName, lifestyle, ...rest }) => ({
-        ...acc,
-        [`${pathName}_${lifestyle}`]: { pathName, lifestyle, ...rest },
-      }),
-      {} as Record<string, (typeof golds)[number]["ascension"]>,
-    );
+  return rows.reduce<
+    Record<
+      string,
+      {
+        ascensionNumber: number;
+        days: number;
+        turns: number;
+        lifestyle: string;
+        pathName: string;
+        player: { id: number; name: string };
+      }
+    >
+  >(
+    (acc, { playerId, playerName, ...rest }) => ({
+      ...acc,
+      [`${rest.pathName}_${rest.lifestyle}`]: { ...rest, player: { id: playerId, name: playerName } },
+    }),
+    {},
+  );
 }
 
 async function tagPyrites(sendWebhook: boolean) {
@@ -293,30 +288,22 @@ async function tagPyrites(sendWebhook: boolean) {
 
   console.timeLog("etl", `Tagging pyrites`);
 
-  await db.$transaction(
-    async (tx) => {
-      await tx.$executeRaw`
-        DELETE FROM "Tag" WHERE "type" IN (${TagType.PYRITE}::"TagType", ${TagType.PYRITE_SPECIAL}::"TagType");
-      `;
+  await db.transaction().execute(async (trx) => {
+    await trx
+      .deleteFrom("Tag")
+      .where("type", "in", [TagType.PYRITE, TagType.PYRITE_SPECIAL])
+      .execute();
 
-      await Promise.all([
-        ...[...SPECIAL_RANKINGS].map(([path, extra]) =>
-          tx.$executeRaw(
-            getLeaderboardQuery(TagType.PYRITE_SPECIAL, { path, extra }),
-          ),
-        ),
-        tx.$executeRaw(
-          getLeaderboardQuery(TagType.PYRITE, {
-            excludePaths: NEVER_RANK_BY_TURNCOUNT,
-          }),
-        ),
-      ]);
-    },
-    {
-      maxWait: 10_000,
-      timeout: 180_000,
-    },
-  );
+    await Promise.all([
+      ...[...SPECIAL_RANKINGS].map(([path, extra]) =>
+        getLeaderboardQuery(TagType.PYRITE_SPECIAL, { path, extra }).execute(trx),
+      ),
+      getLeaderboardQuery(TagType.PYRITE, {
+        excludePaths: NEVER_RANK_BY_TURNCOUNT,
+      }).execute(trx),
+    ]);
+  });
+
   console.timeLog("etl", `Finished tagging pyrites`);
 
   if (sendWebhook) {
@@ -330,7 +317,6 @@ async function tagPyrites(sendWebhook: boolean) {
           run.ascensionNumber !== previous.ascensionNumber ||
           run.player.id !== previous.player.id
         ) {
-          // Record breaker!
           try {
             const result = await fetch(
               `https://oaf.loathers.net/webhooks/samsara?token=${process.env.OAF_TOKEN}`,
@@ -363,55 +349,40 @@ async function tagPyrites(sendWebhook: boolean) {
 
 async function tagLeaderboard() {
   console.timeLog("etl", `Tagging leaderboards`);
-  await db.$transaction(
-    async (tx) => {
-      await tx.$executeRaw`
-        DELETE FROM "Tag" WHERE "type" IN (${TagType.LEADERBOARD}::"TagType", ${TagType.LEADERBOARD_SPECIAL}::"TagType");
-      `;
+  await db.transaction().execute(async (trx) => {
+    await trx
+      .deleteFrom("Tag")
+      .where("type", "in", [TagType.LEADERBOARD, TagType.LEADERBOARD_SPECIAL])
+      .execute();
 
-      await Promise.all([
-        ...[...SPECIAL_RANKINGS].map(([path, extra]) =>
-          tx.$executeRaw(
-            getLeaderboardQuery(TagType.LEADERBOARD_SPECIAL, {
-              path,
-              inSeason: true,
-              extra,
-              special: true,
-            }),
-          ),
-        ),
-        tx.$executeRaw(
-          getLeaderboardQuery(TagType.LEADERBOARD, {
-            inSeason: true,
-            special: false,
-            excludePaths: NEVER_RANK_BY_TURNCOUNT,
-          }),
-        ),
-      ]);
-    },
-    {
-      maxWait: 10_000,
-      timeout: 180_000,
-    },
-  );
+    await Promise.all([
+      ...[...SPECIAL_RANKINGS].map(([path, extra]) =>
+        getLeaderboardQuery(TagType.LEADERBOARD_SPECIAL, {
+          path,
+          inSeason: true,
+          extra,
+          special: true,
+        }).execute(trx),
+      ),
+      getLeaderboardQuery(TagType.LEADERBOARD, {
+        inSeason: true,
+        special: false,
+        excludePaths: NEVER_RANK_BY_TURNCOUNT,
+      }).execute(trx),
+    ]);
+  });
   console.timeLog("etl", `Finished tagging leaderboards`);
 }
 
 async function tagStandard() {
   console.timeLog("etl", `Tagging standard leaderboards`);
-
-  const years = pastYearsOfStandard().map((year) =>
-    db.$executeRaw(
-      getLeaderboardQuery(TagType.STANDARD, {
-        path: "Standard",
-        year,
-      }),
-    ),
+  const yearQueries = pastYearsOfStandard().map((year) =>
+    getLeaderboardQuery(TagType.STANDARD, { path: "Standard", year }),
   );
 
-  await db.$transaction([
-    db.$executeRaw`DELETE FROM "Tag" WHERE "type" IN (${TagType.STANDARD}::"TagType");`,
-    ...years,
-  ]);
+  await db.transaction().execute(async (trx) => {
+    await trx.deleteFrom("Tag").where("type", "=", TagType.STANDARD).execute();
+    await Promise.all(yearQueries.map((q) => q.execute(trx)));
+  });
   console.timeLog("etl", `Finished tagging standard leaderboards`);
 }

@@ -1,6 +1,4 @@
-import { db } from "../db.server.js";
 import { Box, Button, Group, Heading, Stack } from "@chakra-ui/react";
-import { Ascension, Class, Familiar, Path, Tag } from "@prisma/client";
 import {
   type LoaderFunctionArgs,
   type MetaArgs,
@@ -13,15 +11,18 @@ import {
 
 import { FrequencyGraph } from "~/components/FrequencyGraph";
 import { PlayerTable } from "~/components/PlayerTable";
+import {
+  findPlayerByName,
+  findPlayerWithAscensions,
+  getFrequency,
+} from "../db.server.js";
 import { numberFormatter } from "~/utils.js";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const { id } = params;
 
   if (id && isNaN(parseInt(id))) {
-    const found = await db.player.findFirst({
-      where: { name: { mode: "insensitive", equals: id } },
-    });
+    const found = await findPlayerByName(id);
 
     if (found) throw redirect(`/player/${found.id}`);
     throw data({ message: "Invalid player name" }, { status: 400 });
@@ -29,24 +30,11 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
   if (!id) throw data({ message: "Invalid player ID" }, { status: 400 });
 
-  const player = await db.player.findUnique({
-    where: { id: parseInt(id) },
-    include: {
-      ascensions: {
-        include: {
-          path: { select: { slug: true, name: true, image: true } },
-          class: { select: { name: true, image: true } },
-          tags: { select: { type: true, value: true, year: true } },
-          familiar: true,
-        },
-        orderBy: { ascensionNumber: "asc" },
-      },
-    },
-  });
+  const player = await findPlayerWithAscensions(parseInt(id));
 
   if (!player) throw data({ message: "Player not found" }, { status: 404 });
 
-  const frequency = await db.ascension.getFrequency({ player });
+  const frequency = await getFrequency({ player });
 
   return { player, frequency };
 };
@@ -63,12 +51,10 @@ export const meta = ({ data }: MetaArgs<typeof loader>) => {
   ];
 };
 
-export type RowData = Ascension & {
-  path: Pick<Path, "slug" | "name" | "image">;
-  class: Pick<Class, "name" | "image">;
-  tags: Pick<Tag, "type" | "value" | "year">[];
-  familiar: Familiar | null;
-};
+type PlayerWithAscensions = NonNullable<
+  Awaited<ReturnType<typeof findPlayerWithAscensions>>
+>;
+export type RowData = PlayerWithAscensions["ascensions"][number];
 
 export default function Player() {
   const { hash } = useLocation();

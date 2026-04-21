@@ -1,5 +1,6 @@
-import { Player } from "@prisma/client";
+import { Leaderboard } from "kol.js/domains/Leaderboard";
 
+import { Player } from "../app/db.js";
 import { processAscensions, workers } from "./utils/client.js";
 
 function* players(p: Player[]) {
@@ -29,7 +30,8 @@ async function main() {
 
   while (zeroFor < 10) {
     const client = workers[0];
-    const leaderboard = await client.getLeaderboard(++i);
+    const leaderboardClient = new Leaderboard(client);
+    const leaderboard = await leaderboardClient.getLeaderboard(++i);
     const leaderboardees = leaderboard.boards.flatMap((lb) =>
       lb.runs.map((run) => ({ id: run.playerId, name: run.playerName })),
     );

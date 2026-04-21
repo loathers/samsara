@@ -1,5 +1,5 @@
 import { HStack, Text } from "@chakra-ui/react";
-import { Lifestyle } from "@prisma/client";
+import { Lifestyle } from "~/db";
 import { useTheme } from "next-themes";
 import { useMemo, useState } from "react";
 import {

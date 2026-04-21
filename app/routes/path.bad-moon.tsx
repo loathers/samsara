@@ -6,23 +6,17 @@ import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
-import { db, getKittycoreLeaderboard } from "~/db.server";
+import { findPathWithClasses, getKittycoreLeaderboard, getLeaderboard } from "~/db.server";
 import { getPathData } from "~/path.server";
 
 export const loader = async () => {
-  const path = await db.path.findFirst({
-    where: { slug: "bad-moon" },
-    include: { class: true },
-  });
+  const path = await findPathWithClasses({ slug: "bad-moon" });
 
   if (!path) throw data({ message: "Invalid path name" }, { status: 400 });
 
   return {
     ...(await getPathData(path)),
-    casualLeaderboard: await db.ascension.getLeaderboard({
-      path,
-      lifestyle: "CASUAL",
-    }),
+    casualLeaderboard: await getLeaderboard({ path, lifestyle: "CASUAL" }),
     kittycoreLeaderboard: await getKittycoreLeaderboard(),
   };
 };

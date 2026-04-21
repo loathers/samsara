@@ -1,4 +1,4 @@
-import { JsonValue } from "@prisma/client/runtime/library";
+import { JsonValue } from "~/db";
 
 export type ShortenStyle = null | "acronyms" | "symbols" | "full-symbols";
 
@@ -84,7 +84,7 @@ export function awardBg(rank: number, [gold, silver, bronze] = [1, 12, 35]) {
   return "transparent";
 }
 
-export const NS13 = "2007-06-25T00:00:00Z";
+export const NS13 = new Date("2007-06-25T00:00:00Z");
 export const STANDARD = 2015;
 export const pastYearsOfStandard = () =>
   [...Array(new Date().getFullYear() - STANDARD).keys()].map(

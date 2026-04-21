@@ -1,5 +1,7 @@
-import { type Player, PrismaClient } from "@prisma/client";
+import { Kysely, PostgresDialect } from "kysely";
+import pg from "pg";
 
+import type { Database, Player } from "../../app/db.js";
 import { parseWorkers } from "./Worker.js";
 import { fetchClasses, fetchPaths } from "./data.js";
 import { tagAscensions } from "./tagger.js";
@@ -12,7 +14,11 @@ import {
   wait,
 } from "./utils.js";
 
-export const db = new PrismaClient();
+export const db = new Kysely<Database>({
+  dialect: new PostgresDialect({
+    pool: new pg.Pool({ connectionString: process.env.DATABASE_URL }),
+  }),
+});
 
 // KoL used to purge accounts from inactivity and even now, sometimes accounts are purged. This is a sufficiently late known account
 // to let us know when to stop skipping gaps. If we ever encounter a future gap, this should be updated to have a greater value.
@@ -22,11 +28,11 @@ export const workers = parseWorkers(process.env);
 
 export async function nextUpdateIn(seconds: number) {
   const timestamp = Date.now() + seconds * 1000;
-  await db.setting.upsert({
-    where: { key: "nextUpdate" },
-    update: { value: timestamp.toString() },
-    create: { key: "nextUpdate", value: timestamp.toString() },
-  });
+  await db
+    .insertInto("Setting")
+    .values({ key: "nextUpdate", value: timestamp.toString() })
+    .onConflict((oc) => oc.column("key").doUpdateSet({ value: timestamp.toString() }))
+    .execute();
 }
 
 export async function processPlayers(
@@ -38,22 +44,20 @@ export async function processPlayers(
 
   console.timeLog("etl", `Updating ascensions`);
 
-  const paths = (await db.path.findMany({ select: { name: true } })).map(
-    (p) => p.name,
-  );
+  const paths = (
+    await db.selectFrom("Path").select("name").execute()
+  ).map((p) => p.name);
 
-  const classes = (await db.class.findMany({ select: { name: true } })).map(
-    (c) => c.name,
-  );
+  const classes = (
+    await db.selectFrom("Class").select("name").execute()
+  ).map((c) => c.name);
 
   const familiars = (
-    await db.familiar.findMany({ select: { name: true } })
+    await db.selectFrom("Familiar").select("name").execute()
   ).map((f) => f.name);
 
   const familiarsWithImage = (
-    await db.familiar.findMany({
-      where: { image: { not: "nopic" } },
-    })
+    await db.selectFrom("Familiar").select("name").where("image", "!=", "nopic").execute()
   ).map((f) => f.name);
 
   const players: Player[] = [];
@@ -121,11 +125,11 @@ export async function processPlayers(
 
   // Upsert all players detected (in case of name change)
   for (const player of players) {
-    await db.player.upsert({
-      create: player,
-      update: { name: player.name },
-      where: { id: player.id },
-    });
+    await db
+      .insertInto("Player")
+      .values(player)
+      .onConflict((oc) => oc.column("id").doUpdateSet({ name: player.name }))
+      .execute();
   }
 
   // Add any new paths or classes
@@ -139,13 +143,11 @@ export async function processPlayers(
       }, {}),
     );
 
-    await db.path.createMany({
-      data: firstPerNewPath.map((a) => ({
-        name: a.pathName,
-        slug: slugify(a.pathName),
-      })),
-      skipDuplicates: true,
-    });
+    await db
+      .insertInto("Path")
+      .values(firstPerNewPath.map((a) => ({ name: a.pathName, slug: slugify(a.pathName) })))
+      .onConflict((oc) => oc.doNothing())
+      .execute();
     paths.push(...newPaths.map((a) => a.pathName));
   }
 
@@ -158,12 +160,11 @@ export async function processPlayers(
       }, {}),
     );
 
-    await db.class.createMany({
-      data: firstPerNewPerClass.map((a) => ({
-        name: a.className,
-      })),
-      skipDuplicates: true,
-    });
+    await db
+      .insertInto("Class")
+      .values(firstPerNewPerClass.map((a) => ({ name: a.className })))
+      .onConflict((oc) => oc.doNothing())
+      .execute();
     classes.push(...firstPerNewPerClass.map((a) => a.className));
   }
 
@@ -185,13 +186,11 @@ export async function processPlayers(
         return { ...acc, [a.familiarName]: a };
       }, {}),
     );
-    await db.familiar.createMany({
-      data: firstPerNewFamiliar.map((a) => ({
-        name: a.familiarName,
-        image: a.familiarImage,
-      })),
-      skipDuplicates: true,
-    });
+    await db
+      .insertInto("Familiar")
+      .values(firstPerNewFamiliar.map((a) => ({ name: a.familiarName, image: a.familiarImage })))
+      .onConflict((oc) => oc.doNothing())
+      .execute();
     familiars.push(...firstPerNewFamiliar.map((a) => a.familiarName));
   }
 
@@ -206,34 +205,35 @@ export async function processPlayers(
       }, {}),
     );
     for (const a of firstPerMissingImage) {
-      await db.familiar.upsert({
-        where: { name: a.familiarName },
-        update: { image: a.familiarImage },
-        create: {
-          name: a.familiarName,
-          image: a.familiarImage,
-        },
-      });
+      await db
+        .insertInto("Familiar")
+        .values({ name: a.familiarName, image: a.familiarImage })
+        .onConflict((oc) => oc.column("name").doUpdateSet({ image: a.familiarImage }))
+        .execute();
     }
     familiarsWithImage.push(...firstPerMissingImage.map((a) => a.familiarName));
   }
 
   console.timeLog("etl", `  Inserting ascensions to database`);
-  // Now add all the ascensions
   let added: number;
 
   if (ascensionUpdater) {
     // We are correcting a parsing issue, so we can't skip duplicates
     added = await ascensionUpdater(ascensions);
   } else {
-    // Ascensions never change, so we can skip duplicates
-    const { count } = await db.ascension.createMany({
-      // Remove familiarImage from the data
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      data: ascensions.map(({ familiarImage, ...a }) => a),
-      skipDuplicates: true,
-    });
-    added = count;
+    // Ascensions never change, so we can skip duplicates.
+    // Chunk to stay under PostgreSQL's 65535-parameter wire protocol limit.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const rows = ascensions.map(({ familiarImage, ...a }) => a);
+    added = 0;
+    for (let i = 0; i < rows.length; i += 500) {
+      const results = await db
+        .insertInto("Ascension")
+        .values(rows.slice(i, i + 500))
+        .onConflict((oc) => oc.doNothing())
+        .execute();
+      added += results.reduce((sum, r) => sum + Number(r.numInsertedOrUpdatedRows ?? 0), 0);
+    }
   }
   console.timeLog(
     "etl",
@@ -264,60 +264,60 @@ export async function processAscensions(
 }
 
 async function guessPathDates() {
-  await db.$transaction([
-    db.path.updateMany({
-      where: {
-        name: {
-          in: [
-            "None",
-            "Boozetafarian",
-            "Teetotaler",
-            "Bad Moon",
-            "Oxygenarian",
-          ],
-        },
-      },
-      data: { seasonal: false, start: { set: null }, end: { set: null } },
-    }),
+  await db.transaction().execute(async (trx) => {
+    await trx
+      .updateTable("Path")
+      .set({ seasonal: false, start: null, end: null })
+      .where("name", "in", ["None", "Boozetafarian", "Teetotaler", "Bad Moon", "Oxygenarian"])
+      .execute();
 
-    // The first time this runs in a new standard season, the standard dates will be updated.
-    db.path.updateMany({
-      where: { name: "Standard" },
-      data: {
+    await trx
+      .updateTable("Path")
+      .set({
         seasonal: true,
         start: new Date(new Date().getFullYear(), 0, 1),
         end: new Date(new Date().getFullYear(), 11, 31),
-      },
+      })
+      .where("name", "=", "Standard")
+      .execute();
+  });
+
+  const paths = await db
+    .selectFrom("Path")
+    .selectAll()
+    .where("start", "is", null)
+    .where("seasonal", "=", true)
+    .where("name", "!=", "Standard")
+    .execute();
+
+  const firstAscensionDates = await Promise.all(
+    paths.map(async (path) => {
+      const row = await db
+        .selectFrom("Ascension")
+        .select("date")
+        .where("pathName", "=", path.name)
+        .orderBy("date", "asc")
+        .limit(1)
+        .executeTakeFirst();
+      return { path, date: row?.date };
     }),
-  ]);
+  );
 
-  const paths = await db.path.findMany({
-    where: {
-      start: null,
-      seasonal: true,
-      name: { not: "Standard" },
-    },
-    include: {
-      ascensions: { select: { date: true }, orderBy: { date: "asc" }, take: 1 },
-    },
+  await db.transaction().execute(async (trx) => {
+    for (const { path, date } of firstAscensionDates) {
+      if (!date) continue;
+      const start = new Date(date);
+      start.setDate(15);
+      const end = new Date(start);
+      end.setMonth(end.getMonth() + 3);
+      end.setDate(14);
+      await trx
+        .updateTable("Path")
+        .set({ start, end })
+        .where("name", "=", path.name)
+        .execute();
+    }
   });
-
-  const updates = paths.map((path) => {
-    const { date } = path.ascensions[0];
-
-    const start = new Date(date);
-    start.setDate(15);
-    const end = new Date(start);
-    end.setMonth(end.getMonth() + 3);
-    end.setDate(14);
-
-    return db.path.update({
-      where: { name: path.name },
-      data: { start, end },
-    });
-  });
-
-  await db.$transaction(updates);
 }
 
 async function fetchExtraPathData() {
@@ -329,41 +329,54 @@ async function fetchExtraPathData() {
   pathMap.set("None", pathMap.get("none")!);
   pathMap.set("Class Act II", pathMap.get("Class Act II: A Class For Pigs")!);
 
-  const paths = await db.path.findMany({ where: { image: null } });
-  const updates = paths
-    .filter((path) => pathMap.has(path.name))
-    .map((path) => {
-      const knownPath = pathMap.get(path.name)!;
-      return db.path.update({
-        where: { name: path.name },
-        data: { image: knownPath.image, id: knownPath.id },
-      });
-    });
+  const paths = await db.selectFrom("Path").selectAll().where("image", "is", null).execute();
 
-  await db.$transaction(updates);
+  await db.transaction().execute(async (trx) => {
+    for (const path of paths) {
+      const knownPath = pathMap.get(path.name);
+      if (!knownPath) continue;
+      await trx
+        .updateTable("Path")
+        .set({ image: knownPath.image, id: knownPath.id })
+        .where("name", "=", path.name)
+        .execute();
+    }
+  });
 }
 
 export async function updatePaths() {
   console.timeLog("etl", `Updating paths`);
-  // Add start and end dates to paths
   await guessPathDates();
   await fetchExtraPathData();
   console.timeLog("etl", `Finished updating paths`);
 }
 
 export async function updateClasses() {
-  const knownClasses = await fetchClasses();
+  const [knownClasses, existingPaths] = await Promise.all([
+    fetchClasses(),
+    db.selectFrom("Path").select("id").where("id", "is not", null).execute(),
+  ]);
   if (!knownClasses) return;
   console.timeLog("etl", `Updating classes`);
 
   const classMap = new Map(knownClasses.map((p) => [p.name, p]));
+  const existingPathIds = new Set(existingPaths.map((p) => p.id));
 
   // DoL's name doesn't match up on some things
   classMap.set("Actually Ed the Undying", classMap.get("Ed the Undying")!);
   classMap.set("Grey You", classMap.get("Grey Goo")!);
 
-  await db.$transaction(async (tx) => {
-    const classes = await tx.class.findMany({ where: { image: null } });
+  await db.transaction().execute(async (trx) => {
+    const classes = await trx
+      .selectFrom("Class")
+      .selectAll()
+      .where((eb) =>
+        eb.or([
+          eb("image", "is", null),
+          eb.and([eb("pathId", "is", null), eb("id", ">", 6)]),
+        ]),
+      )
+      .execute();
 
     for (const clazz of classes) {
       const knownClass = classMap.get(clazz.name);
@@ -372,15 +385,14 @@ export async function updateClasses() {
       // Abandoned runs get a None class
       if (knownClass.name === "None") continue;
 
-      await tx.class.update({
-        where: { name: clazz.name },
-        // Path 0 is also null
-        data: {
-          image: knownClass.image,
-          id: knownClass.id,
-          pathId: knownClass.path || null,
-        },
-      });
+      // Only set pathId if that path is already in our database
+      const pathId = knownClass.path && existingPathIds.has(knownClass.path) ? knownClass.path : null;
+
+      await trx
+        .updateTable("Class")
+        .set({ image: knownClass.image, id: knownClass.id, pathId })
+        .where("name", "=", clazz.name)
+        .execute();
     }
   });
 

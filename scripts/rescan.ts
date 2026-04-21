@@ -37,7 +37,7 @@ async function main() {
 
   const skip = force
     ? []
-    : (await db.player.findMany({})).map((player) => player.id);
+    : (await db.selectFrom("Player").select("id").execute()).map((player) => player.id);
 
   await processAscensions(counter(startingId, skip));
 

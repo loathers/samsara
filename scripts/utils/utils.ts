@@ -2,7 +2,7 @@ import {
   type Ascension as AscensionModel,
   type Lifestyle,
   type Player,
-} from "@prisma/client";
+} from "../../app/db.js";
 import { Client } from "kol.js";
 
 export interface Ascension extends AscensionModel {

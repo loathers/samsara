@@ -1,5 +1,5 @@
 import { Link } from "@chakra-ui/react";
-import { Tag as FullTag, Path, TagType } from "@prisma/client";
+import { Tag as FullTag, Path, TagType } from "~/db";
 import { Link as RRLink } from "react-router";
 
 import { KoLImage } from "~/components/KoLImage";

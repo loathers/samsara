@@ -1,5 +1,5 @@
 import { HStack } from "@chakra-ui/react";
-import { Lifestyle as LifestyleEnum } from "@prisma/client";
+import { Lifestyle as LifestyleEnum } from "~/db";
 
 import { KoLImage } from "~/components/KoLImage";
 import { ShortenStyle } from "~/utils";

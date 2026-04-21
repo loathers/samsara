@@ -12,7 +12,7 @@ import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
-import { db } from "~/db.server";
+import { findPathWithClasses } from "~/db.server";
 import { getPathData } from "~/path.server";
 import { formatPathName } from "~/utils";
 
@@ -23,10 +23,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
   const id = Number.isNaN(Number(slug)) ? undefined : Number(slug);
 
-  const path = await db.path.findFirst({
-    where: { OR: [{ slug }, { id }] },
-    include: { class: true },
-  });
+  const path = await findPathWithClasses({ slug, id });
 
   if (!path) throw data({ message: "Invalid path name" }, { status: 400 });
 

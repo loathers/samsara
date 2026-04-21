@@ -7,32 +7,18 @@ FROM node:22-bookworm-slim AS builder
 
 WORKDIR /app
 
-# Prisma + many native deps expect openssl present
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    openssl \
-    ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
-
-# Enable yarn via corepack (supports yarn classic + berry)
 RUN corepack enable
 
 # Install deps first for better caching
 COPY package.json yarn.lock ./
-# If you're on Yarn Berry, you may also have these:
 COPY .yarnrc.yml ./
 COPY .yarn/ ./.yarn/
 
-# Install dependencies (include dev deps for build)
-RUN yarn install --immutable || yarn install --frozen-lockfile
+RUN yarn install --immutable
 
 # Copy the rest of the source
 COPY . .
 
-# If you use Prisma, generating client at build-time is typical
-# (Safe even if you also generate elsewhere)
-RUN yarn prisma generate
-
-# Build (e.g., Vite/Next/etc.)
 RUN yarn build
 
 
@@ -44,7 +30,6 @@ FROM node:22-bookworm-slim AS runner
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    openssl \
     ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
@@ -58,19 +43,17 @@ COPY --from=builder /app/.yarnrc.yml ./
 COPY --from=builder /app/.yarn/ ./.yarn/
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/build ./build
-COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/migrations ./migrations
+COPY --from=builder /app/kysely.config.ts ./kysely.config.ts
 COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/app/db.ts ./app/db.ts
 COPY --from=builder /app/app/utils.ts ./app/utils.ts
 
-
-# Add an entrypoint to run migrations then start
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+COPY --chmod=755 docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 # Run as non-root
 USER node
 
-# Your app should listen on $PORT or 3000 depending on your setup
 ENV PORT=3000
 EXPOSE 3000
 

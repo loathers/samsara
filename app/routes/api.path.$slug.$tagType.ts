@@ -1,7 +1,7 @@
-import { Lifestyle, TagType } from "@prisma/client";
+import { Lifestyle, TagType } from "~/db";
 import { type LoaderFunctionArgs, data, redirect } from "react-router";
 
-import { db, getMaxAge } from "~/db.server";
+import { findPath, getLeaderboard, getMaxAge } from "~/db.server";
 
 const isTagType = (input?: string): input is TagType => {
   if (!input) return false;
@@ -22,9 +22,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     return data({ message: "Invalid tag type" }, { status: 400, headers });
 
   const id = Number.isNaN(Number(slug)) ? undefined : Number(slug);
-  const path = await db.path.findFirst({
-    where: { OR: [{ slug }, { id }] },
-  });
+  const path = await findPath({ slug, id });
 
   if (!path)
     return data({ message: "Invalid path name" }, { status: 400, headers });
@@ -37,14 +35,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     await Promise.all(
       Object.values(Lifestyle).map(
         async (lifestyle) =>
-          [
-            lifestyle,
-            await db.ascension.getLeaderboard({
-              path,
-              lifestyle,
-              type: tagType,
-            }),
-          ] as const,
+          [lifestyle, await getLeaderboard({ path, lifestyle, type: tagType })] as const,
       ),
     ),
   );

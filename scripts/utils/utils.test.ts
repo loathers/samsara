@@ -1,4 +1,4 @@
-import { Ascension } from "@prisma/client";
+import { Ascension } from "../../app/db.js";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";

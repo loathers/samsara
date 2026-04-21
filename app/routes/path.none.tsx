@@ -6,24 +6,18 @@ import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
-import { db } from "~/db.server";
+import { findPathWithClasses, getDedication, getLeaderboard } from "~/db.server";
 import { getPathData } from "~/path.server";
 
 export const loader = async () => {
-  const path = await db.path.findFirst({
-    where: { slug: "none" },
-    include: { class: true },
-  });
+  const path = await findPathWithClasses({ slug: "none" });
 
   if (!path) throw data({ message: "Invalid path name" }, { status: 400 });
 
   return {
     ...(await getPathData(path)),
-    casualLeaderboard: await db.ascension.getLeaderboard({
-      path,
-      lifestyle: "CASUAL",
-    }),
-    casualDedication: await db.player.getDedication(path, "CASUAL"),
+    casualLeaderboard: await getLeaderboard({ path, lifestyle: "CASUAL" }),
+    casualDedication: await getDedication(path, "CASUAL"),
   };
 };
 

@@ -1,6 +1,12 @@
-import { Class, Lifestyle, Path, TagType } from "@prisma/client";
+import { Class, Lifestyle, Path, TagType } from "./db";
 
-import { db } from "./db.server";
+import {
+  countAscensions,
+  getDedication,
+  getFrequency,
+  getLeaderboard,
+  getRecordBreaking,
+} from "./db.server";
 import { calculateRange, pastYearsOfStandard } from "./utils";
 
 export function inSeason(path: Path) {
@@ -19,19 +25,19 @@ export function hasPyrites(path: Path) {
 }
 
 type SoftcoreLeaderboards = {
-  scDedication: Awaited<ReturnType<typeof db.player.getDedication>>;
-  scLeaderboard: Awaited<ReturnType<typeof db.ascension.getLeaderboard>>;
-  scPyrite: Awaited<ReturnType<typeof db.ascension.getLeaderboard>>;
-  scSpecialLeaderboard: Awaited<ReturnType<typeof db.ascension.getLeaderboard>>;
-  scSpecialPyrite: Awaited<ReturnType<typeof db.ascension.getLeaderboard>>;
+  scDedication: Awaited<ReturnType<typeof getDedication>>;
+  scLeaderboard: Awaited<ReturnType<typeof getLeaderboard>>;
+  scPyrite: Awaited<ReturnType<typeof getLeaderboard>>;
+  scSpecialLeaderboard: Awaited<ReturnType<typeof getLeaderboard>>;
+  scSpecialPyrite: Awaited<ReturnType<typeof getLeaderboard>>;
 };
 
 type HardcoreLeaderboards = {
-  hcDedication: Awaited<ReturnType<typeof db.player.getDedication>>;
-  hcLeaderboard: Awaited<ReturnType<typeof db.ascension.getLeaderboard>>;
-  hcPyrite: Awaited<ReturnType<typeof db.ascension.getLeaderboard>>;
-  hcSpecialLeaderboard: Awaited<ReturnType<typeof db.ascension.getLeaderboard>>;
-  hcSpecialPyrite: Awaited<ReturnType<typeof db.ascension.getLeaderboard>>;
+  hcDedication: Awaited<ReturnType<typeof getDedication>>;
+  hcLeaderboard: Awaited<ReturnType<typeof getLeaderboard>>;
+  hcPyrite: Awaited<ReturnType<typeof getLeaderboard>>;
+  hcSpecialLeaderboard: Awaited<ReturnType<typeof getLeaderboard>>;
+  hcSpecialPyrite: Awaited<ReturnType<typeof getLeaderboard>>;
 };
 
 async function leaderboardsForLifestyle(
@@ -44,32 +50,16 @@ async function leaderboardsForLifestyle(
 
   const [dedication, leaderboard, pyrite, specialLeaderboard, specialPyrite] =
     await Promise.all([
-      db.player.getDedication(path, lifestyle),
-      db.ascension.getLeaderboard({
-        path,
-        lifestyle: lifestyle,
-        inSeason: path.seasonal,
-      }),
+      getDedication(path, lifestyle),
+      getLeaderboard({ path, lifestyle, inSeason: path.seasonal }),
       pyrites
-        ? db.ascension.getLeaderboard({
-            path,
-            lifestyle: lifestyle,
-          })
+        ? getLeaderboard({ path, lifestyle })
         : Promise.resolve([]),
       special
-        ? db.ascension.getLeaderboard({
-            path,
-            lifestyle: lifestyle,
-            special,
-            inSeason: path.seasonal,
-          })
+        ? getLeaderboard({ path, lifestyle, special, inSeason: path.seasonal })
         : Promise.resolve([]),
       special && pyrites
-        ? db.ascension.getLeaderboard({
-            path,
-            lifestyle: lifestyle,
-            special: true,
-          })
+        ? getLeaderboard({ path, lifestyle, special: true })
         : Promise.resolve([]),
     ]);
 
@@ -94,19 +84,12 @@ export async function getPathData(
     totalRuns,
     totalRunsInSeason,
   ] = await Promise.all([
-    db.ascension.getFrequency({
-      path,
-      range: calculateRange(path.start ?? new Date(0), new Date()),
-    }),
-    db.ascension.getRecordBreaking(path),
+    getFrequency({ path, range: calculateRange(path.start ?? new Date(0), new Date()) }),
+    getRecordBreaking(path),
     leaderboardsForLifestyle(path, special, "HARDCORE"),
     leaderboardsForLifestyle(path, special, "SOFTCORE"),
-    db.ascension.count({ where: { pathName: path.name } }),
-    path.end
-      ? db.ascension.count({
-          where: { pathName: path.name, date: { lt: path.end } },
-        })
-      : Promise.resolve(0),
+    countAscensions(path.name),
+    path.end ? countAscensions(path.name, path.end) : Promise.resolve(0),
   ]);
 
   return {
@@ -129,18 +112,8 @@ export async function getPastStandardLeaderboards(
       pastYearsOfStandard().map(async (year) => {
         // Run softcore and hardcore queries in parallel for each year
         const [softcore, hardcore] = await Promise.all([
-          db.ascension.getLeaderboard({
-            path,
-            lifestyle: Lifestyle.SOFTCORE,
-            type: TagType.STANDARD,
-            year,
-          }),
-          db.ascension.getLeaderboard({
-            path,
-            lifestyle: Lifestyle.HARDCORE,
-            type: TagType.STANDARD,
-            year,
-          }),
+          getLeaderboard({ path, lifestyle: Lifestyle.SOFTCORE, type: TagType.STANDARD, year }),
+          getLeaderboard({ path, lifestyle: Lifestyle.HARDCORE, type: TagType.STANDARD, year }),
         ]);
         return [year, { softcore, hardcore }] as const;
       }),

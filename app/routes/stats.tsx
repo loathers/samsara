@@ -9,12 +9,7 @@ import {
   Table,
   Text,
 } from "@chakra-ui/react";
-import {
-  type Ascension,
-  Lifestyle as LifestyleEnum,
-  Path,
-  type Player,
-} from "@prisma/client";
+import { Lifestyle as LifestyleEnum, type Player } from "~/db";
 import { Link as RRLink, useLoaderData } from "react-router";
 
 import { AscensionDate } from "~/components/AscensionDate";
@@ -24,14 +19,16 @@ import { PlayerLink } from "~/components/PlayerLink";
 import { ResponsiveContent } from "~/components/ResponsiveContent";
 import { StatsTable } from "~/components/StatsTable";
 import { Turncount } from "~/components/Turncount";
-import { db } from "~/db.server.js";
-import { NS13 } from "~/utils.js";
+import {
+  countAscensionsByPath,
+  countAscensionsInSeasonByPath,
+  getLongestRun,
+  getPyritesWithAscensions,
+  getTortoisecoreRun,
+} from "~/db.server.js";
 
-type AscensionData = Ascension & {
-  date: Date;
-  player: Player;
-  path: Path;
-};
+type PyriteData = Awaited<ReturnType<typeof getPyritesWithAscensions>>[number];
+type AscensionData = PyriteData["ascension"];
 
 export type RowData = {
   path: AscensionData["path"];
@@ -60,106 +57,17 @@ export const loader = async () => {
     tortoisecoreRaw,
     longestRaw,
   ] = await Promise.all([
-    // Pyrites query
-    db.tag.findMany({
-      include: {
-        ascension: {
-          include: { player: true, path: true },
-        },
-      },
-      where: {
-        type: {
-          in: ["PYRITE", "PYRITE_SPECIAL"],
-        },
-        value: 1,
-        NOT: {
-          ascension: {
-            path: { id: 999 },
-            lifestyle: "SOFTCORE",
-          },
-        },
-      },
-      orderBy: {
-        ascension: {
-          path: {
-            id: "desc",
-          },
-        },
-      },
-    }),
-    // Total runs per path
-    db.ascension.groupBy({
-      by: ["pathName"],
-      _count: true,
-    }),
-    // Total runs in season per path
-    db.$queryRaw<{ pathName: string; _count: number }[]>`
-      SELECT
-        COUNT(*)::int as "_count",
-        "Ascension"."pathName"
-      FROM
-        "Ascension"
-      INNER JOIN
-        "Path"
-      ON
-        "Ascension"."pathName" = "Path"."name"
-      WHERE
-        "Ascension"."date" <= "Path"."end"
-      GROUP BY "Ascension"."pathName"
-    `,
-    // Tortoisecore queries
+    getPyritesWithAscensions(),
+    countAscensionsByPath(),
+    countAscensionsInSeasonByPath(),
     Promise.all(
-      [
-        LifestyleEnum.CASUAL,
-        LifestyleEnum.SOFTCORE,
-        LifestyleEnum.HARDCORE,
-      ].map((l) =>
-        db.ascension.findFirst({
-          where: {
-            pathName: "None",
-            abandoned: false,
-            dropped: false,
-            date: { gt: NS13 },
-            lifestyle: l,
-          },
-          orderBy: [{ turns: "asc" }, { days: "asc" }],
-          select: {
-            player: true,
-            days: true,
-            turns: true,
-            playerId: true,
-            ascensionNumber: true,
-            lifestyle: true,
-            date: true,
-          },
-          take: 1,
-        }),
+      [LifestyleEnum.CASUAL, LifestyleEnum.SOFTCORE, LifestyleEnum.HARDCORE].map(
+        (l) => getTortoisecoreRun(l),
       ),
     ),
-    // Longest runs queries
     Promise.all(
-      ["turns" as const, "days" as const].flatMap((u) =>
-        [LifestyleEnum.SOFTCORE, LifestyleEnum.HARDCORE].flatMap((l) =>
-          db.ascension.findFirst({
-            where: {
-              lifestyle: l,
-              abandoned: false,
-              dropped: false,
-              date: { gt: NS13 },
-            },
-            orderBy: [{ [u]: "desc" }],
-            select: {
-              player: true,
-              days: true,
-              turns: true,
-              playerId: true,
-              ascensionNumber: true,
-              lifestyle: true,
-              date: true,
-            },
-            take: 1,
-          }),
-        ),
+      (["turns", "days"] as const).flatMap((u) =>
+        (["SOFTCORE", "HARDCORE"] as const).map((l) => getLongestRun(u, l)),
       ),
     ),
   ]);

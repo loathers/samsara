@@ -1,4 +1,4 @@
-import { Player } from "@prisma/client";
+import { Player } from "../app/db.js";
 
 import {
   db,
@@ -57,5 +57,5 @@ async function main() {
 try {
   await main();
 } finally {
-  await db.$disconnect();
+  await db.destroy();
 }

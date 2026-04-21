@@ -1,5 +1,5 @@
 import { HStack, Link } from "@chakra-ui/react";
-import { Lifestyle as LifestyleEnum } from "@prisma/client";
+import { Lifestyle as LifestyleEnum } from "~/db";
 import { Link as RRLink } from "react-router";
 
 import { Lifestyle, formatLifestyle } from "~/components/Lifestyle";

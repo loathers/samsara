@@ -1,4 +1,4 @@
-import { Familiar } from "@prisma/client";
+import { Familiar } from "~/db";
 
 import { KoLImage } from "~/components/KoLImage";
 

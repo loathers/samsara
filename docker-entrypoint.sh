@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Run DB migrations on container start (safe to run repeatedly)
-yarn prisma migrate deploy
+yarn migrate
 
 # Then run the passed command (default: yarn start)
 exec "$@"
