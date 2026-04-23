@@ -3,7 +3,6 @@ import {
   type Lifestyle,
   type Player,
 } from "../../app/db.js";
-import { Client } from "kol.js";
 
 export interface Ascension extends AscensionModel {
   extra: Record<string, number>;
@@ -170,17 +169,6 @@ export function parseRecentAscenders(page: string): Player[] {
 
 export async function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-export async function rolloverSafeFetch(client: Client, url: string) {
-  let response = await client.fetchText(url);
-
-  while (client.isRollover()) {
-    await wait(60000);
-    response = await client.fetchText(url);
-  }
-
-  return response;
 }
 
 export const slugify = (name: string) =>

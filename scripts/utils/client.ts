@@ -9,7 +9,6 @@ import {
   type Ascension,
   parseAscensions,
   parsePlayer,
-  rolloverSafeFetch,
   slugify,
   wait,
 } from "./utils.js";
@@ -73,8 +72,7 @@ export async function processPlayers(
 
     available.run(async (client) => {
       console.timeLog("etl", `  Checking ${id}`);
-      const pre = await rolloverSafeFetch(
-        client,
+      const pre = await client.fetchText(
         `ascensionhistory.php?who=${id}&prens13=1`,
       );
 
@@ -94,8 +92,7 @@ export async function processPlayers(
         return;
       }
 
-      const post = await rolloverSafeFetch(
-        client,
+      const post = await client.fetchText(
         `ascensionhistory.php?who=${id}`,
       );
 
