@@ -1,17 +1,12 @@
 import { Kysely, PostgresDialect } from "kysely";
 import pg from "pg";
 
+import { AscensionHistory, type Ascension } from "kol.js/domains/AscensionHistory";
 import type { Database, Player } from "../../app/db.js";
 import { parseWorkers } from "./Worker.js";
 import { fetchClasses, fetchPaths } from "./data.js";
 import { tagAscensions } from "./tagger.js";
-import {
-  type Ascension,
-  parseAscensions,
-  parsePlayer,
-  slugify,
-  wait,
-} from "./utils.js";
+import { slugify, wait } from "./utils.js";
 
 export const db = new Kysely<Database>({
   dialect: new PostgresDialect({
@@ -72,14 +67,13 @@ export async function processPlayers(
 
     available.run(async (client) => {
       console.timeLog("etl", `  Checking ${id}`);
-      const pre = await client.fetchText(
-        `ascensionhistory.php?who=${id}&prens13=1`,
+
+      const result = await new AscensionHistory(client).getAscensions(
+        id,
+        { includePreNS13: true },
       );
 
-      // Check the player here, no sense in trying post-NS13 if they don't exist.
-      const player = parsePlayer(pre);
-
-      if (player === null) {
+      if (result === null) {
         if (id >= LATEST_KNOWN_ACCOUNT) {
           console.timeLog(
             "etl",
@@ -92,17 +86,8 @@ export async function processPlayers(
         return;
       }
 
-      const post = await client.fetchText(
-        `ascensionhistory.php?who=${id}`,
-      );
+      const { player, ascensions: playerAscensions } = result;
 
-      // Parse and merge pre and post NS13 ascensions
-      const playerAscensions = [
-        ...parseAscensions(pre, player.id),
-        ...parseAscensions(post, player.id),
-      ];
-
-      // We care not for non-ascenders
       if (playerAscensions.length === 0) {
         console.timeLog(
           "etl",

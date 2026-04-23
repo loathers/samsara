@@ -1,4 +1,4 @@
-import { Player } from "../app/db.js";
+import { Leaderboard } from "kol.js/domains/Leaderboard";
 
 import {
   db,
@@ -6,10 +6,9 @@ import {
   processAscensions,
   workers,
 } from "./utils/client.js";
-import { parseRecentAscenders } from "./utils/utils.js";
 
-function* players(p: Player[]) {
-  for (const player of p) yield player.id;
+function* playerIds(players: { id: number }[]) {
+  for (const player of players) yield player.id;
 }
 
 async function main() {
@@ -21,29 +20,14 @@ async function main() {
   console.time("etl");
   console.timeLog("etl", "Begin");
 
-  let recent = "";
-  let i = 0;
-  while (recent === "" && i < 10) {
-    const client = workers[i++ % workers.length];
-    recent = await client.fetchText(
-      "museum.php?place=leaderboards&whichboard=999&showhist=500",
-    );
-
-    if (recent !== "" && client.isRollover()) {
-      console.timeLog("etl", "Rollover detected, exiting");
-      console.timeEnd("etl");
-      return;
-    }
-  }
-
-  const ascenders = parseRecentAscenders(recent);
+  const ascenders = await new Leaderboard(workers[0]).getRecent();
 
   if (ascenders.length === 0) {
     console.timeLog("etl", "No ascenders found, this is weird");
   } else {
     console.timeLog("etl", `Found ${ascenders.length} ascenders`);
 
-    await processAscensions(players(ascenders), {
+    await processAscensions(playerIds(ascenders), {
       stopOnBlank: false,
       sendWebhook: true,
     });
