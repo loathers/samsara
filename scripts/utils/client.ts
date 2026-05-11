@@ -368,7 +368,7 @@ export async function updateClasses() {
       if (knownClass.name === "None") continue;
 
       // Only set pathId if that path is already in our database
-      const pathId = knownClass.path && existingPathIds.has(knownClass.path) ? knownClass.path : null;
+      const pathId = knownClass.path?.id != null && existingPathIds.has(knownClass.path.id) ? knownClass.path.id : null;
 
       await trx
         .updateTable("Class")
