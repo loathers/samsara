@@ -15,7 +15,7 @@ import {
   createListCollection,
 } from "@chakra-ui/react";
 import { useTheme } from "next-themes";
-import { FormEventHandler, useCallback } from "react";
+import { FormEventHandler, useCallback, useEffect, useState } from "react";
 import { LuMoon, LuSun } from "react-icons/lu";
 import {
   type HeadersFunction,
@@ -114,6 +114,8 @@ export default function Index() {
 
   const navigate = useNavigate();
   const { toggleColorMode, colorMode } = useColorMode();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const goToPath = useCallback<FormEventHandler<HTMLFormElement>>(
     (event) => {
@@ -153,18 +155,20 @@ export default function Index() {
 
   return (
     <SimpleGrid gap={8} alignItems="stretch">
-      <IconButton
-        position="absolute"
-        top={5}
-        right={5}
-        onClick={toggleColorMode}
-        variant="subtle"
-        title={
-          colorMode === "light" ? "Switch to dark mode" : "Switch to light mode"
-        }
-      >
-        {colorMode === "light" ? <LuSun /> : <LuMoon />}
-      </IconButton>
+      {mounted && (
+        <IconButton
+          position="absolute"
+          top={5}
+          right={5}
+          onClick={toggleColorMode}
+          variant="subtle"
+          title={
+            colorMode === "light" ? "Switch to dark mode" : "Switch to light mode"
+          }
+        >
+          {colorMode === "light" ? <LuSun /> : <LuMoon />}
+        </IconButton>
+      )}
       <Stack gap={8} alignItems="center">
         <Link to="/">
           <Heading size="4xl" alignSelf="center">
