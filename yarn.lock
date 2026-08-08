@@ -423,6 +423,53 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@chevrotain/cst-dts-gen@npm:12.0.0":
+  version: 12.0.0
+  resolution: "@chevrotain/cst-dts-gen@npm:12.0.0"
+  dependencies:
+    "@chevrotain/gast": "npm:12.0.0"
+    "@chevrotain/types": "npm:12.0.0"
+  checksum: 10c0/bc79319baafbbf77b5d58539d1456e57ede160266a47d4a7bb75716d288dfef7fe2646224f4e2fb296afc0ca1cd57d28e469f82738e9f08e022c292aff2047db
+  languageName: node
+  linkType: hard
+
+"@chevrotain/gast@npm:12.0.0":
+  version: 12.0.0
+  resolution: "@chevrotain/gast@npm:12.0.0"
+  dependencies:
+    "@chevrotain/types": "npm:12.0.0"
+  checksum: 10c0/699f8757b910ee577b9cd955f2bde794ffae1c1faad57ac8040a06c5d1c42b56109f43d32f0b69eb1b56b9c189a32fa3b2b1da5d86ed4fa7c76dc9717a7f3a6b
+  languageName: node
+  linkType: hard
+
+"@chevrotain/regexp-to-ast@npm:12.0.0":
+  version: 12.0.0
+  resolution: "@chevrotain/regexp-to-ast@npm:12.0.0"
+  checksum: 10c0/5cfc68b0cb63cb88281b40660f618555d70feb52b61af1e492862468fa1a0e80c61e84e3ba459431126c889e53f99a8aba4044297e7490a579a67bbe66d5d45e
+  languageName: node
+  linkType: hard
+
+"@chevrotain/types@npm:12.0.0":
+  version: 12.0.0
+  resolution: "@chevrotain/types@npm:12.0.0"
+  checksum: 10c0/8f62dbc49117f6347f35f6fb5dcd5a94ce974b3c8503d4e90c1af7b24523992da1e82afb3a4ab0f450b22adfebbd39c7621c26a3734a639daaf15f0e661f43dc
+  languageName: node
+  linkType: hard
+
+"@chevrotain/utils@npm:12.0.0":
+  version: 12.0.0
+  resolution: "@chevrotain/utils@npm:12.0.0"
+  checksum: 10c0/7bbbbe5256411bbea374a9b2aabe4fb1a69303bcdcfa613aba205d309c24967eb1f567a41a7a6a772ea23e9f1f10dbb533aad6de6218b7f7c14d8395a8ec1473
+  languageName: node
+  linkType: hard
+
+"@date-fns/tz@npm:^1.5.0":
+  version: 1.5.0
+  resolution: "@date-fns/tz@npm:1.5.0"
+  checksum: 10c0/4ef25eedd55924938fa81b23b949a3425201597e2007f5323db54d50fc19283eca5e2a7963c3d82c99b3adf273e9ea9bc7adfd1c9076e15badd99c593a984ffa
+  languageName: node
+  linkType: hard
+
 "@emnapi/core@npm:1.10.0":
   version: 1.10.0
   resolution: "@emnapi/core@npm:1.10.0"
@@ -3348,6 +3395,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"chevrotain@npm:^12.0.0":
+  version: 12.0.0
+  resolution: "chevrotain@npm:12.0.0"
+  dependencies:
+    "@chevrotain/cst-dts-gen": "npm:12.0.0"
+    "@chevrotain/gast": "npm:12.0.0"
+    "@chevrotain/regexp-to-ast": "npm:12.0.0"
+    "@chevrotain/types": "npm:12.0.0"
+    "@chevrotain/utils": "npm:12.0.0"
+  checksum: 10c0/c7bf530f59baae21cc7535406addfbb9ea373d89bb4ea1b874d89e7debd232c9bdf60aa5af236fcc0e12a68ea8f88a6638ffbccaadb829a7b300f98d1429c38d
+  languageName: node
+  linkType: hard
+
 "chokidar@npm:^4.0.0":
   version: 4.0.3
   resolution: "chokidar@npm:4.0.3"
@@ -5364,13 +5424,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kol.js@npm:^0.7.0":
-  version: 0.7.0
-  resolution: "kol.js@npm:0.7.0"
+"kol.js@npm:^0.13.2":
+  version: 0.13.2
+  resolution: "kol.js@npm:0.13.2"
   dependencies:
+    "@date-fns/tz": "npm:^1.5.0"
     async-mutex: "npm:^0.5.0"
+    chevrotain: "npm:^12.0.0"
     css-select: "npm:^6.0.0"
     date-fns: "npm:^4.1.0"
+    debug: "npm:^4.4.3"
     domhandler: "npm:^5.0.3"
     domutils: "npm:^3.2.2"
     emittery: "npm:^1.1.0"
@@ -5382,7 +5445,10 @@ __metadata:
     ofetch: "npm:^1.5.1"
     tough-cookie: "npm:^6.0.0"
     ts-dedent: "npm:^2.2.0"
-  checksum: 10c0/6910cc9e1f5f7a20daffb4b2604697a475150bbdf8c984d5ac237ef1c727657de0eee38300c1ef021d42e1b5f4e8e5297868bd472d3dbd39536c18e92d4c04a0
+    zod: "npm:^4.4.3"
+  peerDependencies:
+    data-of-loathing: ">=4.3.0"
+  checksum: 10c0/985d8d269f99984f005087b5319e26c3af9cf8e1e5fab4f9ed8036d0ed6823789c3eb92af45e52c47a4fc7c963886b974ad1fef192df14137dccb4cdaa75bbdd
   languageName: node
   linkType: hard
 
@@ -6902,7 +6968,7 @@ __metadata:
     eslint-plugin-react: "npm:^7.37.5"
     feed: "npm:^5.2.1"
     isbot: "npm:^5.1.39"
-    kol.js: "npm:^0.7.0"
+    kol.js: "npm:^0.13.2"
     kysely: "npm:^0.28.16"
     kysely-ctl: "npm:^0.20.0"
     next-themes: "npm:^0.4.6"
@@ -8082,5 +8148,12 @@ __metadata:
   version: 0.1.0
   resolution: "yocto-queue@npm:0.1.0"
   checksum: 10c0/dceb44c28578b31641e13695d200d34ec4ab3966a5729814d5445b194933c096b7ced71494ce53a0e8820685d1d010df8b2422e5bf2cdea7e469d97ffbea306f
+  languageName: node
+  linkType: hard
+
+"zod@npm:^4.4.3":
+  version: 4.4.3
+  resolution: "zod@npm:4.4.3"
+  checksum: 10c0/7ea31b558e88f9faf44f31dd185e2e1cbf51fed3081787fb96cc2534749b50c0acfc6da7f0922a7353ed092dd358c7d50c28ea96c94d04af64191bd33152eca3
   languageName: node
   linkType: hard
