@@ -12,6 +12,7 @@ type Props = {
   title?: string;
   ascensions: LeaderboardEntry[];
   showClass?: boolean;
+  ranked?: boolean;
   alternativeScore?: [
     title: string,
     renderer: (ascension: LeaderboardEntry) => number,
@@ -22,6 +23,7 @@ export function Leaderboard({
   title,
   ascensions,
   showClass = true,
+  ranked = true,
   alternativeScore,
 }: Props) {
   return (
@@ -35,7 +37,7 @@ export function Leaderboard({
         <Table.Root size="sm">
           <Table.Header>
             <Table.Row>
-              <Table.ColumnHeader>#</Table.ColumnHeader>
+              {ranked && <Table.ColumnHeader>#</Table.ColumnHeader>}
               <Table.ColumnHeader>Player</Table.ColumnHeader>
               <Table.ColumnHeader>Date</Table.ColumnHeader>
               {alternativeScore && (
@@ -55,9 +57,9 @@ export function Leaderboard({
             {ascensions.map((asc, i) => (
               <Table.Row
                 key={`${asc.player.id}/${asc.ascensionNumber}`}
-                bg={awardBg(i + 1)}
+                bg={ranked ? awardBg(i + 1) : undefined}
               >
-                <Table.Cell>{i + 1}</Table.Cell>
+                {ranked && <Table.Cell>{i + 1}</Table.Cell>}
                 <Table.Cell>
                   <PlayerLink player={asc.player} />
                 </Table.Cell>

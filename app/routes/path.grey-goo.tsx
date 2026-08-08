@@ -34,8 +34,10 @@ export default function GreyGooPath() {
     frequency,
     hcSpecialLeaderboard,
     hcSpecialPyrite,
+    hcRecent,
     path,
     recordBreaking,
+    scRecent,
     scSpecialLeaderboard,
     scSpecialPyrite,
     totalRuns,
@@ -84,6 +86,13 @@ export default function GreyGooPath() {
             ascensions={hcSpecialPyrite}
             alternativeScore={["Goo", getGooScore]}
           />
+        </LeaderboardAccordionItem>
+        <LeaderboardAccordionItem
+          title="Recent Ascensions"
+          description="The most recent ascensions on this path"
+        >
+          <Leaderboard title="Softcore" ascensions={scRecent} ranked={false} />
+          <Leaderboard title="Hardcore" ascensions={hcRecent} ranked={false} />
         </LeaderboardAccordionItem>
       </LeaderboardAccordion>
     </Stack>

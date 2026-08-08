@@ -2,7 +2,7 @@ import pg from "pg";
 import { Kysely, PostgresDialect, sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { Database, Lifestyle, Path, TagType } from "./db";
+import type { Database, JsonValue, Lifestyle, Path, TagType } from "./db";
 import { NS13 } from "./utils";
 
 declare global {
@@ -151,6 +151,42 @@ export async function getRecordBreaking(path: Path, lifestyle?: Lifestyle) {
   }));
 }
 
+function toLeaderboardEntry(
+  r: {
+    ascensionNumber: number;
+    date: Date;
+    dropped: boolean;
+    abandoned: boolean;
+    level: number;
+    sign: string;
+    turns: number;
+    days: number;
+    lifestyle: Lifestyle;
+    extra: JsonValue;
+    playerId: number;
+    playerName: string;
+    className: string | null;
+    classId: number | null;
+  },
+  tags: { value: number | null }[],
+) {
+  return {
+    ascensionNumber: r.ascensionNumber,
+    date: r.date,
+    dropped: r.dropped,
+    abandoned: r.abandoned,
+    level: r.level,
+    sign: r.sign,
+    turns: r.turns,
+    days: r.days,
+    lifestyle: r.lifestyle,
+    extra: r.extra,
+    tags,
+    player: { id: r.playerId, name: r.playerName },
+    class: { id: r.classId ?? null, name: r.className ?? "" },
+  };
+}
+
 export async function getLeaderboard({
   path,
   lifestyle,
@@ -206,21 +242,53 @@ export async function getLeaderboard({
     .orderBy("t.value", "asc")
     .execute();
 
-  return rows.map((r) => ({
-    ascensionNumber: r.ascensionNumber,
-    date: r.date,
-    dropped: r.dropped,
-    abandoned: r.abandoned,
-    level: r.level,
-    sign: r.sign,
-    turns: r.turns,
-    days: r.days,
-    lifestyle: r.lifestyle,
-    extra: r.extra,
-    tags: [{ value: r.tagValue }],
-    player: { id: r.playerId, name: r.playerName },
-    class: { id: r.classId ?? null, name: r.className ?? "" },
-  }));
+  return rows.map((r) => toLeaderboardEntry(r, [{ value: r.tagValue }]));
+}
+
+export async function getRecentAscensions({
+  path,
+  lifestyle,
+  familiar,
+  limit = 11,
+}: {
+  path: { name: string };
+  lifestyle: Lifestyle;
+  /** Restrict to runs completed with this familiar at 100% (e.g. Kittycore). */
+  familiar?: string;
+  limit?: number;
+}) {
+  let query = kysely
+    .selectFrom("Ascension as a")
+    .innerJoin("Player as p", "p.id", "a.playerId")
+    .leftJoin("Class as c", "c.name", "a.className")
+    .select([
+      "a.ascensionNumber",
+      "a.date",
+      "a.dropped",
+      "a.abandoned",
+      "a.level",
+      "a.sign",
+      "a.turns",
+      "a.days",
+      "a.lifestyle",
+      "a.extra",
+      "p.id as playerId",
+      "p.name as playerName",
+      "c.name as className",
+      "c.id as classId",
+    ])
+    .where("a.pathName", "=", path.name)
+    .where("a.lifestyle", "=", lifestyle);
+
+  if (familiar !== undefined) {
+    query = query
+      .where("a.familiarName", "=", familiar)
+      .where("a.familiarPercentage", "=", 100);
+  }
+
+  const rows = await query.orderBy("a.date", "desc").limit(limit).execute();
+
+  return rows.map((r) => toLeaderboardEntry(r, []));
 }
 
 export async function getDedication(

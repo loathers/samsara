@@ -35,12 +35,14 @@ export default function SeaPath() {
     hcDedication,
     hcLeaderboard,
     hcPyrite,
+    hcRecent,
     hcSpecialLeaderboard,
     path,
     recordBreaking,
     scDedication,
     scLeaderboard,
     scPyrite,
+    scRecent,
     scSpecialLeaderboard,
     totalRuns,
     totalRunsInSeason,
@@ -102,6 +104,13 @@ export default function SeaPath() {
             <Leaderboard title="Hardcore Pyrites" ascensions={hcPyrite} />
           </LeaderboardAccordionItem>
         )}
+        <LeaderboardAccordionItem
+          title="Recent Ascensions"
+          description="The most recent ascensions on this path"
+        >
+          <Leaderboard title="Softcore" ascensions={scRecent} ranked={false} />
+          <Leaderboard title="Hardcore" ascensions={hcRecent} ranked={false} />
+        </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
           title="Dedication"
           description="Players who have completed the most ascensions for this path"

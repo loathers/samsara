@@ -6,7 +6,12 @@ import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
-import { findPathWithClasses, getKittycoreLeaderboard, getLeaderboard } from "~/db.server";
+import {
+  findPathWithClasses,
+  getKittycoreLeaderboard,
+  getLeaderboard,
+  getRecentAscensions,
+} from "~/db.server";
 import { getPathData } from "~/path.server";
 
 export const loader = async () => {
@@ -14,10 +19,19 @@ export const loader = async () => {
 
   if (!path) throw data({ message: "Invalid path name" }, { status: 400 });
 
+  const [pathData, casualLeaderboard, kittycoreLeaderboard, kittycoreRecent] =
+    await Promise.all([
+      getPathData(path),
+      getLeaderboard({ path, lifestyle: "CASUAL" }),
+      getKittycoreLeaderboard(),
+      getRecentAscensions({ path, lifestyle: "HARDCORE", familiar: "Black Cat" }),
+    ]);
+
   return {
-    ...(await getPathData(path)),
-    casualLeaderboard: await getLeaderboard({ path, lifestyle: "CASUAL" }),
-    kittycoreLeaderboard: await getKittycoreLeaderboard(),
+    ...pathData,
+    casualLeaderboard,
+    kittycoreLeaderboard,
+    kittycoreRecent,
   };
 };
 
@@ -37,10 +51,13 @@ export default function BadMoonPath() {
     frequency,
     hcDedication,
     hcLeaderboard,
+    hcRecent,
     kittycoreLeaderboard,
+    kittycoreRecent,
     path,
     recordBreaking,
     scLeaderboard,
+    scRecent,
     totalRuns,
   } = useLoaderData<typeof loader>();
 
@@ -77,6 +94,18 @@ export default function BadMoonPath() {
           <Leaderboard
             title="Casual? Leaderboard??"
             ascensions={casualLeaderboard}
+          />
+        </LeaderboardAccordionItem>
+        <LeaderboardAccordionItem
+          title="Recent Ascensions"
+          description="The most recent ascensions on this path"
+        >
+          <Leaderboard title="Softcore" ascensions={scRecent} ranked={false} />
+          <Leaderboard title="Hardcore" ascensions={hcRecent} ranked={false} />
+          <Leaderboard
+            title="Kittycore"
+            ascensions={kittycoreRecent}
+            ranked={false}
           />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
