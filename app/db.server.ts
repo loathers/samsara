@@ -286,7 +286,11 @@ export async function getRecentAscensions({
       .where("a.familiarPercentage", "=", 100);
   }
 
-  const rows = await query.orderBy("a.date", "desc").limit(limit).execute();
+  const rows = await query
+    .orderBy("a.date", "desc")
+    .orderBy(sql`"a"."discoveredAt" DESC NULLS LAST`)
+    .limit(limit)
+    .execute();
 
   return rows.map((r) => toLeaderboardEntry(r, []));
 }

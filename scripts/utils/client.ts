@@ -203,10 +203,14 @@ export async function processPlayers(
     // We are correcting a parsing issue, so we can't skip duplicates
     added = await ascensionUpdater(ascensions);
   } else {
+    const now = new Date();
     // Ascensions never change, so we can skip duplicates.
     // Chunk to stay under PostgreSQL's 65535-parameter wire protocol limit.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const rows = ascensions.map(({ familiarImage, ...a }) => a);
+    const rows = ascensions.map(({ familiarImage, ...a }) => ({
+      ...a,
+      discoveredAt: now,
+    }));
     added = 0;
     for (let i = 0; i < rows.length; i += 500) {
       const results = await db

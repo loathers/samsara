@@ -71,6 +71,7 @@ export interface AscensionTable {
   lifestyle: Lifestyle;
   pathName: string;
   extra: JsonValue;
+  discoveredAt: ColumnType<Date | null, Date | null | undefined, Date | null>;
 }
 
 export interface TagTable {
