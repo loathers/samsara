@@ -6,7 +6,12 @@ import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
-import { findPathWithClasses, getDedication, getLeaderboard } from "~/db.server";
+import {
+  findPathWithClasses,
+  getDedication,
+  getLeaderboard,
+  getRecentAscensions,
+} from "~/db.server";
 import { getPathData } from "~/path.server";
 
 export const loader = async () => {
@@ -14,11 +19,15 @@ export const loader = async () => {
 
   if (!path) throw data({ message: "Invalid path name" }, { status: 400 });
 
-  return {
-    ...(await getPathData(path)),
-    casualLeaderboard: await getLeaderboard({ path, lifestyle: "CASUAL" }),
-    casualDedication: await getDedication(path, "CASUAL"),
-  };
+  const [pathData, casualLeaderboard, casualDedication, casualRecent] =
+    await Promise.all([
+      getPathData(path),
+      getLeaderboard({ path, lifestyle: "CASUAL" }),
+      getDedication(path, "CASUAL"),
+      getRecentAscensions({ path, lifestyle: "CASUAL" }),
+    ]);
+
+  return { ...pathData, casualLeaderboard, casualDedication, casualRecent };
 };
 
 export const meta = () => {
@@ -42,6 +51,9 @@ export default function NoPath() {
     scDedication,
     hcDedication,
     casualDedication,
+    scRecent,
+    hcRecent,
+    casualRecent,
     totalRuns,
   } = useLoaderData<typeof loader>();
 
@@ -76,6 +88,14 @@ export default function NoPath() {
             ascensions={casualLeaderboard}
           />
           <Dedication title="Casual Dedication" dedication={casualDedication} />
+        </LeaderboardAccordionItem>
+        <LeaderboardAccordionItem
+          title="Recent Ascensions"
+          description="The most recent ascensions on this path"
+        >
+          <Leaderboard title="Softcore" ascensions={scRecent} ranked={false} />
+          <Leaderboard title="Hardcore" ascensions={hcRecent} ranked={false} />
+          <Leaderboard title="Casual" ascensions={casualRecent} ranked={false} />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
           title="Dedication"

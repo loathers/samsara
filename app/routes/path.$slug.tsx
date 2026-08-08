@@ -53,10 +53,12 @@ export default function PathPage() {
     hcLeaderboard,
     hcPyrite,
     path,
+    hcRecent,
     recordBreaking,
     scDedication,
     scLeaderboard,
     scPyrite,
+    scRecent,
     totalRuns,
     totalRunsInSeason,
   } = useLoaderData<typeof loader>();
@@ -107,6 +109,23 @@ export default function PathPage() {
             />
           </LeaderboardAccordionItem>
         )}
+        <LeaderboardAccordionItem
+          title="Recent Ascensions"
+          description="The most recent ascensions on this path"
+        >
+          <Leaderboard
+            title="Softcore"
+            ascensions={scRecent}
+            ranked={false}
+            showClass={showClass}
+          />
+          <Leaderboard
+            title="Hardcore"
+            ascensions={hcRecent}
+            ranked={false}
+            showClass={showClass}
+          />
+        </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
           title="Dedication"
           description="Players who have completed the most ascensions for this path"

@@ -42,9 +42,11 @@ export default function OCRSPath() {
     hcSpecialPyrite,
     path,
     recordBreaking,
+    hcRecent,
     scDedication,
     scLeaderboard,
     scPyrite,
+    scRecent,
     scSpecialLeaderboard,
     scSpecialPyrite,
     totalRuns,
@@ -130,6 +132,13 @@ export default function OCRSPath() {
             ascensions={hcPyrite}
             alternativeScore={["Fun", getFunScore]}
           />
+        </LeaderboardAccordionItem>
+        <LeaderboardAccordionItem
+          title="Recent Ascensions"
+          description="The most recent ascensions on this path"
+        >
+          <Leaderboard title="Softcore" ascensions={scRecent} ranked={false} />
+          <Leaderboard title="Hardcore" ascensions={hcRecent} ranked={false} />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
           title="Dedication"

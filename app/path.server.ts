@@ -5,6 +5,7 @@ import {
   getDedication,
   getFrequency,
   getLeaderboard,
+  getRecentAscensions,
   getRecordBreaking,
 } from "./db.server";
 import { calculateRange, pastYearsOfStandard } from "./utils";
@@ -28,6 +29,7 @@ type SoftcoreLeaderboards = {
   scDedication: Awaited<ReturnType<typeof getDedication>>;
   scLeaderboard: Awaited<ReturnType<typeof getLeaderboard>>;
   scPyrite: Awaited<ReturnType<typeof getLeaderboard>>;
+  scRecent: Awaited<ReturnType<typeof getRecentAscensions>>;
   scSpecialLeaderboard: Awaited<ReturnType<typeof getLeaderboard>>;
   scSpecialPyrite: Awaited<ReturnType<typeof getLeaderboard>>;
 };
@@ -36,6 +38,7 @@ type HardcoreLeaderboards = {
   hcDedication: Awaited<ReturnType<typeof getDedication>>;
   hcLeaderboard: Awaited<ReturnType<typeof getLeaderboard>>;
   hcPyrite: Awaited<ReturnType<typeof getLeaderboard>>;
+  hcRecent: Awaited<ReturnType<typeof getRecentAscensions>>;
   hcSpecialLeaderboard: Awaited<ReturnType<typeof getLeaderboard>>;
   hcSpecialPyrite: Awaited<ReturnType<typeof getLeaderboard>>;
 };
@@ -48,25 +51,31 @@ async function leaderboardsForLifestyle(
   const pyrites = hasPyrites(path);
   const prefix = lifestyle === "HARDCORE" ? "hc" : "sc";
 
-  const [dedication, leaderboard, pyrite, specialLeaderboard, specialPyrite] =
-    await Promise.all([
-      getDedication(path, lifestyle),
-      getLeaderboard({ path, lifestyle, inSeason: path.seasonal }),
-      pyrites
-        ? getLeaderboard({ path, lifestyle })
-        : Promise.resolve([]),
-      special
-        ? getLeaderboard({ path, lifestyle, special, inSeason: path.seasonal })
-        : Promise.resolve([]),
-      special && pyrites
-        ? getLeaderboard({ path, lifestyle, special: true })
-        : Promise.resolve([]),
-    ]);
+  const [
+    dedication,
+    leaderboard,
+    pyrite,
+    recent,
+    specialLeaderboard,
+    specialPyrite,
+  ] = await Promise.all([
+    getDedication(path, lifestyle),
+    getLeaderboard({ path, lifestyle, inSeason: path.seasonal }),
+    pyrites ? getLeaderboard({ path, lifestyle }) : Promise.resolve([]),
+    getRecentAscensions({ path, lifestyle }),
+    special
+      ? getLeaderboard({ path, lifestyle, special, inSeason: path.seasonal })
+      : Promise.resolve([]),
+    special && pyrites
+      ? getLeaderboard({ path, lifestyle, special: true })
+      : Promise.resolve([]),
+  ]);
 
   return {
     [`${prefix}Dedication`]: dedication,
     [`${prefix}Leaderboard`]: leaderboard,
     [`${prefix}Pyrite`]: pyrite,
+    [`${prefix}Recent`]: recent,
     [`${prefix}SpecialLeaderboard`]: specialLeaderboard,
     [`${prefix}SpecialPyrite`]: specialPyrite,
   };
