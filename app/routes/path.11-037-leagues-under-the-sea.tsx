@@ -105,6 +105,7 @@ export default function SeaPath() {
           </LeaderboardAccordionItem>
         )}
         <LeaderboardAccordionItem
+          slug="recent"
           title="Recent Ascensions"
           description="The most recent ascensions on this path"
         >

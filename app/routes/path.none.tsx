@@ -90,6 +90,7 @@ export default function NoPath() {
           <Dedication title="Casual Dedication" dedication={casualDedication} />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
+          slug="recent"
           title="Recent Ascensions"
           description="The most recent ascensions on this path"
         >

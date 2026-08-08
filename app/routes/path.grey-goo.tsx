@@ -88,6 +88,7 @@ export default function GreyGooPath() {
           />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
+          slug="recent"
           title="Recent Ascensions"
           description="The most recent ascensions on this path"
         >
