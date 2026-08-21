@@ -5424,9 +5424,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kol.js@npm:^0.13.2":
-  version: 0.13.2
-  resolution: "kol.js@npm:0.13.2"
+"kol.js@npm:^0.14.0":
+  version: 0.14.0
+  resolution: "kol.js@npm:0.14.0"
   dependencies:
     "@date-fns/tz": "npm:^1.5.0"
     async-mutex: "npm:^0.5.0"
@@ -5448,7 +5448,7 @@ __metadata:
     zod: "npm:^4.4.3"
   peerDependencies:
     data-of-loathing: ">=4.3.0"
-  checksum: 10c0/985d8d269f99984f005087b5319e26c3af9cf8e1e5fab4f9ed8036d0ed6823789c3eb92af45e52c47a4fc7c963886b974ad1fef192df14137dccb4cdaa75bbdd
+  checksum: 10c0/66ca30b090bef2fcd728a475507d91910a5ddec554bd4e57557bb4d4af5fd21d5811d930249ad1a98d6f8a9b850a42abdf8afab9cf3e953048d6d2b289f1bf30
   languageName: node
   linkType: hard
 
@@ -6968,7 +6968,7 @@ __metadata:
     eslint-plugin-react: "npm:^7.37.5"
     feed: "npm:^5.2.1"
     isbot: "npm:^5.1.39"
-    kol.js: "npm:^0.13.2"
+    kol.js: "npm:^0.14.0"
     kysely: "npm:^0.28.16"
     kysely-ctl: "npm:^0.20.0"
     next-themes: "npm:^0.4.6"
