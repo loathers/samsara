@@ -60,6 +60,7 @@ const columns = [
             lifestyle={info.row.original.lifestyle}
             path={info.getValue()}
             shorten="symbols"
+            extra={info.row.original.extra}
           />
         ),
         sortingFn: (a, b) =>

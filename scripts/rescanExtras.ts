@@ -25,6 +25,7 @@ async function main() {
       or([
         and([eb("pathName", "=", "Grey Goo"), eb(sql`"extra"->>'Goo Score'`, "is", null)]),
         and([eb("pathName", "=", "One Crazy Random Summer"), eb(sql`"extra"->>'Fun'`, "is", null)]),
+        and([eb("pathName", "=", "Blue vs. Red"), eb(sql`"extra"->>'Team'`, "is", null)]),
       ]),
     )
     .execute();
@@ -35,7 +36,9 @@ async function main() {
       const relevant = ascensions.filter(
         (a) =>
           isObject(a.extra) &&
-          (a.pathName === "Grey Goo" || a.pathName === "One Crazy Random Summer"),
+          (a.pathName === "Grey Goo" ||
+            a.pathName === "One Crazy Random Summer" ||
+            a.pathName === "Blue vs. Red"),
       );
 
       await db.transaction().execute(async (trx) => {

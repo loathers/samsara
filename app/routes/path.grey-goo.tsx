@@ -7,7 +7,6 @@ import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem"
 import { PathHeader } from "~/components/PathHeader";
 import { findPathWithClasses } from "~/db.server";
 import { getPathData } from "~/path.server";
-import { getExtra } from "~/utils";
 
 export const loader = async () => {
   const path = await findPathWithClasses({ slug: "grey-goo" });
@@ -26,8 +25,6 @@ export const meta = () => {
     },
   ];
 };
-
-const getGooScore = getExtra("Goo Score");
 
 export default function GreyGooPath() {
   const {
@@ -63,12 +60,12 @@ export default function GreyGooPath() {
           <Leaderboard
             title="Softcore Leaderboard"
             ascensions={scSpecialLeaderboard}
-            alternativeScore={["Goo", getGooScore]}
+            alternativeScore={["Goo", "Goo Score"]}
           />
           <Leaderboard
             title="Hardcore Leaderboard"
             ascensions={hcSpecialLeaderboard}
-            alternativeScore={["Goo", getGooScore]}
+            alternativeScore={["Goo", "Goo Score"]}
           />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
@@ -79,12 +76,12 @@ export default function GreyGooPath() {
           <Leaderboard
             title="Softcore Leaderboard"
             ascensions={scSpecialPyrite}
-            alternativeScore={["Goo", getGooScore]}
+            alternativeScore={["Goo", "Goo Score"]}
           />
           <Leaderboard
             title="Hardcore Leaderboard"
             ascensions={hcSpecialPyrite}
-            alternativeScore={["Goo", getGooScore]}
+            alternativeScore={["Goo", "Goo Score"]}
           />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem

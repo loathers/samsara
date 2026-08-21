@@ -8,7 +8,6 @@ import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem"
 import { PathHeader } from "~/components/PathHeader";
 import { findPathWithClasses } from "~/db.server";
 import { getPathData } from "~/path.server";
-import { getExtra } from "~/utils";
 
 export const loader = async () => {
   const slug = "one-crazy-random-summer";
@@ -29,8 +28,6 @@ export const meta = () => {
     },
   ];
 };
-
-const getFunScore = getExtra("Fun");
 
 export default function OCRSPath() {
   const {
@@ -77,12 +74,12 @@ export default function OCRSPath() {
           <Leaderboard
             title="Softcore Leaderboard"
             ascensions={scSpecialLeaderboard}
-            alternativeScore={["Fun", getFunScore]}
+            alternativeScore={["Fun", "Fun"]}
           />
           <Leaderboard
             title="Hardcore Leaderboard"
             ascensions={hcSpecialLeaderboard}
-            alternativeScore={["Fun", getFunScore]}
+            alternativeScore={["Fun", "Fun"]}
           />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
@@ -93,12 +90,12 @@ export default function OCRSPath() {
           <Leaderboard
             title="Softcore Leaderboard"
             ascensions={scLeaderboard}
-            alternativeScore={["Fun", getFunScore]}
+            alternativeScore={["Fun", "Fun"]}
           />
           <Leaderboard
             title="Hardcore Leaderboard"
             ascensions={hcLeaderboard}
-            alternativeScore={["Fun", getFunScore]}
+            alternativeScore={["Fun", "Fun"]}
           />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
@@ -109,12 +106,12 @@ export default function OCRSPath() {
           <Leaderboard
             title="Softcore Pyrites"
             ascensions={scSpecialPyrite}
-            alternativeScore={["Fun", getFunScore]}
+            alternativeScore={["Fun", "Fun"]}
           />
           <Leaderboard
             title="Hardcore Pyrites"
             ascensions={hcSpecialPyrite}
-            alternativeScore={["Fun", getFunScore]}
+            alternativeScore={["Fun", "Fun"]}
           />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
@@ -125,12 +122,12 @@ export default function OCRSPath() {
           <Leaderboard
             title="Softcore Pyrites"
             ascensions={scPyrite}
-            alternativeScore={["Fun", getFunScore]}
+            alternativeScore={["Fun", "Fun"]}
           />
           <Leaderboard
             title="Hardcore Pyrites"
             ascensions={hcPyrite}
-            alternativeScore={["Fun", getFunScore]}
+            alternativeScore={["Fun", "Fun"]}
           />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem

@@ -6,17 +6,20 @@ import { PlayerLink } from "~/components/PlayerLink";
 import { ResponsiveContent } from "~/components/ResponsiveContent";
 import { Turncount } from "~/components/Turncount";
 import { LeaderboardEntry } from "~/db.server";
-import { awardBg, numberFormatter } from "~/utils";
+import {
+  awardBg,
+  formatExtraValue,
+  getExtra,
+  getExtraEntries,
+  numberFormatter,
+} from "~/utils";
 
 type Props = {
   title?: string;
   ascensions: LeaderboardEntry[];
   showClass?: boolean;
   ranked?: boolean;
-  alternativeScore?: [
-    title: string,
-    renderer: (ascension: LeaderboardEntry) => number,
-  ];
+  alternativeScore?: [title: string, key: string];
 };
 
 export function Leaderboard({
@@ -26,6 +29,16 @@ export function Leaderboard({
   ranked = true,
   alternativeScore,
 }: Props) {
+  const entries = ascensions.map((asc) =>
+    getExtraEntries(asc.extra, alternativeScore ? [alternativeScore[1]] : []),
+  );
+  const keys = [...new Set(entries.flat().map(([key]) => key))];
+  const extras = entries.map((e) =>
+    keys.length === 1
+      ? e.map(([, value]) => formatExtraValue(value)).join(", ")
+      : e.map(([key, value]) => `${key}: ${formatExtraValue(value)}`).join(", "),
+  );
+
   return (
     <Container>
       {title && (
@@ -42,6 +55,11 @@ export function Leaderboard({
               <Table.ColumnHeader>Date</Table.ColumnHeader>
               {alternativeScore && (
                 <Table.ColumnHeader>{alternativeScore[0]}</Table.ColumnHeader>
+              )}
+              {keys.length > 0 && (
+                <Table.ColumnHeader>
+                  {keys.length === 1 ? keys[0] : "Extra"}
+                </Table.ColumnHeader>
               )}
               <Table.ColumnHeader>
                 <ResponsiveContent narrow="D / T" wide="Days / Turns" />
@@ -68,9 +86,10 @@ export function Leaderboard({
                 </Table.Cell>
                 {alternativeScore && (
                   <Table.Cell>
-                    {numberFormatter.format(alternativeScore[1](asc))}
+                    {numberFormatter.format(getExtra(alternativeScore[1])(asc))}
                   </Table.Cell>
                 )}
+                {keys.length > 0 && <Table.Cell>{extras[i]}</Table.Cell>}
                 <Table.Cell>
                   <Turncount days={asc.days} turns={asc.turns} />
                 </Table.Cell>
