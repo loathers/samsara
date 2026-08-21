@@ -17,6 +17,9 @@ async function main() {
     return;
   }
 
+  console.time("etl");
+  console.timeLog("etl", "Begin");
+
   const needRechecked = await db
     .selectFrom("Ascension")
     .select("playerId")
@@ -57,6 +60,9 @@ async function main() {
       return relevant.length;
     },
   });
+
+  console.timeLog("etl", "Done");
+  console.timeEnd("etl");
 }
 
 main();
