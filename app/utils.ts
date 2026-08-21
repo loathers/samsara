@@ -77,6 +77,20 @@ export const getExtra = (key: string) => (a: { extra: JsonValue }) => {
   return Number(a.extra[key] ?? 0);
 };
 
+export const getExtraEntries = (extra: JsonValue, omit: string[] = []) => {
+  const run = { extra };
+  if (!hasExtra(run)) return [];
+  return Object.entries(run.extra).filter(([key]) => !omit.includes(key));
+};
+
+export const formatExtraValue = (value: JsonValue) =>
+  typeof value === "number" ? numberFormatter.format(value) : String(value);
+
+export const formatExtra = (extra: JsonValue, omit: string[] = []) =>
+  getExtraEntries(extra, omit)
+    .map(([key, value]) => `${key}: ${formatExtraValue(value)}`)
+    .join(", ");
+
 export function awardBg(rank: number, [gold, silver, bronze] = [1, 12, 35]) {
   if (rank <= gold) return "goldmedal";
   if (rank <= silver) return "silvermedal";

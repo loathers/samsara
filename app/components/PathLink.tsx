@@ -1,19 +1,21 @@
 import { HStack, Link } from "@chakra-ui/react";
-import { Lifestyle as LifestyleEnum } from "~/db";
+import { JsonValue, Lifestyle as LifestyleEnum } from "~/db";
 import { Link as RRLink } from "react-router";
 
 import { Lifestyle, formatLifestyle } from "~/components/Lifestyle";
 import { Path } from "~/components/Path";
-import { ShortenStyle, formatPathName } from "~/utils";
+import { ShortenStyle, formatExtra, formatPathName } from "~/utils";
 
 type Props = {
   lifestyle?: LifestyleEnum;
   path: { slug: string; name: string; image: string | null };
   shorten?: ShortenStyle;
+  extra?: JsonValue;
 };
 
-export function PathLink({ lifestyle, path, shorten }: Props) {
-  const title = `${lifestyle ? `${formatLifestyle(lifestyle)} ` : ""}${formatPathName(path)}`;
+export function PathLink({ lifestyle, path, shorten, extra }: Props) {
+  const formattedExtra = extra === undefined ? "" : formatExtra(extra);
+  const title = `${lifestyle ? `${formatLifestyle(lifestyle)} ` : ""}${formatPathName(path)}${formattedExtra && ` (${formattedExtra})`}`;
 
   const child = (
     <>
