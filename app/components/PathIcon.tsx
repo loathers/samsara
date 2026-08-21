@@ -2,6 +2,7 @@ import { KoLImage } from "~/components/KoLImage";
 
 type Props = {
   path: { name: string; image: string | null };
+  title?: string;
 };
 
 function formatImage(path: Props["path"]) {
@@ -11,8 +12,10 @@ function formatImage(path: Props["path"]) {
   return path.image;
 }
 
-export function PathIcon({ path }: Props) {
+export function PathIcon({ path, title }: Props) {
   const image = formatImage(path);
 
-  return <KoLImage src={`itemimages/${image}.gif`} alt={path.name} />;
+  return (
+    <KoLImage src={`itemimages/${image}.gif`} alt={path.name} title={title} />
+  );
 }

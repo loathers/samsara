@@ -20,7 +20,7 @@ export function PathLink({ lifestyle, path, shorten, extra }: Props) {
   const child = (
     <>
       {lifestyle && <Lifestyle lifestyle={lifestyle} shorten={shorten} />}
-      <Path path={path} shorten={shorten} />
+      <Path path={path} shorten={shorten} title={title} />
     </>
   );
 

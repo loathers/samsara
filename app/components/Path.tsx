@@ -6,24 +6,25 @@ import { ShortenStyle, formatPathName, getPathAcronym } from "~/utils";
 type Props = {
   path: { name: string; image: string | null };
   shorten?: ShortenStyle;
+  title?: string;
 };
 
-export function Path({ path, shorten }: Props) {
+export function Path({ path, shorten, title }: Props) {
   const name = formatPathName(path);
 
   switch (shorten) {
     case "acronyms":
       return (
-        <Text as="span" title={name}>
+        <Text as="span" title={title ?? name}>
           {getPathAcronym(name)}
         </Text>
       );
     case "symbols":
-      return <PathIcon path={path} />;
+      return <PathIcon path={path} title={title} />;
     case "full-symbols":
       return (
         <>
-          <PathIcon path={path} />
+          <PathIcon path={path} title={title} />
           {name}
         </>
       );
