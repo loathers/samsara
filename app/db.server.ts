@@ -536,6 +536,12 @@ export const CLASS_COMPARISON_RANK_CUTOFF = 30;
 
 const CLASS_COMPARISON_LIFESTYLES = [Lifestyle.SOFTCORE, Lifestyle.HARDCORE];
 
+/**
+ * Distinct classes a player must have run that season: the one being measured plus at least
+ * three others. Someone who only ever picked the default has no opinion worth averaging.
+ */
+const MIN_CLASSES_PER_PLAYER = 4;
+
 export type ClassComparisonRow = Awaited<
   ReturnType<typeof getClassComparison>
 >[number];
@@ -639,7 +645,14 @@ export async function getClassComparison({
         RANK() OVER (PARTITION BY "year", "lifestyle", "playerId", "className"
                      ORDER BY "days", "turns") AS "rankClass",
         COUNT(*) OVER (PARTITION BY "year", "lifestyle", "playerId", "className",
-                                    "days", "turns") AS "tiesClass"
+                                    "days", "turns") AS "tiesClass",
+        -- COUNT(DISTINCT) is not a window function; ranking the class name from both ends
+        -- and adding counts the distinct values in the partition.
+        DENSE_RANK() OVER (PARTITION BY "year", "lifestyle", "playerId"
+                           ORDER BY "className")
+          + DENSE_RANK() OVER (PARTITION BY "year", "lifestyle", "playerId"
+                               ORDER BY "className" DESC)
+          - 1 AS "classesPlayed"
       FROM "playerRuns"
       WINDOW
         w AS (PARTITION BY "year", "lifestyle", "playerId"),
@@ -653,6 +666,7 @@ export async function getClassComparison({
           - ("cntClass" - ("rankClass" - 1) - "tiesClass") AS "beats",
         "tiesAll" - "tiesClass" AS "draws"
       FROM "ranked"
+      WHERE "classesPlayed" >= ${MIN_CLASSES_PER_PLAYER}
     ),
     "winRate" AS (
       SELECT
