@@ -8,17 +8,26 @@ import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
 import { findPathWithClasses } from "~/db.server";
-import { getPastStandardLeaderboards, getPathData } from "~/path.server";
+import {
+  getClassComparisonByYear,
+  getPastStandardLeaderboards,
+  getPathData,
+} from "~/path.server";
 
 export const loader = async () => {
   const path = await findPathWithClasses({ slug: "standard" });
 
   if (!path) throw data({ message: "Invalid path name" }, { status: 400 });
 
-  return {
-    ...(await getPathData(path)),
-    years: await getPastStandardLeaderboards(path),
-  };
+  const [pathData, years, classComparison] = await Promise.all([
+    getPathData(path),
+    getPastStandardLeaderboards(path),
+    getClassComparisonByYear(path),
+  ]);
+
+  // Resolved on the server so the in-progress season cannot disagree with the loader's data
+  // if the client happens to sit either side of a new year.
+  return { ...pathData, years, classComparison, currentYear: new Date().getFullYear() };
 };
 
 export const meta = () => {
@@ -46,6 +55,8 @@ export default function PathPage() {
     scRecent,
     years,
     totalRuns,
+    classComparison,
+    currentYear,
   } = useLoaderData<typeof loader>();
 
   const yearBoards = useMemo(
@@ -54,6 +65,7 @@ export default function PathPage() {
         .sort(([a], [b]) => Number(b) - Number(a))
         .map(([year, { softcore, hardcore }]) => (
           <LeaderboardAccordionItem
+            key={year}
             title={`${year} Leaderboards`}
             slug={year}
             description="The official leaderboards frozen from the end of the year"
@@ -62,15 +74,17 @@ export default function PathPage() {
               title="Softcore Leaderboard"
               ascensions={softcore}
               showClass
+              classComparison={classComparison[Number(year)]?.softcore}
             />
             <Leaderboard
               title="Hardcore Leaderboard"
               ascensions={hardcore}
               showClass
+              classComparison={classComparison[Number(year)]?.hardcore}
             />
           </LeaderboardAccordionItem>
         )),
-    [years],
+    [years, classComparison],
   );
 
   return (
@@ -90,11 +104,13 @@ export default function PathPage() {
             title="Softcore Leaderboard"
             ascensions={scLeaderboard}
             showClass
+            classComparison={classComparison[currentYear]?.softcore}
           />
           <Leaderboard
             title="Hardcore Leaderboard"
             ascensions={hcLeaderboard}
             showClass
+            classComparison={classComparison[currentYear]?.hardcore}
           />
         </LeaderboardAccordionItem>
         {yearBoards}

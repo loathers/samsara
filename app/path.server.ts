@@ -1,7 +1,9 @@
 import { Class, Lifestyle, Path, TagType } from "./db";
 
 import {
+  ClassComparisonRow,
   countAscensions,
+  getClassComparison,
   getDedication,
   getFrequency,
   getLeaderboard,
@@ -128,4 +130,32 @@ export async function getPastStandardLeaderboards(
       }),
     ),
   );
+}
+
+export type ClassComparisonYear = {
+  softcore: ClassComparisonRow[];
+  hardcore: ClassComparisonRow[];
+};
+
+/**
+ * Every season and lifestyle at once, grouped for rendering. Two queries because finished
+ * seasons are tagged STANDARD per year, while the season in progress only holds LEADERBOARD
+ * tags, which carry no year of their own.
+ */
+export async function getClassComparisonByYear(path: Path) {
+  const [past, current] = await Promise.all([
+    getClassComparison({ path }),
+    getClassComparison({
+      path,
+      tagType: TagType.LEADERBOARD,
+      year: new Date().getFullYear(),
+    }),
+  ]);
+
+  return [...past, ...current].reduce<Record<number, ClassComparisonYear>>((acc, row) => {
+    const year = (acc[row.year] ??= { softcore: [], hardcore: [] });
+    if (row.lifestyle === Lifestyle.SOFTCORE) year.softcore.push(row);
+    if (row.lifestyle === Lifestyle.HARDCORE) year.hardcore.push(row);
+    return acc;
+  }, {});
 }

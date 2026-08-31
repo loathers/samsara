@@ -2,7 +2,8 @@ import pg from "pg";
 import { Kysely, PostgresDialect, sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { Database, JsonValue, Lifestyle, Path, TagType } from "./db";
+import type { Database, JsonValue, Path } from "./db";
+import { Lifestyle, TagType } from "./db";
 import { NS13 } from "./utils";
 
 declare global {
@@ -528,6 +529,186 @@ export async function getLongestRun(
     date: row.date,
     player: { id: row.pId, name: row.playerName },
   };
+}
+
+/** Leaderboard rank a player must reach to count. The tagger only records ranks up to 35. */
+export const CLASS_COMPARISON_RANK_CUTOFF = 30;
+
+const CLASS_COMPARISON_LIFESTYLES = [Lifestyle.SOFTCORE, Lifestyle.HARDCORE];
+
+export type ClassComparisonRow = Awaited<
+  ReturnType<typeof getClassComparison>
+>[number];
+
+/**
+ * How each class fares against the same players' runs in their other classes.
+ *
+ * Runs are only ever compared the way a player compares them: days first, then turns. Most
+ * runs in a season share a daycount, so a mean daycount says almost nothing; instead every
+ * run is scored against the player's other-class runs pairwise, and `winRate` is the share it
+ * beats. `turnDelta` then puts a number on the turn saving, measured only among runs at that
+ * player's own best daycount, since turns are only comparable at a fixed number of days.
+ *
+ * Averaging within a player before averaging across them keeps the grinders from carrying the
+ * whole number. Players who only ever ran one class have nothing to compare and drop out.
+ *
+ * Pass a `year` for tag types that do not carry one. STANDARD is written per-year and covers
+ * finished seasons; the season in progress is only ever tagged LEADERBOARD, with a null year.
+ */
+export async function getClassComparison({
+  path,
+  cutoff = CLASS_COMPARISON_RANK_CUTOFF,
+  tagType = TagType.STANDARD,
+  year,
+}: {
+  path: { name: string };
+  cutoff?: number;
+  tagType?: TagType;
+  year?: number;
+}) {
+  const lifestyles = sql.join(
+    CLASS_COMPARISON_LIFESTYLES.map((l) => sql`${sql.literal(l)}::"Lifestyle"`),
+  );
+
+  const season = year === undefined ? sql`"Tag"."year"` : sql`${year}::integer`;
+
+  const result = await sql<{
+    year: number;
+    lifestyle: Lifestyle;
+    className: string;
+    classImage: string | null;
+    classId: number | null;
+    winRate: number;
+    turnDelta: number | null;
+    runs: number;
+    players: number;
+  }>`
+    WITH "qualifying" AS (
+      SELECT DISTINCT
+        ${season} AS "year",
+        "Ascension"."lifestyle" AS "lifestyle",
+        "Ascension"."playerId" AS "playerId"
+      FROM "Tag"
+      JOIN "Ascension"
+        ON "Ascension"."ascensionNumber" = "Tag"."ascensionNumber"
+        AND "Ascension"."playerId" = "Tag"."playerId"
+      WHERE
+        "Tag"."type" = ${sql.literal(tagType)}::"TagType" AND
+        ${year === undefined ? sql`"Tag"."year" IS NOT NULL AND` : sql``}
+        "Tag"."value" <= ${cutoff} AND
+        "Ascension"."pathName" = ${path.name} AND
+        "Ascension"."lifestyle" IN (${lifestyles})
+    ),
+    -- Every run by a qualifying player that season, tagged or not.
+    "playerRuns" AS (
+      SELECT
+        "qualifying"."year" AS "year",
+        "qualifying"."lifestyle" AS "lifestyle",
+        "qualifying"."playerId" AS "playerId",
+        "Ascension"."className" AS "className",
+        "Ascension"."days" AS "days",
+        "Ascension"."turns" AS "turns"
+      FROM "qualifying"
+      JOIN "Ascension"
+        ON "Ascension"."playerId" = "qualifying"."playerId"
+        AND "Ascension"."lifestyle" = "qualifying"."lifestyle"
+        AND "Ascension"."date" >= MAKE_DATE("qualifying"."year", 1, 1)
+        AND "Ascension"."date" < MAKE_DATE("qualifying"."year" + 1, 1, 1)
+      WHERE
+        "Ascension"."pathName" = ${path.name} AND
+        "Ascension"."dropped" IS FALSE AND
+        "Ascension"."abandoned" IS FALSE AND
+        -- Started in season too, not just ended in it, or a dormant run skews everything.
+        -- Day 1 is the start day, so an N-day run ending on D began on D - (N - 1).
+        "Ascension"."date" - (("Ascension"."days" - 1) * INTERVAL '1 day')
+          >= MAKE_DATE("qualifying"."year", 1, 1)
+    ),
+    -- Ranking by (days, turns) twice — once over all the player's runs, once within the
+    -- class — lets us count how many other-class runs each run beats without a self join,
+    -- which the planner cannot cost properly and turns into a rescan per row.
+    "ranked" AS (
+      SELECT
+        "year", "lifestyle", "playerId", "className", "days", "turns",
+        MIN("days") OVER w AS "bestDays",
+        COUNT(*) OVER w AS "cntAll",
+        RANK() OVER (PARTITION BY "year", "lifestyle", "playerId"
+                     ORDER BY "days", "turns") AS "rankAll",
+        COUNT(*) OVER (PARTITION BY "year", "lifestyle", "playerId",
+                                    "days", "turns") AS "tiesAll",
+        COUNT(*) OVER wc AS "cntClass",
+        RANK() OVER (PARTITION BY "year", "lifestyle", "playerId", "className"
+                     ORDER BY "days", "turns") AS "rankClass",
+        COUNT(*) OVER (PARTITION BY "year", "lifestyle", "playerId", "className",
+                                    "days", "turns") AS "tiesClass"
+      FROM "playerRuns"
+      WINDOW
+        w AS (PARTITION BY "year", "lifestyle", "playerId"),
+        wc AS (PARTITION BY "year", "lifestyle", "playerId", "className")
+    ),
+    "perRun" AS (
+      SELECT
+        "year", "lifestyle", "playerId", "className", "days", "turns", "bestDays",
+        "cntAll" - "cntClass" AS "others",
+        ("cntAll" - ("rankAll" - 1) - "tiesAll")
+          - ("cntClass" - ("rankClass" - 1) - "tiesClass") AS "beats",
+        "tiesAll" - "tiesClass" AS "draws"
+      FROM "ranked"
+    ),
+    "winRate" AS (
+      SELECT
+        "year", "lifestyle", "playerId", "className",
+        AVG(("beats" + 0.5 * "draws") / "others") AS "winRate",
+        COUNT(*) AS "runs"
+      FROM "perRun"
+      WHERE "others" > 0
+      GROUP BY "year", "lifestyle", "playerId", "className"
+    ),
+    -- Turns only mean anything at a fixed daycount, so compare within the player's best.
+    "atBestDay" AS (
+      SELECT
+        "year", "lifestyle", "playerId", "className",
+        SUM("turns"::float) OVER wc AS "classTurns",
+        COUNT(*) OVER wc AS "classN",
+        SUM("turns"::float) OVER w AS "allTurns",
+        COUNT(*) OVER w AS "allN"
+      FROM "perRun"
+      WHERE "days" = "bestDays" AND "others" > 0
+      WINDOW
+        w AS (PARTITION BY "year", "lifestyle", "playerId"),
+        wc AS (PARTITION BY "year", "lifestyle", "playerId", "className")
+    ),
+    "turnsVsOthers" AS (
+      SELECT DISTINCT
+        "year", "lifestyle", "playerId", "className",
+        "classTurns" / "classN"
+          - ("allTurns" - "classTurns") / NULLIF("allN" - "classN", 0) AS "turnDelta"
+      FROM "atBestDay"
+    )
+    SELECT
+      "winRate"."year"::integer AS "year",
+      "winRate"."lifestyle" AS "lifestyle",
+      "winRate"."className" AS "className",
+      "Class"."image" AS "classImage",
+      "Class"."id" AS "classId",
+      AVG("winRate"."winRate")::float AS "winRate",
+      AVG("turnsVsOthers"."turnDelta")::float AS "turnDelta",
+      SUM("winRate"."runs")::integer AS "runs",
+      COUNT(*)::integer AS "players"
+    FROM "winRate"
+    LEFT JOIN "turnsVsOthers"
+      ON "turnsVsOthers"."year" = "winRate"."year"
+     AND "turnsVsOthers"."lifestyle" = "winRate"."lifestyle"
+     AND "turnsVsOthers"."playerId" = "winRate"."playerId"
+     AND "turnsVsOthers"."className" = "winRate"."className"
+    LEFT JOIN "Class" ON "Class"."name" = "winRate"."className"
+    GROUP BY
+      "winRate"."year", "winRate"."lifestyle", "winRate"."className",
+      "Class"."image", "Class"."id"
+    -- Class id is the canonical in-game class order.
+    ORDER BY "year" DESC, "lifestyle" ASC, "Class"."id" ASC NULLS LAST
+  `.execute(kysely);
+
+  return result.rows;
 }
 
 // ── Player queries ──────────────────────────────────────────────────────────

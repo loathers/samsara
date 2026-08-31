@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { formatExtra, getExtraEntries, getPathAcronym } from "./utils";
+import {
+  classComparisonDomain,
+  formatClassComparison,
+  formatExtra,
+  getExtraEntries,
+  getPathAcronym,
+} from "./utils";
 
 describe("getPathAcronym", () => {
   it.each([
@@ -57,5 +63,63 @@ describe("getExtraEntries", () => {
 
   it.each([[{}], [null], [[1, 2]]])("returns nothing for %s", (extra) => {
     expect(getExtraEntries(extra)).toEqual([]);
+  });
+});
+
+describe("formatClassComparison", () => {
+  const row = {
+    winRate: 0.5,
+    turnDelta: 0,
+    year: 2026,
+    lifestyle: "SOFTCORE",
+  };
+
+  it("reports the share of runs beaten", () => {
+    expect(formatClassComparison({ ...row, winRate: 0.575 }).headline).toBe(
+      "Beats 58% of the same players' other 2026 softcore runs, comparing days then turns",
+    );
+  });
+
+  it("calls a near-even split even", () => {
+    expect(formatClassComparison({ ...row, winRate: 0.503 }).headline).toBe(
+      "An even match for the same players' other 2026 softcore runs, comparing days then turns",
+    );
+  });
+
+  it("names the season it compares against", () => {
+    expect(
+      formatClassComparison({ ...row, year: 2019, lifestyle: "HARDCORE" })
+        .headline,
+    ).toContain("other 2019 hardcore runs");
+  });
+
+  it("reports the turn saving at the best daycount", () => {
+    expect(formatClassComparison({ ...row, turnDelta: -12.4 }).detail).toBe(
+      "12 fewer turns on average, at best daycount per player",
+    );
+  });
+
+  it("reports a turn cost the same way", () => {
+    expect(formatClassComparison({ ...row, turnDelta: 12.4 }).detail).toBe(
+      "12 more turns on average, at best daycount per player",
+    );
+  });
+
+  it("says so when no daycount was shared", () => {
+    expect(formatClassComparison({ ...row, turnDelta: null }).detail).toBe(
+      "No runs at a shared daycount to compare turns",
+    );
+  });
+});
+
+describe("classComparisonDomain", () => {
+  it("is symmetric about an even split", () => {
+    expect(
+      classComparisonDomain([{ winRate: 0.32 }, { winRate: 0.55 }]),
+    ).toEqual([0.3, 0.7]);
+  });
+
+  it("keeps a minimum width when every class is level", () => {
+    expect(classComparisonDomain([{ winRate: 0.5 }])).toEqual([0.45, 0.55]);
   });
 });
