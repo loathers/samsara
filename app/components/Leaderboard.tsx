@@ -2,11 +2,10 @@ import { Container, Heading, Table } from "@chakra-ui/react";
 
 import { AscensionDate } from "~/components/AscensionDate";
 import { Class } from "~/components/Class";
-import { ClassComparisonChart } from "~/components/ClassComparisonChart/ClassComparisonChart";
 import { PlayerLink } from "~/components/PlayerLink";
 import { ResponsiveContent } from "~/components/ResponsiveContent";
 import { Turncount } from "~/components/Turncount";
-import type { ClassComparisonRow, LeaderboardEntry } from "~/db.server";
+import type { LeaderboardEntry } from "~/db.server";
 import {
   awardBg,
   formatExtraValue,
@@ -21,8 +20,7 @@ type Props = {
   showClass?: boolean;
   ranked?: boolean;
   alternativeScore?: [title: string, key: string];
-  /** Drawn beneath the table. Undefined means never queried; empty means nobody qualified. */
-  classComparison?: ClassComparisonRow[];
+  children?: React.ReactNode;
 };
 
 export function Leaderboard({
@@ -31,7 +29,7 @@ export function Leaderboard({
   showClass = true,
   ranked = true,
   alternativeScore,
-  classComparison,
+  children,
 }: Props) {
   const entries = ascensions.map((asc) =>
     getExtraEntries(asc.extra, alternativeScore ? [alternativeScore[1]] : []),
@@ -109,9 +107,7 @@ export function Leaderboard({
           </Table.Body>
         </Table.Root>
       </Table.ScrollArea>
-      {classComparison && (
-        <ClassComparisonChart title="Class Performance" data={classComparison} />
-      )}
+      {children}
     </Container>
   );
 }

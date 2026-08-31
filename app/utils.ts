@@ -1,4 +1,4 @@
-import { JsonValue } from "~/db";
+import { JsonValue, Lifestyle } from "~/db";
 
 export type ShortenStyle = null | "acronyms" | "symbols" | "full-symbols";
 
@@ -96,7 +96,6 @@ export const percentFormatter = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 0,
 });
 
-/** Within this of an even split the class is not pulling either way. */
 const NEGLIGIBLE_WIN_RATE = 0.01;
 
 const NEGLIGIBLE_TURNS = 0.5;
@@ -105,13 +104,9 @@ type ClassComparisonSummary = {
   winRate: number;
   turnDelta: number | null;
   year: number;
-  lifestyle: string;
+  lifestyle: Lifestyle;
 };
 
-/**
- * The tooltip is the only place the class comparison explains itself, so it names the group
- * being compared against and says how the runs were ranked.
- */
 export function formatClassComparison(row: ClassComparisonSummary) {
   const against = `the same players' other ${row.year} ${row.lifestyle.toLowerCase()} runs`;
 
@@ -132,19 +127,15 @@ export function formatClassComparison(row: ClassComparisonSummary) {
   return { headline, detail };
 }
 
-/** Symmetric about an even split, so the halfway line sits down the middle. */
-export function classComparisonDomain(data: { winRate: number }[]) {
-  const spread = Math.max(0.05, ...data.map((d) => Math.abs(d.winRate - 0.5)));
-  const rounded = Math.ceil(spread * 20) / 20;
-  return [0.5 - rounded, 0.5 + rounded] as [number, number];
-}
-
 export function awardBg(rank: number, [gold, silver, bronze] = [1, 12, 35]) {
   if (rank <= gold) return "goldmedal";
   if (rank <= silver) return "silvermedal";
   if (rank <= bronze) return "transparent";
   return "transparent";
 }
+
+/** The class being measured plus at least three others. */
+export const MIN_CLASSES_PER_PLAYER = 4;
 
 export const NS13 = new Date("2007-06-25T00:00:00Z");
 export const STANDARD = 2015;

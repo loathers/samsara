@@ -1,5 +1,7 @@
 import { Image } from "@chakra-ui/react";
 
+export const KOL_IMAGE_BASE = "https://s3.amazonaws.com/images.kingdomofloathing.com";
+
 export function KoLImage({
   src,
   alt,
@@ -11,7 +13,7 @@ export function KoLImage({
 }) {
   return (
     <Image
-      src={`https://s3.amazonaws.com/images.kingdomofloathing.com/${src}`}
+      src={`${KOL_IMAGE_BASE}/${src}`}
       filter={{ _dark: "invert(1)" }}
       alt={alt}
       title={title ?? alt}

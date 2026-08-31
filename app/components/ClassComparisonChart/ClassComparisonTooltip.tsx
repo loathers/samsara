@@ -8,7 +8,6 @@ type Props = {
   payload?: { payload: ClassComparisonRow }[];
 };
 
-/** Full control of the markup, rather than recharts' default name/value item list. */
 export function ClassComparisonTooltip({ active, payload }: Props) {
   const row = payload?.[0]?.payload;
   if (!active || !row) return null;

@@ -138,24 +138,25 @@ export type ClassComparisonYear = {
 };
 
 /**
- * Every season and lifestyle at once, grouped for rendering. Two queries because finished
- * seasons are tagged STANDARD per year, while the season in progress only holds LEADERBOARD
- * tags, which carry no year of their own.
+ * Finished seasons are tagged STANDARD per year; the season in progress only holds
+ * LEADERBOARD tags, which carry no year of their own.
  */
-export async function getClassComparisonByYear(path: Path) {
+export async function getStandardClassComparison(path: Path) {
+  const currentYear = new Date().getFullYear();
+
   const [past, current] = await Promise.all([
     getClassComparison({ path }),
-    getClassComparison({
-      path,
-      tagType: TagType.LEADERBOARD,
-      year: new Date().getFullYear(),
-    }),
+    getClassComparison({ path, tagType: TagType.LEADERBOARD, year: currentYear }),
   ]);
 
-  return [...past, ...current].reduce<Record<number, ClassComparisonYear>>((acc, row) => {
-    const year = (acc[row.year] ??= { softcore: [], hardcore: [] });
-    if (row.lifestyle === Lifestyle.SOFTCORE) year.softcore.push(row);
-    if (row.lifestyle === Lifestyle.HARDCORE) year.hardcore.push(row);
-    return acc;
-  }, {});
+  const byYear = [...past, ...current].reduce<Record<number, ClassComparisonYear>>(
+    (acc, row) => {
+      const year = (acc[row.year] ??= { softcore: [], hardcore: [] });
+      year[row.lifestyle === Lifestyle.SOFTCORE ? "softcore" : "hardcore"].push(row);
+      return acc;
+    },
+    {},
+  );
+
+  return { byYear, currentYear };
 }

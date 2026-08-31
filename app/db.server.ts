@@ -4,7 +4,7 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { Database, JsonValue, Path } from "./db";
 import { Lifestyle, TagType } from "./db";
-import { NS13 } from "./utils";
+import { MIN_CLASSES_PER_PLAYER, NS13 } from "./utils";
 
 declare global {
   var globalKysely: Kysely<Database>;
@@ -531,44 +531,34 @@ export async function getLongestRun(
   };
 }
 
-/** Leaderboard rank a player must reach to count. The tagger only records ranks up to 35. */
+/** The tagger only records ranks up to 35. */
 export const CLASS_COMPARISON_RANK_CUTOFF = 30;
 
 const CLASS_COMPARISON_LIFESTYLES = [Lifestyle.SOFTCORE, Lifestyle.HARDCORE];
 
-/**
- * Distinct classes a player must have run that season: the one being measured plus at least
- * three others. Someone who only ever picked the default has no opinion worth averaging.
- */
-const MIN_CLASSES_PER_PLAYER = 4;
+export type ClassComparisonRow = {
+  year: number;
+  lifestyle: Lifestyle;
+  className: string;
+  classImage: string | null;
+  winRate: number;
+  turnDelta: number | null;
+};
 
-export type ClassComparisonRow = Awaited<
-  ReturnType<typeof getClassComparison>
->[number];
-
 /**
- * How each class fares against the same players' runs in their other classes.
+ * Most runs in a season share a daycount, so a mean daycount says almost nothing. Every run is
+ * instead scored pairwise against the player's other-class runs, days before turns, and
+ * `winRate` is the share it beats. Averaging within a player before averaging across them
+ * keeps the grinders from carrying the whole number.
  *
- * Runs are only ever compared the way a player compares them: days first, then turns. Most
- * runs in a season share a daycount, so a mean daycount says almost nothing; instead every
- * run is scored against the player's other-class runs pairwise, and `winRate` is the share it
- * beats. `turnDelta` then puts a number on the turn saving, measured only among runs at that
- * player's own best daycount, since turns are only comparable at a fixed number of days.
- *
- * Averaging within a player before averaging across them keeps the grinders from carrying the
- * whole number. Players who only ever ran one class have nothing to compare and drop out.
- *
- * Pass a `year` for tag types that do not carry one. STANDARD is written per-year and covers
- * finished seasons; the season in progress is only ever tagged LEADERBOARD, with a null year.
+ * Pass a `year` for tag types that do not carry one: only STANDARD does.
  */
 export async function getClassComparison({
   path,
-  cutoff = CLASS_COMPARISON_RANK_CUTOFF,
   tagType = TagType.STANDARD,
   year,
 }: {
   path: { name: string };
-  cutoff?: number;
   tagType?: TagType;
   year?: number;
 }) {
@@ -578,17 +568,7 @@ export async function getClassComparison({
 
   const season = year === undefined ? sql`"Tag"."year"` : sql`${year}::integer`;
 
-  const result = await sql<{
-    year: number;
-    lifestyle: Lifestyle;
-    className: string;
-    classImage: string | null;
-    classId: number | null;
-    winRate: number;
-    turnDelta: number | null;
-    runs: number;
-    players: number;
-  }>`
+  const result = await sql<ClassComparisonRow>`
     WITH "qualifying" AS (
       SELECT DISTINCT
         ${season} AS "year",
@@ -601,11 +581,11 @@ export async function getClassComparison({
       WHERE
         "Tag"."type" = ${sql.literal(tagType)}::"TagType" AND
         ${year === undefined ? sql`"Tag"."year" IS NOT NULL AND` : sql``}
-        "Tag"."value" <= ${cutoff} AND
+        "Tag"."value" <= ${CLASS_COMPARISON_RANK_CUTOFF} AND
         "Ascension"."pathName" = ${path.name} AND
         "Ascension"."lifestyle" IN (${lifestyles})
     ),
-    -- Every run by a qualifying player that season, tagged or not.
+    -- Tagged or not, since the tagger keeps only each player's best run.
     "playerRuns" AS (
       SELECT
         "qualifying"."year" AS "year",
@@ -624,14 +604,13 @@ export async function getClassComparison({
         "Ascension"."pathName" = ${path.name} AND
         "Ascension"."dropped" IS FALSE AND
         "Ascension"."abandoned" IS FALSE AND
-        -- Started in season too, not just ended in it, or a dormant run skews everything.
-        -- Day 1 is the start day, so an N-day run ending on D began on D - (N - 1).
+        -- A run left dormant for years would otherwise land in a season it was never
+        -- played in. Day 1 is the start day.
         "Ascension"."date" - (("Ascension"."days" - 1) * INTERVAL '1 day')
           >= MAKE_DATE("qualifying"."year", 1, 1)
     ),
-    -- Ranking by (days, turns) twice — once over all the player's runs, once within the
-    -- class — lets us count how many other-class runs each run beats without a self join,
-    -- which the planner cannot cost properly and turns into a rescan per row.
+    -- Ranking twice counts how many other-class runs each run beats. Measured 4x faster
+    -- than the self join it replaces, which the planner cannot cost and rescans per row.
     "ranked" AS (
       SELECT
         "year", "lifestyle", "playerId", "className", "days", "turns",
@@ -646,8 +625,7 @@ export async function getClassComparison({
                      ORDER BY "days", "turns") AS "rankClass",
         COUNT(*) OVER (PARTITION BY "year", "lifestyle", "playerId", "className",
                                     "days", "turns") AS "tiesClass",
-        -- COUNT(DISTINCT) is not a window function; ranking the class name from both ends
-        -- and adding counts the distinct values in the partition.
+        -- COUNT(DISTINCT) is not a window function; ranking from both ends and adding is.
         DENSE_RANK() OVER (PARTITION BY "year", "lifestyle", "playerId"
                            ORDER BY "className")
           + DENSE_RANK() OVER (PARTITION BY "year", "lifestyle", "playerId"
@@ -671,13 +649,12 @@ export async function getClassComparison({
     "winRate" AS (
       SELECT
         "year", "lifestyle", "playerId", "className",
-        AVG(("beats" + 0.5 * "draws") / "others") AS "winRate",
-        COUNT(*) AS "runs"
+        AVG(("beats" + 0.5 * "draws") / "others") AS "winRate"
       FROM "perRun"
       WHERE "others" > 0
       GROUP BY "year", "lifestyle", "playerId", "className"
     ),
-    -- Turns only mean anything at a fixed daycount, so compare within the player's best.
+    -- Turns only mean anything at a fixed daycount.
     "atBestDay" AS (
       SELECT
         "year", "lifestyle", "playerId", "className",
@@ -703,11 +680,8 @@ export async function getClassComparison({
       "winRate"."lifestyle" AS "lifestyle",
       "winRate"."className" AS "className",
       "Class"."image" AS "classImage",
-      "Class"."id" AS "classId",
       AVG("winRate"."winRate")::float AS "winRate",
-      AVG("turnsVsOthers"."turnDelta")::float AS "turnDelta",
-      SUM("winRate"."runs")::integer AS "runs",
-      COUNT(*)::integer AS "players"
+      AVG("turnsVsOthers"."turnDelta")::float AS "turnDelta"
     FROM "winRate"
     LEFT JOIN "turnsVsOthers"
       ON "turnsVsOthers"."year" = "winRate"."year"

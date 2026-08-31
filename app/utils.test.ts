@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+import { Lifestyle } from "./db";
+
 import {
-  classComparisonDomain,
   formatClassComparison,
   formatExtra,
   getExtraEntries,
@@ -71,7 +72,7 @@ describe("formatClassComparison", () => {
     winRate: 0.5,
     turnDelta: 0,
     year: 2026,
-    lifestyle: "SOFTCORE",
+    lifestyle: Lifestyle.SOFTCORE,
   };
 
   it("reports the share of runs beaten", () => {
@@ -88,7 +89,7 @@ describe("formatClassComparison", () => {
 
   it("names the season it compares against", () => {
     expect(
-      formatClassComparison({ ...row, year: 2019, lifestyle: "HARDCORE" })
+      formatClassComparison({ ...row, year: 2019, lifestyle: Lifestyle.HARDCORE })
         .headline,
     ).toContain("other 2019 hardcore runs");
   });
@@ -109,17 +110,5 @@ describe("formatClassComparison", () => {
     expect(formatClassComparison({ ...row, turnDelta: null }).detail).toBe(
       "No runs at a shared daycount to compare turns",
     );
-  });
-});
-
-describe("classComparisonDomain", () => {
-  it("is symmetric about an even split", () => {
-    expect(
-      classComparisonDomain([{ winRate: 0.32 }, { winRate: 0.55 }]),
-    ).toEqual([0.3, 0.7]);
-  });
-
-  it("keeps a minimum width when every class is level", () => {
-    expect(classComparisonDomain([{ winRate: 0.5 }])).toEqual([0.45, 0.55]);
   });
 });
