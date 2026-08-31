@@ -1,4 +1,6 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode } from "react";
+
+import { useIsHydrated } from "~/hooks/useIsHydrated";
 
 type Props = {
   children: ReactNode;
@@ -6,11 +8,5 @@ type Props = {
 };
 
 export function ClientOnly({ children, fallback = null }: Props) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  return mounted ? children : fallback;
+  return useIsHydrated() ? children : fallback;
 }
