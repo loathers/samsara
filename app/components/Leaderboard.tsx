@@ -5,7 +5,7 @@ import { Class } from "~/components/Class";
 import { PlayerLink } from "~/components/PlayerLink";
 import { ResponsiveContent } from "~/components/ResponsiveContent";
 import { Turncount } from "~/components/Turncount";
-import { LeaderboardEntry } from "~/db.server";
+import type { LeaderboardEntry } from "~/db.server";
 import {
   awardBg,
   formatExtraValue,
@@ -20,6 +20,7 @@ type Props = {
   showClass?: boolean;
   ranked?: boolean;
   alternativeScore?: [title: string, key: string];
+  children?: React.ReactNode;
 };
 
 export function Leaderboard({
@@ -28,6 +29,7 @@ export function Leaderboard({
   showClass = true,
   ranked = true,
   alternativeScore,
+  children,
 }: Props) {
   const entries = ascensions.map((asc) =>
     getExtraEntries(asc.extra, alternativeScore ? [alternativeScore[1]] : []),
@@ -105,6 +107,7 @@ export function Leaderboard({
           </Table.Body>
         </Table.Root>
       </Table.ScrollArea>
+      {children}
     </Container>
   );
 }

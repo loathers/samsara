@@ -2,22 +2,35 @@ import { Stack } from "@chakra-ui/react";
 import { useMemo } from "react";
 import { data, useLoaderData } from "react-router";
 
+import { ClassComparisonChart } from "~/components/ClassComparisonChart/ClassComparisonChart";
 import { Dedication } from "~/components/Dedication";
 import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
 import { findPathWithClasses } from "~/db.server";
-import { getPastStandardLeaderboards, getPathData } from "~/path.server";
+import {
+  getPastStandardLeaderboards,
+  getPathData,
+  getStandardClassComparison,
+} from "~/path.server";
 
 export const loader = async () => {
   const path = await findPathWithClasses({ slug: "standard" });
 
   if (!path) throw data({ message: "Invalid path name" }, { status: 400 });
 
+  const [pathData, years, classes] = await Promise.all([
+    getPathData(path),
+    getPastStandardLeaderboards(path),
+    getStandardClassComparison(path),
+  ]);
+
   return {
-    ...(await getPathData(path)),
-    years: await getPastStandardLeaderboards(path),
+    ...pathData,
+    years,
+    classComparison: classes.byYear,
+    currentYear: classes.currentYear,
   };
 };
 
@@ -46,6 +59,8 @@ export default function PathPage() {
     scRecent,
     years,
     totalRuns,
+    classComparison,
+    currentYear,
   } = useLoaderData<typeof loader>();
 
   const yearBoards = useMemo(
@@ -54,6 +69,7 @@ export default function PathPage() {
         .sort(([a], [b]) => Number(b) - Number(a))
         .map(([year, { softcore, hardcore }]) => (
           <LeaderboardAccordionItem
+            key={year}
             title={`${year} Leaderboards`}
             slug={year}
             description="The official leaderboards frozen from the end of the year"
@@ -62,15 +78,25 @@ export default function PathPage() {
               title="Softcore Leaderboard"
               ascensions={softcore}
               showClass
-            />
+            >
+              <ClassComparisonChart
+                title="Class Performance"
+                data={classComparison[Number(year)]?.softcore ?? []}
+              />
+            </Leaderboard>
             <Leaderboard
               title="Hardcore Leaderboard"
               ascensions={hardcore}
               showClass
-            />
+            >
+              <ClassComparisonChart
+                title="Class Performance"
+                data={classComparison[Number(year)]?.hardcore ?? []}
+              />
+            </Leaderboard>
           </LeaderboardAccordionItem>
         )),
-    [years],
+    [years, classComparison],
   );
 
   return (
@@ -90,12 +116,22 @@ export default function PathPage() {
             title="Softcore Leaderboard"
             ascensions={scLeaderboard}
             showClass
-          />
+          >
+            <ClassComparisonChart
+              title="Class Performance"
+              data={classComparison[currentYear]?.softcore ?? []}
+            />
+          </Leaderboard>
           <Leaderboard
             title="Hardcore Leaderboard"
             ascensions={hcLeaderboard}
             showClass
-          />
+          >
+            <ClassComparisonChart
+              title="Class Performance"
+              data={classComparison[currentYear]?.hardcore ?? []}
+            />
+          </Leaderboard>
         </LeaderboardAccordionItem>
         {yearBoards}
         <LeaderboardAccordionItem title="Pyrites" description="{PYRITE}">
