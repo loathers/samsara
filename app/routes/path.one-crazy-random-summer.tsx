@@ -1,6 +1,7 @@
 import { Stack } from "@chakra-ui/react";
 import { data, useLoaderData } from "react-router";
 
+import { ClassComparisonChart } from "~/components/ClassComparisonChart/ClassComparisonChart";
 import { Dedication } from "~/components/Dedication";
 import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
@@ -47,6 +48,7 @@ export default function OCRSPath() {
     scSpecialLeaderboard,
     scSpecialPyrite,
     totalRuns,
+    classes,
     totalRunsInSeason,
   } = useLoaderData<typeof loader>();
 
@@ -91,12 +93,20 @@ export default function OCRSPath() {
             title="Softcore Leaderboard"
             ascensions={scLeaderboard}
             alternativeScore={["Fun", "Fun"]}
-          />
+          >
+            <ClassComparisonChart
+              data={classes.main.softcore}
+            />
+          </Leaderboard>
           <Leaderboard
             title="Hardcore Leaderboard"
             ascensions={hcLeaderboard}
             alternativeScore={["Fun", "Fun"]}
-          />
+          >
+            <ClassComparisonChart
+              data={classes.main.hardcore}
+            />
+          </Leaderboard>
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
           slug="fun-pyrites"
@@ -123,12 +133,20 @@ export default function OCRSPath() {
             title="Softcore Pyrites"
             ascensions={scPyrite}
             alternativeScore={["Fun", "Fun"]}
-          />
+          >
+            <ClassComparisonChart
+              data={classes.pyrite.softcore}
+            />
+          </Leaderboard>
           <Leaderboard
             title="Hardcore Pyrites"
             ascensions={hcPyrite}
             alternativeScore={["Fun", "Fun"]}
-          />
+          >
+            <ClassComparisonChart
+              data={classes.pyrite.hardcore}
+            />
+          </Leaderboard>
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
           slug="recent"

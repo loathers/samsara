@@ -7,6 +7,7 @@ import {
   useLoaderData,
 } from "react-router";
 
+import { ClassComparisonChart } from "~/components/ClassComparisonChart/ClassComparisonChart";
 import { Dedication } from "~/components/Dedication";
 import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
@@ -61,6 +62,7 @@ export default function PathPage() {
     scRecent,
     totalRuns,
     totalRunsInSeason,
+    classes,
   } = useLoaderData<typeof loader>();
 
   const showClass = path.class.length !== 1;
@@ -88,12 +90,20 @@ export default function PathPage() {
             title="Softcore Leaderboard"
             ascensions={scLeaderboard}
             showClass={showClass}
-          />
+          >
+            <ClassComparisonChart
+              data={classes.main.softcore}
+            />
+          </Leaderboard>
           <Leaderboard
             title="Hardcore Leaderboard"
             ascensions={hcLeaderboard}
             showClass={showClass}
-          />
+          >
+            <ClassComparisonChart
+              data={classes.main.hardcore}
+            />
+          </Leaderboard>
         </LeaderboardAccordionItem>
         {showPyrites && (
           <LeaderboardAccordionItem title="Pyrites" description="{PYRITE}">
@@ -101,12 +111,20 @@ export default function PathPage() {
               title="Softcore Pyrites"
               ascensions={scPyrite}
               showClass={showClass}
-            />
+            >
+              <ClassComparisonChart
+                data={classes.pyrite.softcore}
+              />
+            </Leaderboard>
             <Leaderboard
               title="Hardcore Pyrites"
               ascensions={hcPyrite}
               showClass={showClass}
-            />
+            >
+              <ClassComparisonChart
+                data={classes.pyrite.hardcore}
+              />
+            </Leaderboard>
           </LeaderboardAccordionItem>
         )}
         <LeaderboardAccordionItem

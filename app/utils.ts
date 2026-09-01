@@ -1,4 +1,4 @@
-import { JsonValue, Lifestyle } from "~/db";
+import { JsonValue } from "~/db";
 
 export type ShortenStyle = null | "acronyms" | "symbols" | "full-symbols";
 
@@ -96,46 +96,12 @@ export const percentFormatter = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 0,
 });
 
-const NEGLIGIBLE_WIN_RATE = 0.01;
-
-const NEGLIGIBLE_TURNS = 0.5;
-
-type ClassComparisonSummary = {
-  winRate: number;
-  turnDelta: number | null;
-  year: number;
-  lifestyle: Lifestyle;
-};
-
-export function formatClassComparison(row: ClassComparisonSummary) {
-  const against = `the same players' other ${row.year} ${row.lifestyle.toLowerCase()} runs`;
-
-  const headline =
-    Math.abs(row.winRate - 0.5) < NEGLIGIBLE_WIN_RATE
-      ? `An even match for ${against}, comparing days then turns`
-      : `Beats ${percentFormatter.format(row.winRate)} of ${against}, comparing days then turns`;
-
-  const detail =
-    row.turnDelta === null
-      ? "No runs at a shared daycount to compare turns"
-      : Math.abs(row.turnDelta) < NEGLIGIBLE_TURNS
-        ? "No turn difference on average, at best daycount per player"
-        : `${numberFormatter.format(Math.round(Math.abs(row.turnDelta)))} ${
-            row.turnDelta < 0 ? "fewer" : "more"
-          } turns on average, at best daycount per player`;
-
-  return { headline, detail };
-}
-
 export function awardBg(rank: number, [gold, silver, bronze] = [1, 12, 35]) {
   if (rank <= gold) return "goldmedal";
   if (rank <= silver) return "silvermedal";
   if (rank <= bronze) return "transparent";
   return "transparent";
 }
-
-/** The class being measured plus at least three others. */
-export const MIN_CLASSES_PER_PLAYER = 4;
 
 export const NS13 = new Date("2007-06-25T00:00:00Z");
 export const STANDARD = 2015;
