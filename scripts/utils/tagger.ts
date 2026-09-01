@@ -306,7 +306,7 @@ async function getBestRuns() {
               // raw key beats announcing the gold with no cohort at all.
               { value: board, label: findBoard(rest.pathName, board)?.label ?? board },
         // The link a TagMedal for this tag would use, so both open the same section.
-        url: `${SITE_URL}/path/${pathSlug}#${tagHash(rest.pathName, type, board)}`,
+        url: `${SITE_URL}/path/${pathSlug}#${tagHash(rest.pathName, type, board, rest.lifestyle)}`,
         player: { id: playerId, name: playerName },
       },
     }),

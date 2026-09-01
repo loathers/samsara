@@ -1,5 +1,5 @@
 import { Link } from "@chakra-ui/react";
-import { Tag as FullTag, Path, TagType } from "~/db";
+import { Tag as FullTag, Lifestyle, Path, TagType } from "~/db";
 import { Link as RRLink } from "react-router";
 
 import { KoLImage } from "~/components/KoLImage";
@@ -9,6 +9,7 @@ type Tag = Pick<FullTag, "type" | "value" | "board">;
 
 type Props = {
   tag: Tag;
+  lifestyle: Lifestyle;
   path?: Pick<Path, "slug" | "name">;
 };
 
@@ -47,7 +48,7 @@ const TAG_MEDAL: Record<TagType, string> = {
   PYRITE_SPECIAL: "fdkol_medal",
 };
 
-export function TagMedal({ tag, path }: Props) {
+export function TagMedal({ tag, lifestyle, path }: Props) {
   const board = path && findBoard(path.name, tag.board);
 
   const image = (
@@ -63,7 +64,7 @@ export function TagMedal({ tag, path }: Props) {
   return (
     <Link asChild>
       <RRLink
-        to={`/path/${path.slug}#${tagHash(path.name, tag.type, tag.board)}`}
+        to={`/path/${path.slug}#${tagHash(path.name, tag.type, tag.board, lifestyle)}`}
         title={formatTag(tag, board)}
       >
         {image}

@@ -4,7 +4,7 @@
  * and how it scores them both live here, and everything else reads them from here.
  */
 
-import type { TagType } from "./db";
+import type { Lifestyle, TagType } from "./db";
 import { STANDARD } from "./utils";
 
 export type Board = {
@@ -153,19 +153,27 @@ export const boardTitle = (label: string, title: string) =>
 /** Routes laying out their own sections; without an entry a medal links to nothing. */
 const PATH_TAG_HASH = new Map<
   string,
-  (type: TagType, board: string | null) => string | null
+  (type: TagType, board: string | null, lifestyle: Lifestyle) => string | null
 >([
   [
+    // Board first, and the only page to split the lifestyles across sections.
     "Bad Moon",
-    (_, board) =>
-      board === "kittycore" ? "kittycore.leaderboard" : "leaderboard",
+    (_, board, lifestyle) => {
+      if (lifestyle !== "HARDCORE") return "weird";
+      return board === "kittycore" ? "kittycore.leaderboard" : "leaderboard";
+    },
   ],
 ]);
 
 /** Shares boardHash with the page, so a medal cannot link to a section that is not there. */
-export function tagHash(pathName: string, type: TagType, board: string | null) {
+export function tagHash(
+  pathName: string,
+  type: TagType,
+  board: string | null,
+  lifestyle: Lifestyle,
+) {
   const override = PATH_TAG_HASH.get(pathName);
-  if (override) return override(type, board);
+  if (override) return override(type, board, lifestyle);
   if (type.startsWith("LEADERBOARD")) return boardHash(board, "leaderboards");
   return boardHash(board, "pyrites");
 }

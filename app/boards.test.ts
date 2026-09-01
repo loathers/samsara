@@ -60,7 +60,7 @@ describe("OVERALL_BOARD", () => {
 
   it("resolves like any other board, so a medal can name it", () => {
     expect(findBoard("Blue vs. Red", "overall")?.label).toBe("Overall");
-    expect(tagHash("Blue vs. Red", "PYRITE", "overall")).toBe(
+    expect(tagHash("Blue vs. Red", "PYRITE", "overall", "HARDCORE")).toBe(
       boardHash("overall", "pyrites"),
     );
   });
@@ -103,50 +103,55 @@ describe("findBoard", () => {
 
 describe("tagHash", () => {
   it("matches the section a single-board path renders", () => {
-    expect(tagHash("Wildfire", "LEADERBOARD", null)).toBe("leaderboards");
-    expect(tagHash("Wildfire", "PYRITE", null)).toBe("pyrites");
+    expect(tagHash("Wildfire", "LEADERBOARD", null, "HARDCORE")).toBe("leaderboards");
+    expect(tagHash("Wildfire", "PYRITE", null, "HARDCORE")).toBe("pyrites");
   });
 
   it("matches the section a named board renders", () => {
-    expect(tagHash("Blue vs. Red", "LEADERBOARD", "blue")).toBe(
+    expect(tagHash("Blue vs. Red", "LEADERBOARD", "blue", "HARDCORE")).toBe(
       boardHash("blue", "leaderboards"),
     );
     expect(
-      tagHash("11,037 Leagues Under the Sea", "PYRITE", "pre-nerf"),
+      tagHash("11,037 Leagues Under the Sea", "PYRITE", "pre-nerf", "HARDCORE"),
     ).toBe(boardHash("pre-nerf", "pyrites"));
   });
 
   it("sends a lone measure board to the section that renders it unnested", () => {
-    expect(hashSection(tagHash("Grey Goo", "PYRITE", "goo")!)).toBe("pyrites");
+    expect(hashSection(tagHash("Grey Goo", "PYRITE", "goo", "HARDCORE")!)).toBe("pyrites");
   });
 
   it("sends a Standard season to the year under its section", () => {
-    expect(tagHash("Standard", "LEADERBOARD", "2024")).toBe(
+    expect(tagHash("Standard", "LEADERBOARD", "2024", "HARDCORE")).toBe(
       boardHash("2024", "leaderboards"),
     );
   });
 
   it("names a measure board like any other", () => {
-    expect(tagHash("One Crazy Random Summer", "PYRITE", "fun")).toBe(
+    expect(tagHash("One Crazy Random Summer", "PYRITE", "fun", "HARDCORE")).toBe(
       boardHash("fun", "pyrites"),
     );
-    expect(tagHash("One Crazy Random Summer", "LEADERBOARD", "time")).toBe(
+    expect(tagHash("One Crazy Random Summer", "LEADERBOARD", "time", "HARDCORE")).toBe(
       boardHash("time", "leaderboards"),
     );
   });
 
   it("follows Bad Moon's board-first layout", () => {
-    expect(tagHash("Bad Moon", "PYRITE", "kittycore")).toBe(
+    expect(tagHash("Bad Moon", "PYRITE", "kittycore", "HARDCORE")).toBe(
       "kittycore.leaderboard",
     );
-    expect(tagHash("Bad Moon", "PYRITE", "overall")).toBe("leaderboard");
+    expect(tagHash("Bad Moon", "PYRITE", "overall", "HARDCORE")).toBe("leaderboard");
+  });
+
+  it("sends Bad Moon's odder lifestyles to the section that shows them", () => {
+    expect(tagHash("Bad Moon", "PYRITE", "overall", "SOFTCORE")).toBe("weird");
+    expect(tagHash("Bad Moon", "PYRITE", "overall", "CASUAL")).toBe("weird");
   });
 
   it("keeps every override pointing at a section its route renders", () => {
-    expect(hashSection(tagHash("Bad Moon", "PYRITE", "kittycore")!)).toBe(
+    expect(hashSection(tagHash("Bad Moon", "PYRITE", "kittycore", "HARDCORE")!)).toBe(
       "kittycore",
     );
-    expect(hashSection(tagHash("Bad Moon", "PYRITE", "overall")!)).toBe(
+    expect(hashSection(tagHash("Bad Moon", "PYRITE", "overall", "HARDCORE")!)).toBe(
       "leaderboard",
     );
   });
