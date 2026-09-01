@@ -200,22 +200,18 @@ export async function getLeaderboard({
   path,
   lifestyle,
   inSeason,
-  special,
   type,
   board,
 }: {
   path: { name: string; start: Date | null; end: Date | null };
   lifestyle: Lifestyle;
   inSeason?: boolean;
-  special?: boolean;
   type?: TagType;
   board?: string;
 }) {
   if (inSeason && (!path.start || !path.end)) return [];
 
-  const tagType =
-    type ||
-    (((inSeason ? "LEADERBOARD" : "PYRITE") + (special ? "_SPECIAL" : "")) as TagType);
+  const tagType = type || ((inSeason ? "LEADERBOARD" : "PYRITE") as TagType);
 
   const rows = await kysely
     .selectFrom("Ascension as a")
@@ -393,6 +389,7 @@ export async function getPyritesWithAscensions() {
     .innerJoin("Path as path", "path.name", "a.pathName")
     .select([
       "t.type",
+      "t.board",
       "a.ascensionNumber",
       "a.days",
       "a.turns",
@@ -411,7 +408,7 @@ export async function getPyritesWithAscensions() {
       "path.start as pathStart",
       "path.end as pathEnd",
     ])
-    .where("t.type", "in", ["PYRITE", "PYRITE_SPECIAL"])
+    .where("t.type", "=", "PYRITE")
     .where("t.value", "=", 1)
     .where((eb) =>
       eb.not(eb.and([eb("path.id", "=", 999), eb("a.lifestyle", "=", "SOFTCORE")])),
@@ -421,6 +418,7 @@ export async function getPyritesWithAscensions() {
 
   return rows.map((r) => ({
     type: r.type,
+    board: r.board,
     ascension: {
       ascensionNumber: r.ascensionNumber,
       days: r.days,

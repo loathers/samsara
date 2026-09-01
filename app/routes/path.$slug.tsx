@@ -68,6 +68,7 @@ const CATEGORIES: Category[] = [
           title="Softcore Leaderboard"
           ascensions={b.scLeaderboard}
           showClass={showClass}
+          alternativeScore={b.board.extra}
           omitExtra={b.board.extraEquals?.[0]}
         >
           <ClassComparisonChart data={b.classes.main.softcore} />
@@ -76,6 +77,7 @@ const CATEGORIES: Category[] = [
           title="Hardcore Leaderboard"
           ascensions={b.hcLeaderboard}
           showClass={showClass}
+          alternativeScore={b.board.extra}
           omitExtra={b.board.extraEquals?.[0]}
         >
           <ClassComparisonChart data={b.classes.main.hardcore} />
@@ -94,6 +96,7 @@ const CATEGORIES: Category[] = [
           title="Softcore Pyrites"
           ascensions={b.scPyrite}
           showClass={showClass}
+          alternativeScore={b.board.extra}
           omitExtra={b.board.extraEquals?.[0]}
         >
           <ClassComparisonChart data={b.classes.pyrite.softcore} />
@@ -102,6 +105,7 @@ const CATEGORIES: Category[] = [
           title="Hardcore Pyrites"
           ascensions={b.hcPyrite}
           showClass={showClass}
+          alternativeScore={b.board.extra}
           omitExtra={b.board.extraEquals?.[0]}
         >
           <ClassComparisonChart data={b.classes.pyrite.hardcore} />

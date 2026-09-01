@@ -1,6 +1,11 @@
 import { RawBuilder, sql } from "kysely";
 
-import { boardFilter } from "../../app/board.server.js";
+import {
+  boardFilter,
+  boardOrder,
+  boardScore,
+  primaryScore,
+} from "../../app/board.server.js";
 import {
   Board,
   DEFAULT_BOARD,
@@ -11,18 +16,8 @@ import {
   yearBoard,
 } from "../../app/boards.js";
 import { TagType } from "../../app/db.js";
-import {
-  NS13,
-  SITE_URL,
-  SPECIAL_RANKINGS,
-  pastYearsOfStandard,
-} from "../../app/utils.js";
+import { NS13, SITE_URL, pastYearsOfStandard } from "../../app/utils.js";
 import { db } from "./client.js";
-
-/**
- * These paths should never be ranked by Days / Turns, only by their special ranking.
- */
-const NEVER_RANK_BY_TURNCOUNT = ["Grey Goo"];
 
 export async function tagAscensions(sendWebhook: boolean) {
   await tagRecordBreaking();
@@ -52,11 +47,7 @@ function getRecordBreakingQuery({
         "turns",
         "pathName",
         "lifestyle",
-        CASE "pathName"
-          WHEN 'Grey Goo' THEN ("extra" ->> 'Goo Score')::bigint
-          WHEN 'One Crazy Random Summer' THEN ("extra" ->> 'Fun')::bigint
-          ELSE -1 * ("days"::bigint * 1000000::bigint + "turns"::bigint)
-        END AS "score"
+        ${boardScore(board)} AS "score"
       FROM
         "Ascension"
       WHERE
@@ -141,12 +132,7 @@ function getPersonalBestQuery() {
         "turns",
         ROW_NUMBER() OVER (
           PARTITION BY "playerId", "pathName", "lifestyle"
-          ORDER BY
-            CASE "pathName"
-              WHEN 'Grey Goo' THEN ("extra" ->> 'Goo Score')::bigint
-              WHEN 'One Crazy Random Summer' THEN ("extra" ->> 'Fun')::bigint
-              ELSE -1 * ("days"::bigint * 1000000::bigint + "turns"::bigint)
-            END DESC
+          ORDER BY ${primaryScore()} DESC
         ) AS "rank"
       FROM
         "Ascension"
@@ -182,14 +168,12 @@ function getLeaderboardQuery(
     path,
     inSeason,
     excludePaths,
-    extra,
     limit = 35,
     board = DEFAULT_BOARD,
   }: {
     path?: string;
     excludePaths?: string[];
     inSeason?: boolean;
-    extra?: string;
     limit?: number;
     /**
      * A board is tagged by its own query, so the other boards' runs are absent from the
@@ -198,9 +182,7 @@ function getLeaderboardQuery(
     board?: Board;
   } = {},
 ) {
-  const order = extra
-    ? sql`("extra"->>${extra})::integer DESC`
-    : sql`"days" ASC, "turns" ASC`;
+  const order = boardOrder(board);
 
   return sql`
     WITH "ranked" AS (
@@ -296,7 +278,7 @@ async function getBestRuns() {
       "Player.name as playerName",
     ])
     // A gold per board and per ranking, each its own thing to announce.
-    .where("Tag.type", "in", [TagType.PYRITE, TagType.PYRITE_SPECIAL])
+    .where("Tag.type", "=", TagType.PYRITE)
     .where("Tag.value", "=", 1)
     .execute();
 
@@ -352,16 +334,13 @@ async function tagPyrites(sendWebhook: boolean) {
       .execute();
 
     await Promise.all([
-      ...[...SPECIAL_RANKINGS].map(([path, extra]) =>
-        getLeaderboardQuery(TagType.PYRITE_SPECIAL, { path, extra }).execute(trx),
-      ),
       ...boardQueries((path, board) =>
         board.trackPyrites === false
           ? undefined
           : getLeaderboardQuery(TagType.PYRITE, { path, board }),
       ).map((q) => q.execute(trx)),
       getLeaderboardQuery(TagType.PYRITE, {
-        excludePaths: [...NEVER_RANK_BY_TURNCOUNT, ...boardPathNames()],
+        excludePaths: boardPathNames(),
       }).execute(trx),
     ]);
   });
@@ -420,13 +399,6 @@ async function tagLeaderboard() {
       .execute();
 
     await Promise.all([
-      ...[...SPECIAL_RANKINGS].map(([path, extra]) =>
-        getLeaderboardQuery(TagType.LEADERBOARD_SPECIAL, {
-          path,
-          inSeason: true,
-          extra,
-        }).execute(trx),
-      ),
       ...boardQueries((path, board) =>
         getLeaderboardQuery(TagType.LEADERBOARD, {
           path,
@@ -436,7 +408,7 @@ async function tagLeaderboard() {
       ).map((q) => q.execute(trx)),
       getLeaderboardQuery(TagType.LEADERBOARD, {
         inSeason: true,
-        excludePaths: [...NEVER_RANK_BY_TURNCOUNT, ...boardPathNames()],
+        excludePaths: boardPathNames(),
       }).execute(trx),
     ]);
   });

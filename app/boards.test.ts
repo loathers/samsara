@@ -94,7 +94,10 @@ describe("findBoard", () => {
   it("is undefined for an untagged board or an undeclared path", () => {
     expect(findBoard("Blue vs. Red", null)).toBeUndefined();
     expect(findBoard("Wildfire", "blue")).toBeUndefined();
-    expect(findBoard("Standard", "2024")).toBeUndefined();
+  });
+
+  it("resolves a Standard year, generated rather than declared", () => {
+    expect(findBoard("Standard", "2024")).toEqual(yearBoard(2024));
   });
 });
 
@@ -113,29 +116,20 @@ describe("tagHash", () => {
     ).toBe(boardHash("pre-nerf", "pyrites"));
   });
 
-  it("sends the special rankings to the same sections as their plain siblings", () => {
-    expect(tagHash("Grey Goo", "LEADERBOARD_SPECIAL", null)).toBe(
-      "leaderboards",
-    );
-    expect(tagHash("Grey Goo", "PYRITE_SPECIAL", null)).toBe("pyrites");
+  it("sends a lone measure board to the section that renders it unnested", () => {
+    expect(hashSection(tagHash("Grey Goo", "PYRITE", "goo")!)).toBe("pyrites");
   });
 
   it("sends Standard to its year", () => {
     expect(tagHash("Standard", "STANDARD", "2024")).toBe("2024");
   });
 
-  it("splits One Crazy Random Summer by the measure it ranked", () => {
-    expect(tagHash("One Crazy Random Summer", "PYRITE_SPECIAL", null)).toBe(
-      "fun-pyrites",
+  it("names a measure board like any other", () => {
+    expect(tagHash("One Crazy Random Summer", "PYRITE", "fun")).toBe(
+      boardHash("fun", "pyrites"),
     );
-    expect(tagHash("One Crazy Random Summer", "PYRITE", null)).toBe(
-      "time-pyrites",
-    );
-    expect(
-      tagHash("One Crazy Random Summer", "LEADERBOARD_SPECIAL", null),
-    ).toBe("fun-leaderboards");
-    expect(tagHash("One Crazy Random Summer", "LEADERBOARD", null)).toBe(
-      "time-leaderboards",
+    expect(tagHash("One Crazy Random Summer", "LEADERBOARD", "time")).toBe(
+      boardHash("time", "leaderboards"),
     );
   });
 
@@ -150,9 +144,9 @@ describe("tagHash", () => {
     expect(hashSection(tagHash("Bad Moon", "PYRITE", "kittycore")!)).toBe(
       "kittycore",
     );
-    expect(
-      hashSection(tagHash("One Crazy Random Summer", "PYRITE", null)!),
-    ).toBe("time-pyrites");
+    expect(hashSection(tagHash("Bad Moon", "PYRITE", "overall")!)).toBe(
+      "leaderboard",
+    );
   });
 });
 

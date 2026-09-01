@@ -33,8 +33,6 @@ type SoftcoreLeaderboards = {
   scLeaderboard: Awaited<ReturnType<typeof getLeaderboard>>;
   scPyrite: Awaited<ReturnType<typeof getLeaderboard>>;
   scRecent: Awaited<ReturnType<typeof getRecentAscensions>>;
-  scSpecialLeaderboard: Awaited<ReturnType<typeof getLeaderboard>>;
-  scSpecialPyrite: Awaited<ReturnType<typeof getLeaderboard>>;
 };
 
 type HardcoreLeaderboards = {
@@ -42,46 +40,23 @@ type HardcoreLeaderboards = {
   hcLeaderboard: Awaited<ReturnType<typeof getLeaderboard>>;
   hcPyrite: Awaited<ReturnType<typeof getLeaderboard>>;
   hcRecent: Awaited<ReturnType<typeof getRecentAscensions>>;
-  hcSpecialLeaderboard: Awaited<ReturnType<typeof getLeaderboard>>;
-  hcSpecialPyrite: Awaited<ReturnType<typeof getLeaderboard>>;
 };
 
 async function leaderboardsForLifestyle(
   path: Path,
-  special: boolean,
   lifestyle: "HARDCORE" | "SOFTCORE",
   board: Board = DEFAULT_BOARD,
 ) {
-  const pyrites = hasPyrites(path);
   const prefix = lifestyle === "HARDCORE" ? "hc" : "sc";
   const key = board.key ?? undefined;
 
-  const [
-    dedication,
-    leaderboard,
-    pyrite,
-    recent,
-    specialLeaderboard,
-    specialPyrite,
-  ] = await Promise.all([
+  const [dedication, leaderboard, pyrite, recent] = await Promise.all([
     getDedication(path, lifestyle, board),
     getLeaderboard({ path, lifestyle, inSeason: path.seasonal, board: key }),
-    pyrites
+    hasPyrites(path)
       ? getLeaderboard({ path, lifestyle, board: key })
       : Promise.resolve([]),
     getRecentAscensions({ path, lifestyle, board }),
-    special
-      ? getLeaderboard({
-          path,
-          lifestyle,
-          special,
-          inSeason: path.seasonal,
-          board: key,
-        })
-      : Promise.resolve([]),
-    special && pyrites
-      ? getLeaderboard({ path, lifestyle, special: true, board: key })
-      : Promise.resolve([]),
   ]);
 
   return {
@@ -89,8 +64,6 @@ async function leaderboardsForLifestyle(
     [`${prefix}Leaderboard`]: leaderboard,
     [`${prefix}Pyrite`]: pyrite,
     [`${prefix}Recent`]: recent,
-    [`${prefix}SpecialLeaderboard`]: specialLeaderboard,
-    [`${prefix}SpecialPyrite`]: specialPyrite,
   };
 }
 
@@ -104,21 +77,20 @@ function byLifestyle(rows: ClassComparisonRow[]): ClassComparisonYear {
   );
 }
 
-/** Grey Goo carries no days/turns tags at all, so there is no board to describe. */
-const NO_CLASS_COMPARISON = ["Grey Goo"];
 
 /**
  * Mirrors leaderboardsForLifestyle: the headline board is tagged LEADERBOARD while a path is
  * seasonal and PYRITE otherwise, so the comparison has to follow the same window.
  *
  * Paths with their own classes are excluded because those run a board per class in game, so
- * a combined comparison would not describe any board anyone sees.
+ * a combined comparison would not describe any board anyone sees. So are boards ranked on
+ * something other than speed, which the chart has no way to draw.
  */
 export async function getPathClassComparison(
   path: Path & { class: Class[] },
   board: Board = DEFAULT_BOARD,
 ) {
-  if (path.class.length > 0 || NO_CLASS_COMPARISON.includes(path.name)) {
+  if (path.class.length > 0 || board.extra) {
     return { main: byLifestyle([]), pyrite: byLifestyle([]) };
   }
 
@@ -152,16 +124,12 @@ export async function getPathClassComparison(
   return { main: byLifestyle(main), pyrite: byLifestyle(pyrite) };
 }
 
-async function boardData(
-  path: Path & { class: Class[] },
-  special: boolean,
-  board: Board,
-) {
+async function boardData(path: Path & { class: Class[] }, board: Board) {
   const [recordBreaking, hardcoreLeaderboards, softcoreLeaderboards, classes] =
     await Promise.all([
       getRecordBreaking(path, undefined, board.key ?? undefined),
-      leaderboardsForLifestyle(path, special, "HARDCORE", board),
-      leaderboardsForLifestyle(path, special, "SOFTCORE", board),
+      leaderboardsForLifestyle(path, "HARDCORE", board),
+      leaderboardsForLifestyle(path, "SOFTCORE", board),
       getPathClassComparison(path, board),
     ]);
 
@@ -176,15 +144,12 @@ async function boardData(
 
 export type BoardData = Awaited<ReturnType<typeof boardData>>;
 
-export async function getPathData(
-  path: Path & { class: Class[] },
-  special = false,
-) {
+export async function getPathData(path: Path & { class: Class[] }) {
   const [frequency, totalRuns, totalRunsInSeason, ...boards] = await Promise.all([
     getFrequency({ path, range: calculateRange(path.start ?? new Date(0), new Date()) }),
     countAscensions(path.name),
     path.end ? countAscensions(path.name, path.end) : Promise.resolve(0),
-    ...boardsFor(path).map((board) => boardData(path, special, board)),
+    ...boardsFor(path).map((board) => boardData(path, board)),
   ]);
 
   return {

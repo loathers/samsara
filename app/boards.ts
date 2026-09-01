@@ -1,10 +1,11 @@
 /**
  * A board is one ranking of a path's runs, tagged by its own query. Boards may overlap or
- * leave runs out, so a run holds one tag per board it places on. Ranking the same runs by
- * another measure is a tag type rather than a board. See SPECIAL_RANKINGS.
+ * leave runs out, so a run holds one tag per board it places on. Which runs a board takes
+ * and how it scores them both live here, and everything else reads them from here.
  */
 
 import type { TagType } from "./db";
+import { pastYearsOfStandard } from "./utils";
 
 export type Board = {
   /** Stored in Tag.board. Null where the path ranks a single board. */
@@ -15,6 +16,8 @@ export type Board = {
   dateRange?: { from?: string; to?: string };
   className?: string;
   familiarAt100?: string;
+  /** Ranks on this entry of `extra`, highest first, rather than on days and turns. */
+  extra?: { key: string; label: string };
   trackRecords?: boolean;
   /** Off where a board cannot gain runs, so its pyrite would repeat its leaderboard. */
   trackPyrites?: boolean;
@@ -63,6 +66,19 @@ export const PATH_BOARDS = new Map<string, Board[]>([
     ],
   ],
   [
+    // The season was ranked on goo alone, so days and turns rank nothing here.
+    "Grey Goo",
+    [{ key: "goo", label: "", extra: { key: "Goo Score", label: "Goo" } }],
+  ],
+  [
+    // Ranked on fun in season, but the daycount race carried on regardless.
+    "One Crazy Random Summer",
+    [
+      { key: "fun", label: "Fun", extra: { key: "Fun", label: "Fun" } },
+      { key: "time", label: "Days/Turns" },
+    ],
+  ],
+  [
     // The eras are not comparable. The path's own route titles these sections.
     "11,037 Leagues Under the Sea",
     [
@@ -91,11 +107,23 @@ export const boardsFor = (path: { name: string }) =>
 
 export const boardPathNames = () => [...PATH_BOARDS.keys()];
 
-/** Undefined for a path that declares no boards, including Standard's year boards. */
+/** The measure a path's official leaderboard used, which is its first board's. */
+export const pathExtra = (pathName: string) =>
+  boardsFor({ name: pathName })[0].extra;
+
+/**
+ * Standard's years are boards too, but generated per season and tagged by their own pass
+ * rather than declared, so they resolve here without joining the fan-out.
+ */
+const namedBoards = (pathName: string) =>
+  pathName === "Standard"
+    ? pastYearsOfStandard().map(yearBoard)
+    : (PATH_BOARDS.get(pathName) ?? []);
+
 export const findBoard = (pathName: string, key: string | null) =>
   key === null
     ? undefined
-    : PATH_BOARDS.get(pathName)?.find((board) => board.key === key);
+    : namedBoards(pathName).find((board) => board.key === key);
 
 /** Section first, so everything before the dot names the section, however deeply nested. */
 export const boardHash = (key: string | null, suffix: string) =>
@@ -111,13 +139,6 @@ const PATH_TAG_HASH = new Map<
   string,
   (type: TagType, board: string | null) => string | null
 >([
-  [
-    "One Crazy Random Summer",
-    (type) =>
-      `${type.endsWith("_SPECIAL") ? "fun" : "time"}-${
-        type.startsWith("LEADERBOARD") ? "leaderboards" : "pyrites"
-      }`,
-  ],
   [
     "Bad Moon",
     (_, board) =>

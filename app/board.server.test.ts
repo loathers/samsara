@@ -9,7 +9,7 @@ import {
 } from "kysely";
 import { describe, expect, it } from "vitest";
 
-import { boardFilter } from "./board.server";
+import { boardFilter, boardOrder, boardScore, primaryScore } from "./board.server";
 import { Board, DEFAULT_BOARD, OVERALL_BOARD, PATH_BOARDS } from "./boards";
 
 const db = new Kysely<Record<string, never>>({
@@ -78,5 +78,47 @@ describe("boardFilter", () => {
     expect(text).toBe(
       `SELECT 1 FROM "Ascension" WHERE "dropped" IS FALSE AND ("date" >= '2024-01-01'::date AND "date" <= '2025-08-31'::date)`,
     );
+  });
+});
+
+describe("scoring", () => {
+  const GOO = PATH_BOARDS.get("Grey Goo")![0];
+
+  it("scores a plain board so that fewer days and turns rank higher", () => {
+    expect(compile(boardScore(DEFAULT_BOARD)).sql).toBe(
+      `-1 * ("days"::bigint * 1000000::bigint + "turns"::bigint)`,
+    );
+  });
+
+  it("scores a measure board on its own key", () => {
+    expect(compile(boardScore(GOO)).sql).toBe(
+      `("extra" ->> 'Goo Score')::bigint`,
+    );
+  });
+
+  it("orders a measure board by that key, best first", () => {
+    expect(compile(boardOrder(GOO)).sql).toBe(
+      `(("extra" ->> 'Goo Score')::bigint) DESC`,
+    );
+    expect(compile(boardOrder(DEFAULT_BOARD)).sql).toBe(
+      `"days" ASC, "turns" ASC`,
+    );
+  });
+
+  it("gives the boardless pass a branch per path that ranks on a measure", () => {
+    const { sql: text } = compile(primaryScore());
+
+    for (const [pathName, [board]] of PATH_BOARDS) {
+      if (!board.extra) continue;
+      expect(text).toContain(
+        `WHEN '${pathName.replaceAll("'", "''")}' THEN ${compile(boardScore(board)).sql}`,
+      );
+    }
+
+    expect(text).toMatch(/^CASE "pathName" .* ELSE .* END$/);
+  });
+
+  it("has no branch for a path whose official board ranks on speed", () => {
+    expect(compile(primaryScore()).sql).not.toContain("Blue vs. Red");
   });
 });
