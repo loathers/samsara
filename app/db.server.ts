@@ -545,7 +545,7 @@ export type ClassComparisonRow = {
   lifestyle: Lifestyle;
   className: string;
   classImage: string | null;
-  /** Fraction of the board's runs that used this class; zero if nobody picked it. */
+  /** Fraction of the board's runs that used this class. */
   share: number;
   /** Null when too few players ran several classes to compare within them. */
   winRate: number | null;
