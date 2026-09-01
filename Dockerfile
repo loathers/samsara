@@ -46,8 +46,9 @@ COPY --from=builder /app/build ./build
 COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/kysely.config.ts ./kysely.config.ts
 COPY --from=builder /app/scripts ./scripts
-COPY --from=builder /app/app/db.ts ./app/db.ts
-COPY --from=builder /app/app/utils.ts ./app/utils.ts
+# The whole directory, not the files the scripts import today: enumerating them
+# silently breaks the tagger the next time it grows an import.
+COPY --from=builder /app/app ./app
 
 COPY --chmod=755 docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
