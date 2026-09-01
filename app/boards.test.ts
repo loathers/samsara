@@ -5,6 +5,7 @@ import {
   boardHash,
   boardTitle,
   boardsFor,
+  hashSection,
   findBoard,
   tagHash,
   yearBoard,
@@ -37,7 +38,16 @@ describe("naming", () => {
 
   it("prefixes a named board", () => {
     expect(boardTitle("Blue Team", "Pyrites")).toBe("Blue Team Pyrites");
-    expect(boardHash("blue", "pyrites")).toBe("blue-pyrites");
+    expect(boardHash("blue", "pyrites")).toBe("pyrites.blue");
+  });
+
+  it("puts the section first, so a nested hash still names its section", () => {
+    expect(hashSection(boardHash("cow-puncher", "leaderboards"))).toBe(
+      "leaderboards",
+    );
+    expect(hashSection(boardHash(null, "leaderboards"))).toBe("leaderboards");
+    // Board keys contain hyphens, which is why a dot separates them.
+    expect(hashSection(boardHash("pre-nerf", "dedication"))).toBe("dedication");
   });
 });
 

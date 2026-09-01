@@ -93,12 +93,18 @@ export const findBoard = (pathName: string, key: string | null) =>
     : PATH_BOARDS.get(pathName)?.find((board) => board.key === key);
 
 /**
+ * Section first, so that everything before the dot names the section a hash belongs to
+ * however deeply the page nests it.
+ *
  * @param key Board key
  * @param suffix Accordion section, e.g. "leaderboards"
- * @returns Hash for the section, unprefixed when the path has only one board
+ * @returns Hash for the section, bare when the path has only one board
  */
 export const boardHash = (key: string | null, suffix: string) =>
-  key ? `${key}-${suffix}` : suffix;
+  key ? `${suffix}.${key}` : suffix;
+
+/** The section a hash names, whichever board within it the hash picks out. */
+export const hashSection = (hash: string) => hash.split(".")[0];
 
 /**
  * @param label Board label

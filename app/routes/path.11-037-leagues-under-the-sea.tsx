@@ -1,6 +1,7 @@
 import { Stack } from "@chakra-ui/react";
 import { data, useLoaderData } from "react-router";
 
+import { boardHash } from "~/boards";
 import { ClassComparisonChart } from "~/components/ClassComparisonChart/ClassComparisonChart";
 import { Dedication } from "~/components/Dedication";
 import { Leaderboard } from "~/components/Leaderboard";
@@ -52,7 +53,7 @@ export default function SeaPath() {
       />
       <LeaderboardAccordion>
         <LeaderboardAccordionItem
-          slug="leaderboards"
+          slug={boardHash("post-nerf", "leaderboards")}
           title="Leaderboards"
           description={
             <>
@@ -76,7 +77,7 @@ export default function SeaPath() {
           </Leaderboard>
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
-          slug="pre-nerf-leaderboards"
+          slug={boardHash("pre-nerf", "leaderboards")}
           title="Leaderboards (Pre-Nerf)"
           description="The official leaderboards for the pre-nerf path, for which commendations were issued."
         >
@@ -95,7 +96,7 @@ export default function SeaPath() {
         </LeaderboardAccordionItem>
         {showPyrites && (
           <LeaderboardAccordionItem
-            slug="pyrites"
+            slug={boardHash("post-nerf", "pyrites")}
             title="Pyrites"
             description="{PYRITE}"
           >
@@ -114,7 +115,7 @@ export default function SeaPath() {
           </LeaderboardAccordionItem>
         )}
         <LeaderboardAccordionItem
-          slug="recent"
+          slug={boardHash("post-nerf", "recent")}
           title="Recent Ascensions"
           description="The most recent ascensions on this path"
         >
@@ -130,6 +131,7 @@ export default function SeaPath() {
           />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
+          slug={boardHash("post-nerf", "dedication")}
           title="Dedication"
           description="Players who have completed the most ascensions for this path"
         >
@@ -143,7 +145,7 @@ export default function SeaPath() {
           />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
-          slug="pre-nerf-dedication"
+          slug={boardHash("pre-nerf", "dedication")}
           title="Dedication (Pre-Nerf)"
           description="Players who completed the most ascensions before the nerf"
         >

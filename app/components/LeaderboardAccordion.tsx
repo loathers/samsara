@@ -7,15 +7,22 @@ import { useIsHydrated } from "~/hooks/useIsHydrated";
 
 type Props = {
   children?: React.ReactNode;
+  /**
+   * Maps the URL hash to the item this accordion should open. Nested accordions share
+   * one hash, which points at a leaf: an outer accordion maps a leaf back to the section
+   * holding it, and an inner one maps its section's own hash to a board to open.
+   */
+  toItemValue?: (hash: string) => string;
 };
 
-export function LeaderboardAccordion({ children }: Props) {
+export function LeaderboardAccordion({ children, toItemValue }: Props) {
   const { hash } = useLocation();
   const navigate = useNavigate();
 
   const hydrated = useIsHydrated();
 
-  const value = hydrated ? hash.slice(1) : "";
+  const current = hydrated ? hash.slice(1) : "";
+  const value = current && toItemValue ? toItemValue(current) : current;
 
   const onChange = useCallback(
     (details: AccordionValueChangeDetails) => {

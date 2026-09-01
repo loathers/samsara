@@ -7,7 +7,7 @@ import {
   useLoaderData,
 } from "react-router";
 
-import { boardHash, boardTitle } from "~/boards";
+import { boardHash, hashSection } from "~/boards";
 import { ClassComparisonChart } from "~/components/ClassComparisonChart/ClassComparisonChart";
 import { Dedication } from "~/components/Dedication";
 import { Leaderboard } from "~/components/Leaderboard";
@@ -47,126 +47,117 @@ export const meta = ({ data }: MetaArgs<typeof loader>) => {
   ];
 };
 
-/**
- * A path's sections. Most paths have a single unnamed board, in which case the titles
- * and hashes are exactly what they have always been; a path that ranks several boards
- * gets one set of sections per board, labelled and hashed by board.
- */
-function BoardSections({
-  board: {
-    board,
-    classes,
-    hcDedication,
-    hcLeaderboard,
-    hcPyrite,
-    hcRecent,
-    scDedication,
-    scLeaderboard,
-    scPyrite,
-    scRecent,
-  },
-  current,
-  showClass,
-}: {
-  board: BoardData;
-  current: boolean;
-  showClass: boolean;
-}) {
-  const showPyrites = scPyrite.length + hcPyrite.length > 0;
+type Category = {
+  slug: string;
+  title: string;
+  description: (current: boolean) => React.ReactNode;
+  /** Whether this board has anything to show under this heading. */
+  show?: (board: BoardData) => boolean;
+  content: (board: BoardData, showClass: boolean) => React.ReactNode;
+};
 
-  // A board's own discriminator is redundant in a table that is only that board.
-  const omitExtra = board.extraEquals?.[0];
-  const showClassColumn = showClass && !board.className;
-
-  return (
-    <>
-      <LeaderboardAccordionItem
-        slug={boardHash(board.key, "leaderboards")}
-        title={boardTitle(board.label, "Leaderboards")}
-        description={
-          current
-            ? "The official leaderboards as they currently stand"
-            : "The official leaderboards frozen once the path went out-of-season"
-        }
-      >
+const CATEGORIES: Category[] = [
+  {
+    slug: "leaderboards",
+    title: "Leaderboards",
+    description: (current) =>
+      current
+        ? "The official leaderboards as they currently stand"
+        : "The official leaderboards frozen once the path went out-of-season",
+    content: (b, showClass) => (
+      <>
         <Leaderboard
           title="Softcore Leaderboard"
-          ascensions={scLeaderboard}
-          showClass={showClassColumn}
-          omitExtra={omitExtra}
+          ascensions={b.scLeaderboard}
+          showClass={showClass}
+          omitExtra={b.board.extraEquals?.[0]}
         >
-          <ClassComparisonChart data={classes.main.softcore} />
+          <ClassComparisonChart data={b.classes.main.softcore} />
         </Leaderboard>
         <Leaderboard
           title="Hardcore Leaderboard"
-          ascensions={hcLeaderboard}
-          showClass={showClassColumn}
-          omitExtra={omitExtra}
+          ascensions={b.hcLeaderboard}
+          showClass={showClass}
+          omitExtra={b.board.extraEquals?.[0]}
         >
-          <ClassComparisonChart data={classes.main.hardcore} />
+          <ClassComparisonChart data={b.classes.main.hardcore} />
         </Leaderboard>
-      </LeaderboardAccordionItem>
-      {showPyrites && (
-        <LeaderboardAccordionItem
-          slug={boardHash(board.key, "pyrites")}
-          title={boardTitle(board.label, "Pyrites")}
-          description="{PYRITE}"
+      </>
+    ),
+  },
+  {
+    slug: "pyrites",
+    title: "Pyrites",
+    description: () => "{PYRITE}",
+    show: (b) => b.scPyrite.length + b.hcPyrite.length > 0,
+    content: (b, showClass) => (
+      <>
+        <Leaderboard
+          title="Softcore Pyrites"
+          ascensions={b.scPyrite}
+          showClass={showClass}
+          omitExtra={b.board.extraEquals?.[0]}
         >
-          <Leaderboard
-            title="Softcore Pyrites"
-            ascensions={scPyrite}
-            showClass={showClassColumn}
-            omitExtra={omitExtra}
-          >
-            <ClassComparisonChart data={classes.pyrite.softcore} />
-          </Leaderboard>
-          <Leaderboard
-            title="Hardcore Pyrites"
-            ascensions={hcPyrite}
-            showClass={showClassColumn}
-            omitExtra={omitExtra}
-          >
-            <ClassComparisonChart data={classes.pyrite.hardcore} />
-          </Leaderboard>
-        </LeaderboardAccordionItem>
-      )}
-      <LeaderboardAccordionItem
-        slug={boardHash(board.key, "recent")}
-        title={boardTitle(board.label, "Recent Ascensions")}
-        description="The most recent ascensions on this path"
-      >
+          <ClassComparisonChart data={b.classes.pyrite.softcore} />
+        </Leaderboard>
+        <Leaderboard
+          title="Hardcore Pyrites"
+          ascensions={b.hcPyrite}
+          showClass={showClass}
+          omitExtra={b.board.extraEquals?.[0]}
+        >
+          <ClassComparisonChart data={b.classes.pyrite.hardcore} />
+        </Leaderboard>
+      </>
+    ),
+  },
+  {
+    slug: "recent",
+    title: "Recent Ascensions",
+    description: () => "The most recent ascensions on this path",
+    content: (b, showClass) => (
+      <>
         <Leaderboard
           title="Softcore"
-          ascensions={scRecent}
+          ascensions={b.scRecent}
           ranked={false}
-          showClass={showClassColumn}
-          omitExtra={omitExtra}
+          showClass={showClass}
+          omitExtra={b.board.extraEquals?.[0]}
         />
         <Leaderboard
           title="Hardcore"
-          ascensions={hcRecent}
+          ascensions={b.hcRecent}
           ranked={false}
-          showClass={showClassColumn}
-          omitExtra={omitExtra}
+          showClass={showClass}
+          omitExtra={b.board.extraEquals?.[0]}
         />
-      </LeaderboardAccordionItem>
-      <LeaderboardAccordionItem
-        slug={boardHash(board.key, "dedication")}
-        title={boardTitle(board.label, "Dedication")}
-        description="Players who have completed the most ascensions for this path"
-      >
-        <Dedication title="Softcore Dedication" dedication={scDedication} />
-        <Dedication title="Hardcore Dedication" dedication={hcDedication} />
-      </LeaderboardAccordionItem>
-    </>
-  );
-}
+      </>
+    ),
+  },
+  {
+    slug: "dedication",
+    title: "Dedication",
+    description: () =>
+      "Players who have completed the most ascensions for this path",
+    content: (b) => (
+      <>
+        <Dedication title="Softcore Dedication" dedication={b.scDedication} />
+        <Dedication title="Hardcore Dedication" dedication={b.hcDedication} />
+      </>
+    ),
+  },
+];
+
+/** A board's own discriminator is redundant in a table that is only that board. */
+const showClassFor = (board: BoardData, showClass: boolean) =>
+  showClass && !board.board.className;
 
 export default function PathPage() {
   const { boards, current, frequency, path, totalRuns, totalRunsInSeason } =
     useLoaderData<typeof loader>();
 
   const showClass = path.class.length !== 1;
+  const split = boards.length > 1;
 
   return (
     <Stack gap={10}>
@@ -177,14 +168,38 @@ export default function PathPage() {
         totalRuns={totalRuns}
         totalRunsInSeason={totalRunsInSeason}
       />
-      <LeaderboardAccordion>
-        {boards.map((board) => (
-          <BoardSections
-            key={board.board.key ?? "default"}
-            board={board}
-            current={current}
-            showClass={showClass}
-          />
+      <LeaderboardAccordion toItemValue={split ? hashSection : undefined}>
+        {CATEGORIES.filter((category) =>
+          boards.some((board) => category.show?.(board) ?? true),
+        ).map((category) => (
+          <LeaderboardAccordionItem
+            key={category.slug}
+            slug={category.slug}
+            title={category.title}
+            description={category.description(current)}
+            stacked={split}
+          >
+            {split ? (
+              // No mapping here: the bare section hash matches no board, so opening a
+              // section leaves its boards closed until one is picked.
+              <LeaderboardAccordion>
+                {boards
+                  .filter((board) => category.show?.(board) ?? true)
+                  .map((board) => (
+                    <LeaderboardAccordionItem
+                      key={board.board.key ?? "default"}
+                      slug={boardHash(board.board.key, category.slug)}
+                      title={board.board.label}
+                      description=""
+                    >
+                      {category.content(board, showClassFor(board, showClass))}
+                    </LeaderboardAccordionItem>
+                  ))}
+              </LeaderboardAccordion>
+            ) : (
+              category.content(boards[0], showClassFor(boards[0], showClass))
+            )}
+          </LeaderboardAccordionItem>
         ))}
       </LeaderboardAccordion>
     </Stack>
