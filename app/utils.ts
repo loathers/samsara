@@ -101,30 +101,37 @@ const NEGLIGIBLE_WIN_RATE = 0.01;
 const NEGLIGIBLE_TURNS = 0.5;
 
 type ClassComparisonSummary = {
-  winRate: number;
+  share: number;
+  winRate: number | null;
   turnDelta: number | null;
-  year: number;
+  year: number | null;
   lifestyle: Lifestyle;
 };
 
 export function formatClassComparison(row: ClassComparisonSummary) {
-  const against = `the same players' other ${row.year} ${row.lifestyle.toLowerCase()} runs`;
+  const share = `${percentFormatter.format(row.share)} of runs on this board`;
+
+  const against = row.year
+    ? `the same players' other ${row.year} ${row.lifestyle.toLowerCase()} runs`
+    : `the same players' other runs on this path`;
 
   const headline =
-    Math.abs(row.winRate - 0.5) < NEGLIGIBLE_WIN_RATE
-      ? `An even match for ${against}, comparing days then turns`
-      : `Beats ${percentFormatter.format(row.winRate)} of ${against}, comparing days then turns`;
+    row.winRate === null
+      ? "Too few players ran several classes to compare"
+      : Math.abs(row.winRate - 0.5) < NEGLIGIBLE_WIN_RATE
+        ? `An even match for ${against}`
+        : `Beats ${percentFormatter.format(row.winRate)} of ${against}`;
 
   const detail =
     row.turnDelta === null
-      ? "No runs at a shared daycount to compare turns"
+      ? null
       : Math.abs(row.turnDelta) < NEGLIGIBLE_TURNS
         ? "No turn difference on average, at best daycount per player"
         : `${numberFormatter.format(Math.round(Math.abs(row.turnDelta)))} ${
             row.turnDelta < 0 ? "fewer" : "more"
           } turns on average, at best daycount per player`;
 
-  return { headline, detail };
+  return { share, headline, detail };
 }
 
 export function awardBg(rank: number, [gold, silver, bronze] = [1, 12, 35]) {

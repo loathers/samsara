@@ -1,6 +1,7 @@
 import { Stack } from "@chakra-ui/react";
 import { data, useLoaderData } from "react-router";
 
+import { ClassComparisonChart } from "~/components/ClassComparisonChart/ClassComparisonChart";
 import { Dedication } from "~/components/Dedication";
 import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
@@ -59,6 +60,7 @@ export default function BadMoonPath() {
     scLeaderboard,
     scRecent,
     totalRuns,
+    classes,
   } = useLoaderData<typeof loader>();
 
   return (
@@ -74,7 +76,11 @@ export default function BadMoonPath() {
           title="Leaderboard"
           description="The official leaderboard as it currently stands"
         >
-          <Leaderboard ascensions={hcLeaderboard} />
+          <Leaderboard ascensions={hcLeaderboard}>
+            <ClassComparisonChart
+              data={classes.main.hardcore}
+            />
+          </Leaderboard>
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
           title="Kittycore"

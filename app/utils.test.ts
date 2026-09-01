@@ -69,6 +69,7 @@ describe("getExtraEntries", () => {
 
 describe("formatClassComparison", () => {
   const row = {
+    share: 0.25,
     winRate: 0.5,
     turnDelta: 0,
     year: 2026,
@@ -77,13 +78,13 @@ describe("formatClassComparison", () => {
 
   it("reports the share of runs beaten", () => {
     expect(formatClassComparison({ ...row, winRate: 0.575 }).headline).toBe(
-      "Beats 58% of the same players' other 2026 softcore runs, comparing days then turns",
+      "Beats 58% of the same players' other 2026 softcore runs",
     );
   });
 
   it("calls a near-even split even", () => {
     expect(formatClassComparison({ ...row, winRate: 0.503 }).headline).toBe(
-      "An even match for the same players' other 2026 softcore runs, comparing days then turns",
+      "An even match for the same players' other 2026 softcore runs",
     );
   });
 
@@ -106,9 +107,27 @@ describe("formatClassComparison", () => {
     );
   });
 
-  it("says so when no daycount was shared", () => {
-    expect(formatClassComparison({ ...row, turnDelta: null }).detail).toBe(
-      "No runs at a shared daycount to compare turns",
+  it("omits the turn line when no daycount was shared", () => {
+    expect(formatClassComparison({ ...row, turnDelta: null }).detail).toBeNull();
+  });
+
+  it("always reports the share of runs", () => {
+    expect(formatClassComparison({ ...row, share: 0.442 }).share).toBe(
+      "44% of runs on this board",
+    );
+  });
+
+  it("says so when too few players explored", () => {
+    expect(formatClassComparison({ ...row, winRate: null }).headline).toBe(
+      "Too few players ran several classes to compare",
+    );
+  });
+
+  it("drops the year from the phrasing on boards without one", () => {
+    expect(
+      formatClassComparison({ ...row, year: null, winRate: 0.62 }).headline,
+    ).toBe(
+      "Beats 62% of the same players' other runs on this path",
     );
   });
 });

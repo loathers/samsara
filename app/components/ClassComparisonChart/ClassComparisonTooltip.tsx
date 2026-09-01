@@ -12,7 +12,7 @@ export function ClassComparisonTooltip({ active, payload }: Props) {
   const row = payload?.[0]?.payload;
   if (!active || !row) return null;
 
-  const { headline, detail } = formatClassComparison(row);
+  const { share, headline, detail } = formatClassComparison(row);
 
   return (
     <Box
@@ -27,10 +27,13 @@ export function ClassComparisonTooltip({ active, payload }: Props) {
       <Text fontWeight="bold" fontSize="sm">
         {row.className}
       </Text>
+      <Text fontSize="xs">{share}</Text>
       <Text fontSize="xs">{headline}</Text>
-      <Text fontSize="xs" color="fg.muted">
-        {detail}
-      </Text>
+      {detail && (
+        <Text fontSize="xs" color="fg.muted">
+          {detail}
+        </Text>
+      )}
     </Box>
   );
 }

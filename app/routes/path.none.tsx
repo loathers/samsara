@@ -1,6 +1,7 @@
 import { Stack } from "@chakra-ui/react";
 import { data, useLoaderData } from "react-router";
 
+import { ClassComparisonChart } from "~/components/ClassComparisonChart/ClassComparisonChart";
 import { Dedication } from "~/components/Dedication";
 import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
@@ -55,6 +56,7 @@ export default function NoPath() {
     hcRecent,
     casualRecent,
     totalRuns,
+    classes,
   } = useLoaderData<typeof loader>();
 
   return (
@@ -73,11 +75,19 @@ export default function NoPath() {
           <Leaderboard
             title="Softcore Leaderboard"
             ascensions={scLeaderboard}
-          />
+          >
+            <ClassComparisonChart
+              data={classes.main.softcore}
+            />
+          </Leaderboard>
           <Leaderboard
             title="Hardcore Leaderboard"
             ascensions={hcLeaderboard}
-          />
+          >
+            <ClassComparisonChart
+              data={classes.main.hardcore}
+            />
+          </Leaderboard>
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
           title="Casual"
