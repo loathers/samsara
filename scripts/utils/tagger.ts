@@ -289,13 +289,14 @@ async function getBestRuns() {
         turns: number;
         lifestyle: string;
         pathName: string;
+        board: string | null;
         player: { id: number; name: string };
       }
     >
   >(
-    (acc, { playerId, playerName, type, board, ...rest }) => ({
+    (acc, { playerId, playerName, type, ...rest }) => ({
       ...acc,
-      [`${rest.pathName}_${rest.lifestyle}_${type}_${board ?? ""}`]: {
+      [`${rest.pathName}_${rest.lifestyle}_${type}_${rest.board ?? ""}`]: {
         ...rest,
         player: { id: playerId, name: playerName },
       },
