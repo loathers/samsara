@@ -18,10 +18,7 @@ export const TagType = {
 } as const;
 export type TagType = (typeof TagType)[keyof typeof TagType];
 
-/**
- * Class ids are the in-game class order, and the six starting classes come first. Anything
- * above is a path's own class, whether or not that path is in the database yet.
- */
+/** Anything above is a path's own class, whether or not that path is in the database yet. */
 export const LAST_STANDARD_CLASS_ID = 6;
 
 export type JsonPrimitive = string | number | boolean | null;

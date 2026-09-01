@@ -1,5 +1,5 @@
 type Props = {
-  /** Recharts passes null, not undefined, for a row whose win rate is missing. */
+  /** Recharts passes null, not undefined, for a row with no win rate. */
   cx?: number | null;
   cy?: number | null;
   fill: string;
@@ -24,8 +24,6 @@ function starPoints(outer: number, inner: number) {
 const POINTS = starPoints(SIZE / 2, SIZE / 5);
 
 export function WinRateStar({ cx, cy, fill, stroke }: Props) {
-  // translate(null,y) is invalid, so the whole transform is dropped and the star lands in
-  // the chart's top left corner.
   if (cx == null || cy == null) return null;
 
   return (

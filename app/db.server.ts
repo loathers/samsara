@@ -639,10 +639,9 @@ export async function getClassComparison({
       GROUP BY "season", "lifestyle", "className"
     ),
     -- Only paths without classes of their own get compared, so every board is open to the
-    -- six starting classes. Give each one a row per bucket, because a class nobody picked
-    -- is a finding and should read as an empty bar rather than a missing one. The union is
-    -- load bearing: a handful of runs carry a path's class on a path that does not grant
-    -- it, and dropping those would leave the shares not adding up.
+    -- six starting classes and a class nobody picked should read as an empty bar rather
+    -- than a missing one. The union still matters: a few runs carry a path's class on a
+    -- path that does not grant it.
     "boardClass" AS (
       SELECT "name" FROM "Class" WHERE "id" BETWEEN 1 AND ${LAST_STANDARD_CLASS_ID}
       UNION
@@ -652,7 +651,6 @@ export async function getClassComparison({
       SELECT
         "bucket"."season", "bucket"."lifestyle", "boardClass"."name" AS "className",
         COALESCE("runsByClass"."share", 0) AS "share"
-      -- Both sets come off the grouped rows rather than a second pass over every run.
       FROM (SELECT DISTINCT "season", "lifestyle" FROM "runsByClass") AS "bucket"
       CROSS JOIN "boardClass"
       LEFT JOIN "runsByClass"

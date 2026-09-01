@@ -14,7 +14,6 @@ const NEGLIGIBLE_WIN_RATE = 0.01;
 const NEGLIGIBLE_TURNS = 0.5;
 
 export function formatClassComparison(row: ClassComparisonRow) {
-  // Every class gets a row whether or not anyone ran it, so the empty ones say why.
   if (row.share === 0) {
     return {
       share: "Nobody ran this class on this board",
