@@ -110,7 +110,9 @@ export function RecordGraph({ data, extra }: Props) {
                       index,
                       payload: { lifestyle, days },
                     }) => {
-                      if (cx === null || cy === null) return <svg key={key} />;
+                      // A datum carries one lifestyle, so the other series has no
+                      // point here. Recharts says so with undefined, not null.
+                      if (cx == null || cy == null) return <svg key={key} />;
                       const last = backwardsSearchFrom(
                         graphData,
                         index - 1,

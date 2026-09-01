@@ -34,6 +34,6 @@ export function DaysDot({ days, cx = 0, cy = 0, r = 0, ...rest }: Props) {
     case 1:
       return <circle cx={cx} cy={cy} r={r} {...rest} />;
     default:
-      return <polygon points={polygon([cx, cy], days, r)} />;
+      return <polygon points={polygon([cx, cy], days, r)} {...rest} />;
   }
 }

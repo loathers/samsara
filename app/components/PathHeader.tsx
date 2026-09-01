@@ -29,14 +29,15 @@ type Props = {
   totalRuns: number;
   totalRunsInSeason?: number;
   frequency: Datum[];
-  recordBreaking: RecordDatum[];
+  /** Boards rank independently, so each gets its own progression graph. */
+  boards: { board: { label: string }; recordBreaking: RecordDatum[] }[];
   extra?: string;
 };
 
 export function PathHeader({
   path,
   frequency,
-  recordBreaking,
+  boards,
   extra,
   totalRuns,
   totalRunsInSeason,
@@ -104,16 +105,22 @@ export function PathHeader({
           <FrequencyGraph data={frequency} lines={lines} />
           <Text fontSize="2xs">Ascension frequency over time</Text>
         </Box>
-        <Box
-          textAlign="center"
-          mt={8}
-          height={150}
-          width="100%"
-          alignSelf="center"
-        >
-          <RecordGraph data={recordBreaking} extra={extra} />
-          <Text fontSize="2xs">Progression of best runs over time</Text>
-        </Box>
+        {boards.map(({ board, recordBreaking }) => (
+          <Box
+            key={board.label}
+            textAlign="center"
+            mt={8}
+            height={150}
+            width="100%"
+            alignSelf="center"
+          >
+            <RecordGraph data={recordBreaking} extra={extra} />
+            <Text fontSize="2xs">
+              Progression of best runs over time
+              {board.label && ` (${board.label})`}
+            </Text>
+          </Box>
+        ))}
       </Stack>
     </Stack>
   );

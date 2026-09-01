@@ -7,6 +7,7 @@ type Props = {
   title: string;
   slug?: string;
   description: React.ReactNode;
+  stacked?: boolean;
   children: React.ReactNode;
 };
 
@@ -15,6 +16,7 @@ export function LeaderboardAccordionItem({
   description,
   children,
   slug,
+  stacked = false,
 }: Props) {
   switch (description) {
     case "{PYRITE}":
@@ -33,7 +35,7 @@ export function LeaderboardAccordionItem({
       <Accordion.ItemContent>
         <Stack
           gap={4}
-          direction={["column", null, null, "row"]}
+          direction={stacked ? "column" : ["column", null, null, "row"]}
           alignItems="stretch"
           justifyContent="center"
         >

@@ -33,31 +33,34 @@ export const meta = () => {
 export default function OCRSPath() {
   const {
     frequency,
+    path,
+    totalRuns,
+    totalRunsInSeason,
+    boards,
+  } = useLoaderData<typeof loader>();
+
+  const {
+    classes,
     hcDedication,
     hcLeaderboard,
     hcPyrite,
+    hcRecent,
     hcSpecialLeaderboard,
     hcSpecialPyrite,
-    path,
-    recordBreaking,
-    hcRecent,
     scDedication,
     scLeaderboard,
     scPyrite,
     scRecent,
     scSpecialLeaderboard,
     scSpecialPyrite,
-    totalRuns,
-    classes,
-    totalRunsInSeason,
-  } = useLoaderData<typeof loader>();
+  } = boards[0];
 
   return (
     <Stack gap={10}>
       <PathHeader
         path={path}
         frequency={frequency}
-        recordBreaking={recordBreaking}
+        boards={boards}
         extra="Fun"
         totalRuns={totalRuns}
         totalRunsInSeason={totalRunsInSeason}

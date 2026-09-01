@@ -1,13 +1,14 @@
 import { Stack } from "@chakra-ui/react";
 import { data, useLoaderData } from "react-router";
 
+import { BoardSection } from "~/components/BoardSection";
+import { ClassComparisonChart } from "~/components/ClassComparisonChart/ClassComparisonChart";
 import { Dedication } from "~/components/Dedication";
 import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
-import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
 import { findPathWithClasses } from "~/db.server";
-import { getPathData } from "~/path.server";
+import { type BoardData, getPathData } from "~/path.server";
 
 export const loader = async () => {
   const slug = "11-037-leagues-under-the-sea";
@@ -16,7 +17,7 @@ export const loader = async () => {
 
   if (!path) throw data({ message: "Invalid path name" }, { status: 400 });
 
-  return await getPathData(path, true);
+  return await getPathData(path);
 };
 
 export const meta = () => {
@@ -29,96 +30,133 @@ export const meta = () => {
   ];
 };
 
-export default function SeaPath() {
-  const {
-    frequency,
-    hcDedication,
-    hcLeaderboard,
-    hcPyrite,
-    hcRecent,
-    hcSpecialLeaderboard,
-    path,
-    recordBreaking,
-    scDedication,
-    scLeaderboard,
-    scPyrite,
-    scRecent,
-    scSpecialLeaderboard,
-    totalRuns,
-    totalRunsInSeason,
-  } = useLoaderData<typeof loader>();
+const leaderboards = (b: BoardData) => (
+  <>
+    <Leaderboard title="Softcore Leaderboard" ascensions={b.scLeaderboard}>
+      <ClassComparisonChart data={b.classes.main.softcore} />
+    </Leaderboard>
+    <Leaderboard title="Hardcore Leaderboard" ascensions={b.hcLeaderboard}>
+      <ClassComparisonChart data={b.classes.main.hardcore} />
+    </Leaderboard>
+  </>
+);
 
-  const showPyrites = scPyrite.length + hcPyrite.length > 0;
+const dedication = (b: BoardData) => (
+  <>
+    <Dedication title="Softcore Dedication" dedication={b.scDedication} />
+    <Dedication title="Hardcore Dedication" dedication={b.hcDedication} />
+  </>
+);
+
+const era = (
+  board: BoardData,
+  content: React.ReactNode,
+  description: React.ReactNode = null,
+) => ({
+  key: board.board.key,
+  label: board.board.label,
+  description,
+  content,
+});
+
+export default function SeaPath() {
+  const { boards, frequency, path, totalRuns, totalRunsInSeason } =
+    useLoaderData<typeof loader>();
+
+  // Pre-nerf can never gain another run, so it has nothing recent to show and a pyrite
+  // board that would only repeat its leaderboard.
+  const [postNerf, preNerf] = boards;
+
+  const showPyrites = postNerf.scPyrite.length + postNerf.hcPyrite.length > 0;
 
   return (
     <Stack gap={10}>
       <PathHeader
         path={path}
         frequency={frequency}
-        recordBreaking={recordBreaking}
+        boards={boards}
         totalRuns={totalRuns}
         totalRunsInSeason={totalRunsInSeason}
       />
       <LeaderboardAccordion>
-        <LeaderboardAccordionItem
+        <BoardSection
           slug="leaderboards"
           title="Leaderboards"
-          description={
-            <>
-              The official leaderboards frozen once the path went out-of-season.
-              These leaderboards only include post-nerf runs, and are considered
-              the "true" leaderboards for the path.
-            </>
-          }
-        >
-          <Leaderboard
-            title="Softcore Leaderboard"
-            ascensions={scLeaderboard}
-          />
-          <Leaderboard
-            title="Hardcore Leaderboard"
-            ascensions={hcLeaderboard}
-          />
-        </LeaderboardAccordionItem>
-        <LeaderboardAccordionItem
-          slug="pre-nerf-leaderboards"
-          title="Leaderboards (Pre-Nerf)"
-          description="The official leaderboards for the pre-nerf path, for which commendations were issued."
-        >
-          <Leaderboard
-            title="Softcore Leaderboard"
-            ascensions={scSpecialLeaderboard}
-          />
-          <Leaderboard
-            title="Hardcore Leaderboard"
-            ascensions={hcSpecialLeaderboard}
-          />
-        </LeaderboardAccordionItem>
+          description="The official leaderboards frozen once the path went out-of-season"
+          boards={[
+            era(
+              postNerf,
+              leaderboards(postNerf),
+              'Post-nerf runs only, and considered the "true" leaderboards for the path',
+            ),
+            era(
+              preNerf,
+              leaderboards(preNerf),
+              "The pre-nerf path, for which commendations were issued",
+            ),
+          ]}
+        />
         {showPyrites && (
-          <LeaderboardAccordionItem
+          <BoardSection
             slug="pyrites"
             title="Pyrites"
             description="{PYRITE}"
-          >
-            <Leaderboard title="Softcore Pyrites" ascensions={scPyrite} />
-            <Leaderboard title="Hardcore Pyrites" ascensions={hcPyrite} />
-          </LeaderboardAccordionItem>
+            boards={[
+              era(
+                postNerf,
+                <>
+                  <Leaderboard
+                    title="Softcore Pyrites"
+                    ascensions={postNerf.scPyrite}
+                  >
+                    <ClassComparisonChart
+                      data={postNerf.classes.pyrite.softcore}
+                    />
+                  </Leaderboard>
+                  <Leaderboard
+                    title="Hardcore Pyrites"
+                    ascensions={postNerf.hcPyrite}
+                  >
+                    <ClassComparisonChart
+                      data={postNerf.classes.pyrite.hardcore}
+                    />
+                  </Leaderboard>
+                </>,
+              ),
+            ]}
+          />
         )}
-        <LeaderboardAccordionItem
+        <BoardSection
           slug="recent"
           title="Recent Ascensions"
           description="The most recent ascensions on this path"
-        >
-          <Leaderboard title="Softcore" ascensions={scRecent} ranked={false} />
-          <Leaderboard title="Hardcore" ascensions={hcRecent} ranked={false} />
-        </LeaderboardAccordionItem>
-        <LeaderboardAccordionItem
+          boards={[
+            era(
+              postNerf,
+              <>
+                <Leaderboard
+                  title="Softcore"
+                  ascensions={postNerf.scRecent}
+                  ranked={false}
+                />
+                <Leaderboard
+                  title="Hardcore"
+                  ascensions={postNerf.hcRecent}
+                  ranked={false}
+                />
+              </>,
+            ),
+          ]}
+        />
+        <BoardSection
+          slug="dedication"
           title="Dedication"
           description="Players who have completed the most ascensions for this path"
-        >
-          <Dedication title="Softcore Dedication" dedication={scDedication} />
-          <Dedication title="Hardcore Dedication" dedication={hcDedication} />
-        </LeaderboardAccordionItem>
+          boards={[
+            era(postNerf, dedication(postNerf)),
+            era(preNerf, dedication(preNerf)),
+          ]}
+        />
       </LeaderboardAccordion>
     </Stack>
   );

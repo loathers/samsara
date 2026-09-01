@@ -43,28 +43,31 @@ export const meta = () => {
 
 export default function NoPath() {
   const {
-    path,
-    frequency,
-    recordBreaking,
-    scLeaderboard,
-    hcLeaderboard,
-    casualLeaderboard,
-    scDedication,
-    hcDedication,
     casualDedication,
-    scRecent,
-    hcRecent,
+    casualLeaderboard,
     casualRecent,
+    frequency,
+    path,
     totalRuns,
-    classes,
+    boards,
   } = useLoaderData<typeof loader>();
+
+  const {
+    classes,
+    hcDedication,
+    hcLeaderboard,
+    hcRecent,
+    scDedication,
+    scLeaderboard,
+    scRecent,
+  } = boards[0];
 
   return (
     <Stack gap={10}>
       <PathHeader
         path={path}
         frequency={frequency}
-        recordBreaking={recordBreaking}
+        boards={boards}
         totalRuns={totalRuns}
       />
       <LeaderboardAccordion>

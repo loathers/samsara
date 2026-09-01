@@ -8,7 +8,7 @@ const isTagType = (input?: string): input is TagType => {
   return /(LEADERBOARD|PYRITE)(_SPECIAL)?/i.test(input);
 };
 
-export const loader = async ({ params }: LoaderFunctionArgs) => {
+export const loader = async ({ params, request }: LoaderFunctionArgs) => {
   let { slug, tagType } = params;
 
   slug = slug?.toLowerCase();
@@ -31,11 +31,17 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     return redirect(`/api/path/${path.id}/${tagType.toLowerCase()}`);
   }
 
+  // Ranks repeat across a path's boards, so without this they come back merged.
+  const board = new URL(request.url).searchParams.get("board") ?? undefined;
+
   const leaderboards = Object.fromEntries(
     await Promise.all(
       Object.values(Lifestyle).map(
         async (lifestyle) =>
-          [lifestyle, await getLeaderboard({ path, lifestyle, type: tagType })] as const,
+          [
+            lifestyle,
+            await getLeaderboard({ path, lifestyle, type: tagType, board }),
+          ] as const,
       ),
     ),
   );

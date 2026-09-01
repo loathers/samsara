@@ -7,14 +7,14 @@ import {
   useLoaderData,
 } from "react-router";
 
+import { BoardSection } from "~/components/BoardSection";
 import { ClassComparisonChart } from "~/components/ClassComparisonChart/ClassComparisonChart";
 import { Dedication } from "~/components/Dedication";
 import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
-import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
 import { findPathWithClasses } from "~/db.server";
-import { getPathData } from "~/path.server";
+import { type BoardData, getPathData } from "~/path.server";
 import { formatPathName } from "~/utils";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -46,112 +46,144 @@ export const meta = ({ data }: MetaArgs<typeof loader>) => {
   ];
 };
 
+type Category = {
+  slug: string;
+  title: string;
+  description: (current: boolean) => React.ReactNode;
+  show?: (board: BoardData) => boolean;
+  content: (board: BoardData, showClass: boolean) => React.ReactNode;
+};
+
+const CATEGORIES: Category[] = [
+  {
+    slug: "leaderboards",
+    title: "Leaderboards",
+    description: (current) =>
+      current
+        ? "The official leaderboards as they currently stand"
+        : "The official leaderboards frozen once the path went out-of-season",
+    content: (b, showClass) => (
+      <>
+        <Leaderboard
+          title="Softcore Leaderboard"
+          ascensions={b.scLeaderboard}
+          showClass={showClass}
+          omitExtra={b.board.extraEquals?.[0]}
+        >
+          <ClassComparisonChart data={b.classes.main.softcore} />
+        </Leaderboard>
+        <Leaderboard
+          title="Hardcore Leaderboard"
+          ascensions={b.hcLeaderboard}
+          showClass={showClass}
+          omitExtra={b.board.extraEquals?.[0]}
+        >
+          <ClassComparisonChart data={b.classes.main.hardcore} />
+        </Leaderboard>
+      </>
+    ),
+  },
+  {
+    slug: "pyrites",
+    title: "Pyrites",
+    description: () => "{PYRITE}",
+    show: (b) => b.scPyrite.length + b.hcPyrite.length > 0,
+    content: (b, showClass) => (
+      <>
+        <Leaderboard
+          title="Softcore Pyrites"
+          ascensions={b.scPyrite}
+          showClass={showClass}
+          omitExtra={b.board.extraEquals?.[0]}
+        >
+          <ClassComparisonChart data={b.classes.pyrite.softcore} />
+        </Leaderboard>
+        <Leaderboard
+          title="Hardcore Pyrites"
+          ascensions={b.hcPyrite}
+          showClass={showClass}
+          omitExtra={b.board.extraEquals?.[0]}
+        >
+          <ClassComparisonChart data={b.classes.pyrite.hardcore} />
+        </Leaderboard>
+      </>
+    ),
+  },
+  {
+    slug: "recent",
+    title: "Recent Ascensions",
+    description: () => "The most recent ascensions on this path",
+    content: (b, showClass) => (
+      <>
+        <Leaderboard
+          title="Softcore"
+          ascensions={b.scRecent}
+          ranked={false}
+          showClass={showClass}
+          omitExtra={b.board.extraEquals?.[0]}
+        />
+        <Leaderboard
+          title="Hardcore"
+          ascensions={b.hcRecent}
+          ranked={false}
+          showClass={showClass}
+          omitExtra={b.board.extraEquals?.[0]}
+        />
+      </>
+    ),
+  },
+  {
+    slug: "dedication",
+    title: "Dedication",
+    description: () =>
+      "Players who have completed the most ascensions for this path",
+    content: (b) => (
+      <>
+        <Dedication title="Softcore Dedication" dedication={b.scDedication} />
+        <Dedication title="Hardcore Dedication" dedication={b.hcDedication} />
+      </>
+    ),
+  },
+];
+
+/** A board's own discriminator is redundant in a table that is only that board. */
+const showClassFor = (board: BoardData, showClass: boolean) =>
+  showClass && !board.board.className;
+
 export default function PathPage() {
-  const {
-    current,
-    frequency,
-    hcDedication,
-    hcLeaderboard,
-    hcPyrite,
-    path,
-    hcRecent,
-    recordBreaking,
-    scDedication,
-    scLeaderboard,
-    scPyrite,
-    scRecent,
-    totalRuns,
-    totalRunsInSeason,
-    classes,
-  } = useLoaderData<typeof loader>();
+  const { boards, current, frequency, path, totalRuns, totalRunsInSeason } =
+    useLoaderData<typeof loader>();
 
   const showClass = path.class.length !== 1;
-  const showPyrites = scPyrite.length + hcPyrite.length > 0;
 
   return (
     <Stack gap={10}>
       <PathHeader
         path={path}
         frequency={frequency}
-        recordBreaking={recordBreaking}
+        boards={boards}
         totalRuns={totalRuns}
         totalRunsInSeason={totalRunsInSeason}
       />
       <LeaderboardAccordion>
-        <LeaderboardAccordionItem
-          title="Leaderboards"
-          description={
-            current
-              ? "The official leaderboards as they currently stand"
-              : "The official leaderboards frozen once the path went out-of-season"
-          }
-        >
-          <Leaderboard
-            title="Softcore Leaderboard"
-            ascensions={scLeaderboard}
-            showClass={showClass}
-          >
-            <ClassComparisonChart
-              data={classes.main.softcore}
-            />
-          </Leaderboard>
-          <Leaderboard
-            title="Hardcore Leaderboard"
-            ascensions={hcLeaderboard}
-            showClass={showClass}
-          >
-            <ClassComparisonChart
-              data={classes.main.hardcore}
-            />
-          </Leaderboard>
-        </LeaderboardAccordionItem>
-        {showPyrites && (
-          <LeaderboardAccordionItem title="Pyrites" description="{PYRITE}">
-            <Leaderboard
-              title="Softcore Pyrites"
-              ascensions={scPyrite}
-              showClass={showClass}
-            >
-              <ClassComparisonChart
-                data={classes.pyrite.softcore}
-              />
-            </Leaderboard>
-            <Leaderboard
-              title="Hardcore Pyrites"
-              ascensions={hcPyrite}
-              showClass={showClass}
-            >
-              <ClassComparisonChart
-                data={classes.pyrite.hardcore}
-              />
-            </Leaderboard>
-          </LeaderboardAccordionItem>
-        )}
-        <LeaderboardAccordionItem
-          slug="recent"
-          title="Recent Ascensions"
-          description="The most recent ascensions on this path"
-        >
-          <Leaderboard
-            title="Softcore"
-            ascensions={scRecent}
-            ranked={false}
-            showClass={showClass}
+        {CATEGORIES.map((category) => (
+          <BoardSection
+            key={category.slug}
+            slug={category.slug}
+            title={category.title}
+            description={category.description(current)}
+            boards={boards
+              .filter((board) => category.show?.(board) ?? true)
+              .map((board) => ({
+                key: board.board.key,
+                label: board.board.label,
+                content: category.content(
+                  board,
+                  showClassFor(board, showClass),
+                ),
+              }))}
           />
-          <Leaderboard
-            title="Hardcore"
-            ascensions={hcRecent}
-            ranked={false}
-            showClass={showClass}
-          />
-        </LeaderboardAccordionItem>
-        <LeaderboardAccordionItem
-          title="Dedication"
-          description="Players who have completed the most ascensions for this path"
-        >
-          <Dedication title="Softcore Dedication" dedication={scDedication} />
-          <Dedication title="Hardcore Dedication" dedication={hcDedication} />
-        </LeaderboardAccordionItem>
+        ))}
       </LeaderboardAccordion>
     </Stack>
   );

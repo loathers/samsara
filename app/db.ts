@@ -80,7 +80,8 @@ export interface AscensionTable {
 export interface TagTable {
   type: TagType;
   value: number | null;
-  year: number | null;
+  /** Which of the path's boards this rank is on. See app/boards.ts. */
+  board: string | null;
   ascensionNumber: number;
   playerId: number;
 }

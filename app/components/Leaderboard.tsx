@@ -20,6 +20,7 @@ type Props = {
   showClass?: boolean;
   ranked?: boolean;
   alternativeScore?: [title: string, key: string];
+  omitExtra?: string;
   children?: React.ReactNode;
 };
 
@@ -29,11 +30,11 @@ export function Leaderboard({
   showClass = true,
   ranked = true,
   alternativeScore,
+  omitExtra,
   children,
 }: Props) {
-  const entries = ascensions.map((asc) =>
-    getExtraEntries(asc.extra, alternativeScore ? [alternativeScore[1]] : []),
-  );
+  const omit = [alternativeScore?.[1], omitExtra].filter((k) => k !== undefined);
+  const entries = ascensions.map((asc) => getExtraEntries(asc.extra, omit));
   const keys = [...new Set(entries.flat().map(([key]) => key))];
   const extras = entries.map((e) =>
     keys.length === 1

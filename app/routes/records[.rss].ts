@@ -1,9 +1,10 @@
 import { Feed } from "feed";
 import { data } from "react-router";
 
+import { findBoard } from "~/boards";
 import { formatLifestyle } from "~/components/Lifestyle";
 import { getMaxAge, getRecordsForRSS } from "~/db.server";
-import { hasExtra } from "~/utils";
+import { SPECIAL_RANKINGS, hasExtra } from "~/utils";
 
 export const loader = async () => {
   const headers = {
@@ -24,12 +25,17 @@ export const loader = async () => {
   });
 
   records.forEach((record) => {
-    const score = hasExtra(record)
-      ? Object.entries(record.extra)
-          .map(([key, value]) => `${value} ${key}`)
-          .join(", ")
-      : `${record.turns}/${record.days}`;
-    const description = `${record.player.name} (#${record.player.id}) has achieved the best ${formatLifestyle(record.lifestyle)} ${record.path.name} with ${score}`;
+    // Otherwise metadata like Blue vs. Red's team stands in for days and turns.
+    const rankedOn = SPECIAL_RANKINGS.get(record.path.name);
+    const score =
+      rankedOn && hasExtra(record)
+        ? `${record.extra[rankedOn]} ${rankedOn}`
+        : `${record.turns}/${record.days}`;
+
+    const board = findBoard(record.path.name, record.board);
+    const path = board ? `${record.path.name} (${board.label})` : record.path.name;
+
+    const description = `${record.player.name} (#${record.player.id}) has achieved the best ${formatLifestyle(record.lifestyle)} ${path} with ${score}`;
     feed.addItem({
       title: description,
       id: `https://samsara.loathers.net/player/${record.player.id}#${record.ascensionNumber}`,

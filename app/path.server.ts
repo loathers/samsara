@@ -1,3 +1,4 @@
+import { Board, DEFAULT_BOARD, boardsFor } from "./boards";
 import { Class, Lifestyle, Path, TagType } from "./db";
 
 import {
@@ -49,9 +50,11 @@ async function leaderboardsForLifestyle(
   path: Path,
   special: boolean,
   lifestyle: "HARDCORE" | "SOFTCORE",
+  board: Board = DEFAULT_BOARD,
 ) {
   const pyrites = hasPyrites(path);
   const prefix = lifestyle === "HARDCORE" ? "hc" : "sc";
+  const key = board.key ?? undefined;
 
   const [
     dedication,
@@ -61,15 +64,23 @@ async function leaderboardsForLifestyle(
     specialLeaderboard,
     specialPyrite,
   ] = await Promise.all([
-    getDedication(path, lifestyle),
-    getLeaderboard({ path, lifestyle, inSeason: path.seasonal }),
-    pyrites ? getLeaderboard({ path, lifestyle }) : Promise.resolve([]),
-    getRecentAscensions({ path, lifestyle }),
+    getDedication(path, lifestyle, board),
+    getLeaderboard({ path, lifestyle, inSeason: path.seasonal, board: key }),
+    pyrites
+      ? getLeaderboard({ path, lifestyle, board: key })
+      : Promise.resolve([]),
+    getRecentAscensions({ path, lifestyle, board }),
     special
-      ? getLeaderboard({ path, lifestyle, special, inSeason: path.seasonal })
+      ? getLeaderboard({
+          path,
+          lifestyle,
+          special,
+          inSeason: path.seasonal,
+          board: key,
+        })
       : Promise.resolve([]),
     special && pyrites
-      ? getLeaderboard({ path, lifestyle, special: true })
+      ? getLeaderboard({ path, lifestyle, special: true, board: key })
       : Promise.resolve([]),
   ]);
 
@@ -93,12 +104,8 @@ function byLifestyle(rows: ClassComparisonRow[]): ClassComparisonYear {
   );
 }
 
-/**
- * Boards whose tagged population a plain season window cannot describe: Grey Goo is ranked by
- * Goo Score and carries no days/turns tags at all, and 11,037's tags are split around a
- * mid-season nerf, so a Path.start/end window would compare the wrong runs.
- */
-const NO_CLASS_COMPARISON = ["Grey Goo", "11,037 Leagues Under the Sea"];
+/** Grey Goo carries no days/turns tags at all, so there is no board to describe. */
+const NO_CLASS_COMPARISON = ["Grey Goo"];
 
 /**
  * Mirrors leaderboardsForLifestyle: the headline board is tagged LEADERBOARD while a path is
@@ -107,7 +114,10 @@ const NO_CLASS_COMPARISON = ["Grey Goo", "11,037 Leagues Under the Sea"];
  * Paths with their own classes are excluded because those run a board per class in game, so
  * a combined comparison would not describe any board anyone sees.
  */
-export async function getPathClassComparison(path: Path & { class: Class[] }) {
+export async function getPathClassComparison(
+  path: Path & { class: Class[] },
+  board: Board = DEFAULT_BOARD,
+) {
   if (path.class.length > 0 || NO_CLASS_COMPARISON.includes(path.name)) {
     return { main: byLifestyle([]), pyrite: byLifestyle([]) };
   }
@@ -119,50 +129,71 @@ export async function getPathClassComparison(path: Path & { class: Class[] }) {
     path.seasonal && path.start && path.end
       ? getClassComparison({
           path,
+          board,
           tagType: TagType.LEADERBOARD,
           window: { start: path.start, end: new Date(path.end.getTime() + DAY) },
         })
-      : getClassComparison({ path, tagType: TagType.PYRITE, window: allTime }),
+      : getClassComparison({
+          path,
+          board,
+          tagType: TagType.PYRITE,
+          window: allTime,
+        }),
     hasPyrites(path)
-      ? getClassComparison({ path, tagType: TagType.PYRITE, window: allTime })
+      ? getClassComparison({
+          path,
+          board,
+          tagType: TagType.PYRITE,
+          window: allTime,
+        })
       : Promise.resolve([]),
   ]);
 
   return { main: byLifestyle(main), pyrite: byLifestyle(pyrite) };
 }
 
+async function boardData(
+  path: Path & { class: Class[] },
+  special: boolean,
+  board: Board,
+) {
+  const [recordBreaking, hardcoreLeaderboards, softcoreLeaderboards, classes] =
+    await Promise.all([
+      getRecordBreaking(path, undefined, board.key ?? undefined),
+      leaderboardsForLifestyle(path, special, "HARDCORE", board),
+      leaderboardsForLifestyle(path, special, "SOFTCORE", board),
+      getPathClassComparison(path, board),
+    ]);
+
+  return {
+    board,
+    recordBreaking,
+    classes,
+    ...(hardcoreLeaderboards as HardcoreLeaderboards),
+    ...(softcoreLeaderboards as SoftcoreLeaderboards),
+  };
+}
+
+export type BoardData = Awaited<ReturnType<typeof boardData>>;
+
 export async function getPathData(
   path: Path & { class: Class[] },
   special = false,
 ) {
-  const [
-    frequency,
-    recordBreaking,
-    hardcoreLeaderboards,
-    softcoreLeaderboards,
-    totalRuns,
-    totalRunsInSeason,
-    classes,
-  ] = await Promise.all([
+  const [frequency, totalRuns, totalRunsInSeason, ...boards] = await Promise.all([
     getFrequency({ path, range: calculateRange(path.start ?? new Date(0), new Date()) }),
-    getRecordBreaking(path),
-    leaderboardsForLifestyle(path, special, "HARDCORE"),
-    leaderboardsForLifestyle(path, special, "SOFTCORE"),
     countAscensions(path.name),
     path.end ? countAscensions(path.name, path.end) : Promise.resolve(0),
-    getPathClassComparison(path),
+    ...boardsFor(path).map((board) => boardData(path, special, board)),
   ]);
 
   return {
     current: inSeason(path),
     frequency,
     path,
-    recordBreaking,
-    ...(hardcoreLeaderboards as HardcoreLeaderboards),
-    ...(softcoreLeaderboards as SoftcoreLeaderboards),
+    boards,
     totalRuns,
     totalRunsInSeason,
-    classes,
   };
 }
 
@@ -174,8 +205,8 @@ export async function getPastStandardLeaderboards(
       pastYearsOfStandard().map(async (year) => {
         // Run softcore and hardcore queries in parallel for each year
         const [softcore, hardcore] = await Promise.all([
-          getLeaderboard({ path, lifestyle: Lifestyle.SOFTCORE, type: TagType.STANDARD, year }),
-          getLeaderboard({ path, lifestyle: Lifestyle.HARDCORE, type: TagType.STANDARD, year }),
+          getLeaderboard({ path, lifestyle: Lifestyle.SOFTCORE, type: TagType.STANDARD, board: String(year) }),
+          getLeaderboard({ path, lifestyle: Lifestyle.HARDCORE, type: TagType.STANDARD, board: String(year) }),
         ]);
         return [year, { softcore, hardcore }] as const;
       }),
