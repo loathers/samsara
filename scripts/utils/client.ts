@@ -2,7 +2,7 @@ import { Kysely, PostgresDialect } from "kysely";
 import pg from "pg";
 
 import { AscensionHistory, type Ascension } from "kol.js/domains/AscensionHistory";
-import type { Database, Player } from "../../app/db.js";
+import { LAST_STANDARD_CLASS_ID, type Database, type Player } from "../../app/db.js";
 import { parseWorkers } from "./Worker.js";
 import { fetchClasses, fetchPaths } from "./data.js";
 import { tagAscensions } from "./tagger.js";
@@ -359,7 +359,7 @@ export async function updateClasses() {
       .where((eb) =>
         eb.or([
           eb("image", "is", null),
-          eb.and([eb("pathId", "is", null), eb("id", ">", 6)]),
+          eb.and([eb("pathId", "is", null), eb("id", ">", LAST_STANDARD_CLASS_ID)]),
         ]),
       )
       .execute();

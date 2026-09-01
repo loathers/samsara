@@ -1,6 +1,7 @@
 type Props = {
-  cx?: number;
-  cy?: number;
+  /** Recharts passes null, not undefined, for a row whose win rate is missing. */
+  cx?: number | null;
+  cy?: number | null;
   fill: string;
   /** Inverse of the fill, so the star reads where it overlaps a bar. */
   stroke: string;
@@ -23,9 +24,9 @@ function starPoints(outer: number, inner: number) {
 const POINTS = starPoints(SIZE / 2, SIZE / 5);
 
 export function WinRateStar({ cx, cy, fill, stroke }: Props) {
-  // Recharts hands a custom shape null coordinates for rows with no value, which
-  // would otherwise stamp an untransformed star on the chart's top left corner.
-  if (!Number.isFinite(cx) || !Number.isFinite(cy)) return null;
+  // translate(null,y) is invalid, so the whole transform is dropped and the star lands in
+  // the chart's top left corner.
+  if (cx == null || cy == null) return null;
 
   return (
     <polygon

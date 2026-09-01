@@ -74,7 +74,7 @@ export function ClassComparisonChart({
   );
 
   const winRateShape = useCallback(
-    ({ cx, cy }: { cx?: number; cy?: number }) => (
+    ({ cx, cy }: { cx?: number | null; cy?: number | null }) => (
       <WinRateStar cx={cx} cy={cy} fill={star} stroke={starOutline} />
     ),
     [star, starOutline],
@@ -111,13 +111,11 @@ export function ClassComparisonChart({
               />
               <ReferenceLine x={0.5} stroke={zero} />
               <Bar dataKey="share" fill={bar} barSize={14} isAnimationActive={false} />
-              {hasWinRates && (
-                <Scatter
-                  dataKey="winRate"
-                  shape={winRateShape}
-                  isAnimationActive={false}
-                />
-              )}
+              <Scatter
+                dataKey="winRate"
+                shape={winRateShape}
+                isAnimationActive={false}
+              />
               <Tooltip cursor={CURSOR} content={TOOLTIP} />
             </ComposedChart>
           </ResponsiveContainer>
