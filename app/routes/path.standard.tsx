@@ -26,12 +26,7 @@ export const loader = async () => {
     getStandardClassComparison(path),
   ]);
 
-  return {
-    ...pathData,
-    years,
-    classComparison: classes.byYear,
-    currentYear: classes.currentYear,
-  };
+  return { ...pathData, years, classComparison: classes };
 };
 
 export const meta = () => {
@@ -47,7 +42,6 @@ export const meta = () => {
 export default function PathPage() {
   const {
     classComparison,
-    currentYear,
     frequency,
     path,
     totalRuns,
@@ -57,6 +51,7 @@ export default function PathPage() {
 
   // A single-board path, so everything comes from the one board.
   const {
+    classes,
     hcDedication,
     hcLeaderboard,
     hcPyrite,
@@ -84,7 +79,6 @@ export default function PathPage() {
               showClass
             >
               <ClassComparisonChart
-                title="Class Performance"
                 data={classComparison[Number(year)]?.softcore ?? []}
               />
             </Leaderboard>
@@ -94,7 +88,6 @@ export default function PathPage() {
               showClass
             >
               <ClassComparisonChart
-                title="Class Performance"
                 data={classComparison[Number(year)]?.hardcore ?? []}
               />
             </Leaderboard>
@@ -122,8 +115,7 @@ export default function PathPage() {
             showClass
           >
             <ClassComparisonChart
-              title="Class Performance"
-              data={classComparison[currentYear]?.softcore ?? []}
+              data={classes.main.softcore}
             />
           </Leaderboard>
           <Leaderboard
@@ -132,8 +124,7 @@ export default function PathPage() {
             showClass
           >
             <ClassComparisonChart
-              title="Class Performance"
-              data={classComparison[currentYear]?.hardcore ?? []}
+              data={classes.main.hardcore}
             />
           </Leaderboard>
         </LeaderboardAccordionItem>
@@ -143,12 +134,20 @@ export default function PathPage() {
             title="Softcore Pyrites"
             ascensions={scPyrite}
             showClass
-          />
+          >
+            <ClassComparisonChart
+              data={classes.pyrite.softcore}
+            />
+          </Leaderboard>
           <Leaderboard
             title="Hardcore Pyrites"
             ascensions={hcPyrite}
             showClass
-          />
+          >
+            <ClassComparisonChart
+              data={classes.pyrite.hardcore}
+            />
+          </Leaderboard>
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
           slug="recent"

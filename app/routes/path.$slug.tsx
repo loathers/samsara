@@ -8,6 +8,7 @@ import {
 } from "react-router";
 
 import { boardHash, boardTitle } from "~/boards";
+import { ClassComparisonChart } from "~/components/ClassComparisonChart/ClassComparisonChart";
 import { Dedication } from "~/components/Dedication";
 import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
@@ -54,6 +55,7 @@ export const meta = ({ data }: MetaArgs<typeof loader>) => {
 function BoardSections({
   board: {
     board,
+    classes,
     hcDedication,
     hcLeaderboard,
     hcPyrite,
@@ -72,6 +74,9 @@ function BoardSections({
 }) {
   const showPyrites = scPyrite.length + hcPyrite.length > 0;
 
+  // The board's own discriminator is redundant in a table that is only that board.
+  const omitExtra = board.extraEquals?.[0];
+
   return (
     <>
       <LeaderboardAccordionItem
@@ -88,14 +93,18 @@ function BoardSections({
           title="Softcore Leaderboard"
           ascensions={scLeaderboard}
           showClass={showClass}
-          omitExtra={board.extraEquals?.[0]}
-        />
+          omitExtra={omitExtra}
+        >
+          <ClassComparisonChart data={classes.main.softcore} />
+        </Leaderboard>
         <Leaderboard
           title="Hardcore Leaderboard"
           ascensions={hcLeaderboard}
           showClass={showClass}
-          omitExtra={board.extraEquals?.[0]}
-        />
+          omitExtra={omitExtra}
+        >
+          <ClassComparisonChart data={classes.main.hardcore} />
+        </Leaderboard>
       </LeaderboardAccordionItem>
       {showPyrites && (
         <LeaderboardAccordionItem
@@ -107,14 +116,18 @@ function BoardSections({
             title="Softcore Pyrites"
             ascensions={scPyrite}
             showClass={showClass}
-            omitExtra={board.extraEquals?.[0]}
-          />
+            omitExtra={omitExtra}
+          >
+            <ClassComparisonChart data={classes.pyrite.softcore} />
+          </Leaderboard>
           <Leaderboard
             title="Hardcore Pyrites"
             ascensions={hcPyrite}
             showClass={showClass}
-            omitExtra={board.extraEquals?.[0]}
-          />
+            omitExtra={omitExtra}
+          >
+            <ClassComparisonChart data={classes.pyrite.hardcore} />
+          </Leaderboard>
         </LeaderboardAccordionItem>
       )}
       <LeaderboardAccordionItem
@@ -127,14 +140,14 @@ function BoardSections({
           ascensions={scRecent}
           ranked={false}
           showClass={showClass}
-          omitExtra={board.extraEquals?.[0]}
+          omitExtra={omitExtra}
         />
         <Leaderboard
           title="Hardcore"
           ascensions={hcRecent}
           ranked={false}
           showClass={showClass}
-          omitExtra={board.extraEquals?.[0]}
+          omitExtra={omitExtra}
         />
       </LeaderboardAccordionItem>
       <LeaderboardAccordionItem

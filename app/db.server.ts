@@ -6,7 +6,7 @@ import { boardFilter } from "./board.server";
 import { Board, DEFAULT_BOARD } from "./boards";
 import type { Database, JsonValue, Path } from "./db";
 import { Lifestyle, TagType } from "./db";
-import { MIN_CLASSES_PER_PLAYER, NS13 } from "./utils";
+import { NS13 } from "./utils";
 
 declare global {
   var globalKysely: Kysely<Database>;
@@ -557,44 +557,70 @@ export const CLASS_COMPARISON_RANK_CUTOFF = 30;
 
 const CLASS_COMPARISON_LIFESTYLES = [Lifestyle.SOFTCORE, Lifestyle.HARDCORE];
 
+/** The class being measured plus at least three others. */
+const MIN_CLASSES_PER_PLAYER = 4;
+
 export type ClassComparisonRow = {
-  year: number;
+  /** The Standard season, or null on boards that are not bucketed by year. */
+  year: number | null;
   lifestyle: Lifestyle;
   className: string;
   classImage: string | null;
-  winRate: number;
+  /** Fraction of the board's runs that used this class. */
+  share: number;
+  /** Null when too few players ran several classes to compare within them. */
+  winRate: number | null;
   turnDelta: number | null;
 };
 
 /**
- * Most runs in a season share a daycount, so a mean daycount says almost nothing. Every run is
- * instead scored pairwise against the player's other-class runs, days before turns, and
- * `winRate` is the share it beats. Averaging within a player before averaging across them
- * keeps the grinders from carrying the whole number.
+ * Two things about class choice on a board: what people actually pick (`share`), and how
+ * those picks fare (`winRate`).
  *
- * Pass a `year` for tag types that do not carry one: only STANDARD does.
+ * Share counts every qualifying player, because a class nobody ran is the finding on paths
+ * where one class dominates. Win rate needs a player who ran several classes, so it scores
+ * every run pairwise against that player's other-class runs, days before turns, and averages
+ * within a player before across them so the grinders do not carry it. It is null where too
+ * few players explored.
+ *
+ * `window` bounds the comparison. Omit it for STANDARD tags, which carry a year each and are
+ * bucketed into calendar years; pass one for a path's season or for all time.
+ *
+ * `board` scopes it to one of a path's parallel boards. It has to restrict the untagged runs
+ * too, or a player's runs on the other board would be compared against their runs on this one.
  */
 export async function getClassComparison({
   path,
   tagType = TagType.STANDARD,
-  year,
+  window,
+  board,
 }: {
   path: { name: string };
   tagType?: TagType;
-  year?: number;
+  /** `end` is exclusive. */
+  window?: { start: Date; end: Date; year?: number };
+  board?: Board;
 }) {
   const lifestyles = sql.join(
     CLASS_COMPARISON_LIFESTYLES.map((l) => sql`${sql.literal(l)}::"Lifestyle"`),
   );
 
-  // Standard's boards are years, so the discriminator comes back out as a number here.
-  const season =
-    year === undefined ? sql`"Tag"."board"::integer` : sql`${year}::integer`;
+  // Kept non-null so the joins below match; the final select turns 0 back into null.
+  // Without a window the boards are Standard's years, so the key comes back as a number.
+  const season = window
+    ? sql`${window.year ?? 0}::integer`
+    : sql`"Tag"."board"::integer`;
+  const seasonStart = window
+    ? sql`${window.start}`
+    : sql`MAKE_DATE("qualifying"."season", 1, 1)`;
+  const seasonEnd = window
+    ? sql`${window.end}`
+    : sql`MAKE_DATE("qualifying"."season" + 1, 1, 1)`;
 
   const result = await sql<ClassComparisonRow>`
     WITH "qualifying" AS (
       SELECT DISTINCT
-        ${season} AS "year",
+        ${season} AS "season",
         "Ascension"."lifestyle" AS "lifestyle",
         "Ascension"."playerId" AS "playerId"
       FROM "Tag"
@@ -603,7 +629,8 @@ export async function getClassComparison({
         AND "Ascension"."playerId" = "Tag"."playerId"
       WHERE
         "Tag"."type" = ${sql.literal(tagType)}::"TagType" AND
-        ${year === undefined ? sql`"Tag"."board" IS NOT NULL AND` : sql``}
+        ${window ? sql`` : sql`"Tag"."board" IS NOT NULL AND`}
+        ${board?.key ? sql`"Tag"."board" = ${board.key} AND` : sql``}
         "Tag"."value" <= ${CLASS_COMPARISON_RANK_CUTOFF} AND
         "Ascension"."pathName" = ${path.name} AND
         "Ascension"."lifestyle" IN (${lifestyles})
@@ -611,7 +638,7 @@ export async function getClassComparison({
     -- Tagged or not, since the tagger keeps only each player's best run.
     "playerRuns" AS (
       SELECT
-        "qualifying"."year" AS "year",
+        "qualifying"."season" AS "season",
         "qualifying"."lifestyle" AS "lifestyle",
         "qualifying"."playerId" AS "playerId",
         "Ascension"."className" AS "className",
@@ -621,47 +648,57 @@ export async function getClassComparison({
       JOIN "Ascension"
         ON "Ascension"."playerId" = "qualifying"."playerId"
         AND "Ascension"."lifestyle" = "qualifying"."lifestyle"
-        AND "Ascension"."date" >= MAKE_DATE("qualifying"."year", 1, 1)
-        AND "Ascension"."date" < MAKE_DATE("qualifying"."year" + 1, 1, 1)
+        AND "Ascension"."date" >= ${seasonStart}
+        AND "Ascension"."date" < ${seasonEnd}
       WHERE
         "Ascension"."pathName" = ${path.name} AND
         "Ascension"."dropped" IS FALSE AND
         "Ascension"."abandoned" IS FALSE AND
+        ${board ? sql`${boardFilter(board, "Ascension")} AND` : sql``}
         -- A run left dormant for years would otherwise land in a season it was never
         -- played in. Day 1 is the start day.
         "Ascension"."date" - (("Ascension"."days" - 1) * INTERVAL '1 day')
-          >= MAKE_DATE("qualifying"."year", 1, 1)
+          >= ${seasonStart}
+    ),
+    -- Before the exploration filter, so a class only the unadventurous ran still counts.
+    "share" AS (
+      SELECT
+        "season", "lifestyle", "className",
+        COUNT(*)::float
+          / SUM(COUNT(*)) OVER (PARTITION BY "season", "lifestyle") AS "share"
+      FROM "playerRuns"
+      GROUP BY "season", "lifestyle", "className"
     ),
     -- Ranking twice counts how many other-class runs each run beats. Measured 4x faster
     -- than the self join it replaces, which the planner cannot cost and rescans per row.
     "ranked" AS (
       SELECT
-        "year", "lifestyle", "playerId", "className", "days", "turns",
+        "season", "lifestyle", "playerId", "className", "days", "turns",
         MIN("days") OVER w AS "bestDays",
         COUNT(*) OVER w AS "cntAll",
-        RANK() OVER (PARTITION BY "year", "lifestyle", "playerId"
+        RANK() OVER (PARTITION BY "season", "lifestyle", "playerId"
                      ORDER BY "days", "turns") AS "rankAll",
-        COUNT(*) OVER (PARTITION BY "year", "lifestyle", "playerId",
+        COUNT(*) OVER (PARTITION BY "season", "lifestyle", "playerId",
                                     "days", "turns") AS "tiesAll",
         COUNT(*) OVER wc AS "cntClass",
-        RANK() OVER (PARTITION BY "year", "lifestyle", "playerId", "className"
+        RANK() OVER (PARTITION BY "season", "lifestyle", "playerId", "className"
                      ORDER BY "days", "turns") AS "rankClass",
-        COUNT(*) OVER (PARTITION BY "year", "lifestyle", "playerId", "className",
+        COUNT(*) OVER (PARTITION BY "season", "lifestyle", "playerId", "className",
                                     "days", "turns") AS "tiesClass",
         -- COUNT(DISTINCT) is not a window function; ranking from both ends and adding is.
-        DENSE_RANK() OVER (PARTITION BY "year", "lifestyle", "playerId"
+        DENSE_RANK() OVER (PARTITION BY "season", "lifestyle", "playerId"
                            ORDER BY "className")
-          + DENSE_RANK() OVER (PARTITION BY "year", "lifestyle", "playerId"
+          + DENSE_RANK() OVER (PARTITION BY "season", "lifestyle", "playerId"
                                ORDER BY "className" DESC)
           - 1 AS "classesPlayed"
       FROM "playerRuns"
       WINDOW
-        w AS (PARTITION BY "year", "lifestyle", "playerId"),
-        wc AS (PARTITION BY "year", "lifestyle", "playerId", "className")
+        w AS (PARTITION BY "season", "lifestyle", "playerId"),
+        wc AS (PARTITION BY "season", "lifestyle", "playerId", "className")
     ),
     "perRun" AS (
       SELECT
-        "year", "lifestyle", "playerId", "className", "days", "turns", "bestDays",
+        "season", "lifestyle", "playerId", "className", "days", "turns", "bestDays",
         "cntAll" - "cntClass" AS "others",
         ("cntAll" - ("rankAll" - 1) - "tiesAll")
           - ("cntClass" - ("rankClass" - 1) - "tiesClass") AS "beats",
@@ -671,16 +708,16 @@ export async function getClassComparison({
     ),
     "winRate" AS (
       SELECT
-        "year", "lifestyle", "playerId", "className",
+        "season", "lifestyle", "playerId", "className",
         AVG(("beats" + 0.5 * "draws") / "others") AS "winRate"
       FROM "perRun"
       WHERE "others" > 0
-      GROUP BY "year", "lifestyle", "playerId", "className"
+      GROUP BY "season", "lifestyle", "playerId", "className"
     ),
     -- Turns only mean anything at a fixed daycount.
     "atBestDay" AS (
       SELECT
-        "year", "lifestyle", "playerId", "className",
+        "season", "lifestyle", "playerId", "className",
         SUM("turns"::float) OVER wc AS "classTurns",
         COUNT(*) OVER wc AS "classN",
         SUM("turns"::float) OVER w AS "allTurns",
@@ -688,35 +725,46 @@ export async function getClassComparison({
       FROM "perRun"
       WHERE "days" = "bestDays" AND "others" > 0
       WINDOW
-        w AS (PARTITION BY "year", "lifestyle", "playerId"),
-        wc AS (PARTITION BY "year", "lifestyle", "playerId", "className")
+        w AS (PARTITION BY "season", "lifestyle", "playerId"),
+        wc AS (PARTITION BY "season", "lifestyle", "playerId", "className")
     ),
     "turnsVsOthers" AS (
       SELECT DISTINCT
-        "year", "lifestyle", "playerId", "className",
+        "season", "lifestyle", "playerId", "className",
         "classTurns" / "classN"
           - ("allTurns" - "classTurns") / NULLIF("allN" - "classN", 0) AS "turnDelta"
       FROM "atBestDay"
+    ),
+    "byClass" AS (
+      SELECT
+        "season", "lifestyle", "className",
+        AVG("winRate")::float AS "winRate"
+      FROM "winRate"
+      GROUP BY "season", "lifestyle", "className"
+    ),
+    "turnByClass" AS (
+      SELECT
+        "season", "lifestyle", "className",
+        AVG("turnDelta")::float AS "turnDelta"
+      FROM "turnsVsOthers"
+      GROUP BY "season", "lifestyle", "className"
     )
     SELECT
-      "winRate"."year"::integer AS "year",
-      "winRate"."lifestyle" AS "lifestyle",
-      "winRate"."className" AS "className",
+      NULLIF("share"."season", 0)::integer AS "year",
+      "share"."lifestyle" AS "lifestyle",
+      "share"."className" AS "className",
       "Class"."image" AS "classImage",
-      AVG("winRate"."winRate")::float AS "winRate",
-      AVG("turnsVsOthers"."turnDelta")::float AS "turnDelta"
-    FROM "winRate"
-    LEFT JOIN "turnsVsOthers"
-      ON "turnsVsOthers"."year" = "winRate"."year"
-     AND "turnsVsOthers"."lifestyle" = "winRate"."lifestyle"
-     AND "turnsVsOthers"."playerId" = "winRate"."playerId"
-     AND "turnsVsOthers"."className" = "winRate"."className"
-    LEFT JOIN "Class" ON "Class"."name" = "winRate"."className"
-    GROUP BY
-      "winRate"."year", "winRate"."lifestyle", "winRate"."className",
-      "Class"."image", "Class"."id"
+      "share"."share"::float AS "share",
+      "byClass"."winRate" AS "winRate",
+      "turnByClass"."turnDelta" AS "turnDelta"
+    FROM "share"
+    LEFT JOIN "byClass"
+      USING ("season", "lifestyle", "className")
+    LEFT JOIN "turnByClass"
+      USING ("season", "lifestyle", "className")
+    LEFT JOIN "Class" ON "Class"."name" = "share"."className"
     -- Class id is the canonical in-game class order.
-    ORDER BY "year" DESC, "lifestyle" ASC, "Class"."id" ASC NULLS LAST
+    ORDER BY "year" DESC NULLS LAST, "lifestyle" ASC, "Class"."id" ASC NULLS LAST
   `.execute(kysely);
 
   return result.rows;
