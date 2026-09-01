@@ -29,10 +29,7 @@ type Props = {
   totalRuns: number;
   totalRunsInSeason?: number;
   frequency: Datum[];
-  /**
-   * One entry per board the path ranks. Boards are ranked independently, so each gets
-   * its own progression graph rather than sharing a series dimension with lifestyle.
-   */
+  /** Boards rank independently, so each gets its own progression graph. */
   boards: { board: { label: string }; recordBreaking: RecordDatum[] }[];
   extra?: string;
 };

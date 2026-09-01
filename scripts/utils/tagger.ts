@@ -168,9 +168,8 @@ function getLeaderboardQuery(
     extra?: string;
     limit?: number;
     /**
-     * Restricts the query to one of a path's parallel boards. Each board is tagged by
-     * its own query, so the other boards' runs are absent from the CTE entirely and both
-     * the per-player and overall ranks come out per-board without further partitioning.
+     * A board is tagged by its own query, so the other boards' runs are absent from the
+     * CTE and the ranks come out per-board without further partitioning.
      */
     board?: Board;
   } = {},
@@ -241,16 +240,9 @@ function getLeaderboardQuery(
   `;
 }
 
-/**
- * The pre-nerf Sea cannot be run any more, so that board can never gain a run and a
- * pyrite there would only repeat its leaderboard.
- */
+/** Boards that can never gain a run, whose pyrite would repeat their leaderboard. */
 const NO_PYRITE_BOARD = ["11,037 Leagues Under the Sea/pre-nerf"];
 
-/**
- * One query per board, for every path that ranks more than one. Each carves out its own
- * cohort, so the boards never compete with each other.
- */
 function boardQueries(
   tagType: TagType,
   options: Parameters<typeof getLeaderboardQuery>[1],
@@ -283,8 +275,7 @@ async function getBestRuns() {
       "Player.id as playerId",
       "Player.name as playerName",
     ])
-    // A path can hold a gold per board and per ranking, and each is its own thing to
-    // announce — a Blue vs. Red team gold, or a Grey Goo score gold.
+    // A gold per board and per ranking, each its own thing to announce.
     .where("Tag.type", "in", [TagType.PYRITE, TagType.PYRITE_SPECIAL])
     .where("Tag.value", "=", 1)
     .execute();
@@ -352,8 +343,7 @@ async function tagPyrites(sendWebhook: boolean) {
       console.timeLog("etl", "Reporting new golds to OAF webhook");
       for (const [category, run] of Object.entries(await getBestRuns())) {
         const previous = golds[category];
-        // A category with no previous gold is new — a new path, or a board that did not
-        // exist before this pass — so there is no change to announce.
+        // A category with no previous gold is new, so there is no change to announce.
         if (
           previous &&
           (run.ascensionNumber !== previous.ascensionNumber ||

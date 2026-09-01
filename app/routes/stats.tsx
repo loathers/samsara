@@ -94,11 +94,8 @@ export const loader = async () => {
     softcore?: PyriteAscension["ascension"];
   };
 
-  /**
-   * A path can hold several golds per lifestyle, and only one belongs in its row. A
-   * _SPECIAL gold ranks the same runs by a truer score (Fun, Goo), so it wins outright;
-   * otherwise the boards rank the same way on different cohorts, so the faster run does.
-   */
+  // Of the several golds a path can hold per lifestyle, a _SPECIAL one ranks by a truer
+  // score and wins outright. Otherwise the boards rank alike, so the faster run wins.
   const preferred = (
     incumbent: AscensionData | undefined,
     tag: PyriteAscension,

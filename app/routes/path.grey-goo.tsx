@@ -35,7 +35,6 @@ export default function GreyGooPath() {
     boards,
   } = useLoaderData<typeof loader>();
 
-  // A single-board path, so everything comes from the one board.
   const {
     hcRecent,
     hcSpecialLeaderboard,

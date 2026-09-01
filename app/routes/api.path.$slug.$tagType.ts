@@ -31,8 +31,7 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
     return redirect(`/api/path/${path.id}/${tagType.toLowerCase()}`);
   }
 
-  // Paths that rank several boards need one naming which is wanted, since the ranks
-  // repeat across them. Without it every board comes back merged into one list.
+  // Ranks repeat across a path's boards, so without this they come back merged.
   const board = new URL(request.url).searchParams.get("board") ?? undefined;
 
   const leaderboards = Object.fromEntries(

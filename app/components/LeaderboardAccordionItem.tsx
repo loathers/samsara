@@ -7,7 +7,6 @@ type Props = {
   title: string;
   slug?: string;
   description: React.ReactNode;
-  /** Stack the content instead of laying it out in a row, for a nested accordion. */
   stacked?: boolean;
   children: React.ReactNode;
 };

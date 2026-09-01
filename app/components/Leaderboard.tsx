@@ -20,7 +20,6 @@ type Props = {
   showClass?: boolean;
   ranked?: boolean;
   alternativeScore?: [title: string, key: string];
-  /** An extra key to leave out, e.g. the board's own discriminator. */
   omitExtra?: string;
   children?: React.ReactNode;
 };

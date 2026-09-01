@@ -39,7 +39,6 @@ export default function OCRSPath() {
     boards,
   } = useLoaderData<typeof loader>();
 
-  // A single-board path, so everything comes from the one board.
   const {
     classes,
     hcDedication,

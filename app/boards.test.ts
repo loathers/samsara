@@ -46,7 +46,6 @@ describe("naming", () => {
       "leaderboards",
     );
     expect(hashSection(boardHash(null, "leaderboards"))).toBe("leaderboards");
-    // Board keys contain hyphens, which is why a dot separates them.
     expect(hashSection(boardHash("pre-nerf", "dedication"))).toBe("dedication");
   });
 });
@@ -59,14 +58,11 @@ describe("findBoard", () => {
   it("is undefined for an untagged board or an undeclared path", () => {
     expect(findBoard("Blue vs. Red", null)).toBeUndefined();
     expect(findBoard("Wildfire", "blue")).toBeUndefined();
-    // Standard's year boards are generated, not declared.
     expect(findBoard("Standard", "2024")).toBeUndefined();
   });
 });
 
 describe("tagHash", () => {
-  // A medal must never link to a section the path page does not render, so these have
-  // to agree with what boardHash produces for the same board.
   it("matches the section a single-board path renders", () => {
     expect(tagHash("LEADERBOARD", null)).toBe("leaderboards");
     expect(tagHash("PYRITE", null)).toBe("pyrites");

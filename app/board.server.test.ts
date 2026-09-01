@@ -55,7 +55,6 @@ describe("boardFilter", () => {
   });
 
   it("inlines its values rather than binding them", () => {
-    // "extra" ->> $1 is ambiguous between the text and integer operators.
     expect(compile(boardFilter(BLUE)).parameters).toEqual([]);
   });
 

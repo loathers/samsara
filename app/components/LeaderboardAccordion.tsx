@@ -7,11 +7,7 @@ import { useIsHydrated } from "~/hooks/useIsHydrated";
 
 type Props = {
   children?: React.ReactNode;
-  /**
-   * Maps the URL hash to the item this accordion should open. Nested accordions share
-   * one hash, which points at a leaf: an outer accordion maps a leaf back to the section
-   * holding it, and an inner one maps its section's own hash to a board to open.
-   */
+  /** Nested accordions share one hash, which points at a leaf. This maps it here. */
   toItemValue?: (hash: string) => string;
 };
 

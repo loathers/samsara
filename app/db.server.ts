@@ -209,7 +209,6 @@ export async function getLeaderboard({
   inSeason?: boolean;
   special?: boolean;
   type?: TagType;
-  /** Which of the path's parallel boards to read, where it ranks more than one. */
   board?: string;
 }) {
   if (inSeason && (!path.start || !path.end)) return [];
@@ -266,10 +265,7 @@ export async function getRecentAscensions({
   lifestyle: Lifestyle;
   /** Restrict to runs completed with this familiar at 100% (e.g. Kittycore). */
   familiar?: string;
-  /**
-   * Restrict to one of the path's boards. Unlike the leaderboards there is no tag to
-   * carry the cohort here, since this is a date sort rather than a ranking.
-   */
+  /** A date sort rather than a ranking, so there is no tag to carry the cohort. */
   board?: Board;
   limit?: number;
 }) {
@@ -586,8 +582,8 @@ export type ClassComparisonRow = {
  * `window` bounds the comparison. Omit it for STANDARD tags, which carry a year each and are
  * bucketed into calendar years; pass one for a path's season or for all time.
  *
- * `board` scopes it to one of a path's parallel boards. It has to restrict the untagged runs
- * too, or a player's runs on the other board would be compared against their runs on this one.
+ * `board` has to restrict the untagged runs too, or a player's runs on another board would
+ * be compared against their runs on this one.
  */
 export async function getClassComparison({
   path,
@@ -606,7 +602,7 @@ export async function getClassComparison({
   );
 
   // Kept non-null so the joins below match; the final select turns 0 back into null.
-  // Without a window the boards are Standard's years, so the key comes back as a number.
+  // Without a window the boards are Standard's years, so the key is a number.
   const season = window
     ? sql`${window.year ?? 0}::integer`
     : sql`"Tag"."board"::integer`;

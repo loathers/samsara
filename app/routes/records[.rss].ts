@@ -25,8 +25,7 @@ export const loader = async () => {
   });
 
   records.forEach((record) => {
-    // Only quote a score from extra where the path is actually ranked on it — otherwise
-    // incidental metadata like Blue vs. Red's team would stand in for days and turns.
+    // Otherwise metadata like Blue vs. Red's team stands in for days and turns.
     const rankedOn = SPECIAL_RANKINGS.get(record.path.name);
     const score =
       rankedOn && hasExtra(record)

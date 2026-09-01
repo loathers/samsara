@@ -104,10 +104,7 @@ function byLifestyle(rows: ClassComparisonRow[]): ClassComparisonYear {
   );
 }
 
-/**
- * Grey Goo is ranked by Goo Score and carries no days/turns tags at all, so there is no
- * board here to describe.
- */
+/** Grey Goo carries no days/turns tags at all, so there is no board to describe. */
 const NO_CLASS_COMPARISON = ["Grey Goo"];
 
 /**
@@ -155,7 +152,6 @@ export async function getPathClassComparison(
   return { main: byLifestyle(main), pyrite: byLifestyle(pyrite) };
 }
 
-/** Everything a single board contributes to a path page. */
 async function boardData(
   path: Path & { class: Class[] },
   special: boolean,

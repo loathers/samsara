@@ -49,7 +49,6 @@ const dedication = (b: BoardData) => (
   </>
 );
 
-/** One entry for BoardSection, labelled by the era it covers. */
 const era = (
   board: BoardData,
   content: React.ReactNode,
@@ -65,9 +64,8 @@ export default function SeaPath() {
   const { boards, frequency, path, totalRuns, totalRunsInSeason } =
     useLoaderData<typeof loader>();
 
-  // The nerf split the season in two. Pre-nerf is a closed era that can never gain
-  // another run, which leaves it nothing recent to show and a pyrite board that would
-  // only repeat its leaderboard, so those two sections cover post-nerf alone.
+  // Pre-nerf can never gain another run, so it has nothing recent to show and a pyrite
+  // board that would only repeat its leaderboard.
   const [postNerf, preNerf] = boards;
 
   const showPyrites = postNerf.scPyrite.length + postNerf.hcPyrite.length > 0;

@@ -1,8 +1,6 @@
 import { type Kysely, sql } from "kysely";
 
-// Tag.year only ever discriminated Standard's per-year boards. Generalise it into a
-// board key, so any path that ranks several cohorts side by side can use the same
-// column — see app/boards.ts.
+// Generalise Standard's year into a board key any path can use. See app/boards.ts.
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema.alterTable("Tag").addColumn("board", "text").execute();
@@ -26,8 +24,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.alterTable("Tag").addColumn("year", "integer").execute();
 
-  // Lossy: boards that are not years have nowhere to go in the old column. Re-running
-  // the tagger restores them.
+  // Lossy: boards that are not years have nowhere to go. Re-running the tagger fixes it.
   await sql`UPDATE "Tag" SET "year" = "board"::integer WHERE "board" ~ '^\\d+$'`.execute(
     db,
   );

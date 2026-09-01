@@ -51,7 +51,6 @@ type Category = {
   slug: string;
   title: string;
   description: (current: boolean) => React.ReactNode;
-  /** Whether this board has anything to show under this heading. */
   show?: (board: BoardData) => boolean;
   content: (board: BoardData, showClass: boolean) => React.ReactNode;
 };
