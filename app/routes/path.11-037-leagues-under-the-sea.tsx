@@ -142,6 +142,20 @@ export default function SeaPath() {
             dedication={postNerf.hcDedication}
           />
         </LeaderboardAccordionItem>
+        <LeaderboardAccordionItem
+          slug="pre-nerf-dedication"
+          title="Dedication (Pre-Nerf)"
+          description="Players who completed the most ascensions before the nerf"
+        >
+          <Dedication
+            title="Softcore Dedication"
+            dedication={preNerf.scDedication}
+          />
+          <Dedication
+            title="Hardcore Dedication"
+            dedication={preNerf.hcDedication}
+          />
+        </LeaderboardAccordionItem>
       </LeaderboardAccordion>
     </Stack>
   );

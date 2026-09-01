@@ -21,19 +21,35 @@ export type Board = {
   extraEquals?: [key: string, value: string];
   /** Restricts the cohort to runs in this date range, both bounds inclusive. */
   dateRange?: { from?: string; to?: string };
+  /** Restricts the cohort to runs of this class. */
+  className?: string;
 };
 
-/**
- * Blue vs. Red hands out a set of commendations to each team, so the teams are ranked
- * separately rather than against each other.
- */
+/** The paths whose own classes each got their own leaderboard in game. */
+const classBoards = (...classNames: string[]): Board[] =>
+  classNames.map((className) => ({
+    key: className.toLowerCase().replaceAll(" ", "-"),
+    label: className,
+    className,
+  }));
+
 export const PATH_BOARDS = new Map<string, Board[]>([
   [
+    // A set of commendations goes to each team, so the teams are never ranked against
+    // each other.
     "Blue vs. Red",
     [
       { key: "blue", label: "Blue Team", extraEquals: ["Team", "Blue"] },
       { key: "red", label: "Red Team", extraEquals: ["Team", "Red"] },
     ],
+  ],
+  [
+    "Avatar of West of Loathing",
+    classBoards("Cow Puncher", "Beanslinger", "Snake Oiler"),
+  ],
+  [
+    "Avatar of Shadows Over Loathing",
+    classBoards("Pig Skinner", "Cheese Wizard", "Jazz Agent"),
   ],
   [
     // The nerf split the season in two, and the two eras are not comparable. The path has

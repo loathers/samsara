@@ -37,6 +37,12 @@ function predicates(board: Board, alias?: string) {
     );
   }
 
+  if (board.className) {
+    parts.push(
+      sql<boolean>`${column("className", alias)} = ${sql.lit(board.className)}`,
+    );
+  }
+
   return parts;
 }
 

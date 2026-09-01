@@ -74,8 +74,9 @@ function BoardSections({
 }) {
   const showPyrites = scPyrite.length + hcPyrite.length > 0;
 
-  // The board's own discriminator is redundant in a table that is only that board.
+  // A board's own discriminator is redundant in a table that is only that board.
   const omitExtra = board.extraEquals?.[0];
+  const showClassColumn = showClass && !board.className;
 
   return (
     <>
@@ -91,7 +92,7 @@ function BoardSections({
         <Leaderboard
           title="Softcore Leaderboard"
           ascensions={scLeaderboard}
-          showClass={showClass}
+          showClass={showClassColumn}
           omitExtra={omitExtra}
         >
           <ClassComparisonChart data={classes.main.softcore} />
@@ -99,7 +100,7 @@ function BoardSections({
         <Leaderboard
           title="Hardcore Leaderboard"
           ascensions={hcLeaderboard}
-          showClass={showClass}
+          showClass={showClassColumn}
           omitExtra={omitExtra}
         >
           <ClassComparisonChart data={classes.main.hardcore} />
@@ -114,7 +115,7 @@ function BoardSections({
           <Leaderboard
             title="Softcore Pyrites"
             ascensions={scPyrite}
-            showClass={showClass}
+            showClass={showClassColumn}
             omitExtra={omitExtra}
           >
             <ClassComparisonChart data={classes.pyrite.softcore} />
@@ -122,7 +123,7 @@ function BoardSections({
           <Leaderboard
             title="Hardcore Pyrites"
             ascensions={hcPyrite}
-            showClass={showClass}
+            showClass={showClassColumn}
             omitExtra={omitExtra}
           >
             <ClassComparisonChart data={classes.pyrite.hardcore} />
@@ -138,14 +139,14 @@ function BoardSections({
           title="Softcore"
           ascensions={scRecent}
           ranked={false}
-          showClass={showClass}
+          showClass={showClassColumn}
           omitExtra={omitExtra}
         />
         <Leaderboard
           title="Hardcore"
           ascensions={hcRecent}
           ranked={false}
-          showClass={showClass}
+          showClass={showClassColumn}
           omitExtra={omitExtra}
         />
       </LeaderboardAccordionItem>
