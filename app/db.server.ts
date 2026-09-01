@@ -4,7 +4,7 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { Database, JsonValue, Path } from "./db";
 import { Lifestyle, TagType } from "./db";
-import { MIN_CLASSES_PER_PLAYER, NS13 } from "./utils";
+import { NS13 } from "./utils";
 
 declare global {
   var globalKysely: Kysely<Database>;
@@ -535,6 +535,9 @@ export async function getLongestRun(
 export const CLASS_COMPARISON_RANK_CUTOFF = 30;
 
 const CLASS_COMPARISON_LIFESTYLES = [Lifestyle.SOFTCORE, Lifestyle.HARDCORE];
+
+/** The class being measured plus at least three others. */
+const MIN_CLASSES_PER_PLAYER = 4;
 
 export type ClassComparisonRow = {
   /** The Standard season, or null on boards that are not bucketed by year. */
