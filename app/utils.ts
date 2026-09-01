@@ -107,11 +107,6 @@ export function awardBg(rank: number, [gold, silver, bronze] = [1, 12, 35]) {
 
 export const NS13 = new Date("2007-06-25T00:00:00Z");
 export const STANDARD = 2015;
-export const pastYearsOfStandard = () =>
-  [...Array(new Date().getFullYear() - STANDARD).keys()].map(
-    (y) => y + STANDARD,
-  );
-
 export const getDifferenceInMonths = (start: Date, end = new Date()) =>
   Math.max(
     (end.getFullYear() - start.getFullYear()) * 12 +

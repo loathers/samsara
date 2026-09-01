@@ -1,6 +1,6 @@
 import { RawBuilder, sql } from "kysely";
 
-import { Board, PATH_BOARDS } from "./boards";
+import { Board, allBoards } from "./boards";
 
 const column = (name: string, alias?: string) =>
   sql.ref(alias ? `${alias}.${name}` : name);
@@ -67,7 +67,7 @@ export const boardOrder = (board: Board) =>
 
 /** For the one pass that has no board: each path scores by its first board's measure. */
 export function primaryScore(): RawBuilder<unknown> {
-  const branches = [...PATH_BOARDS].flatMap(([pathName, [board]]) =>
+  const branches = allBoards().flatMap(([pathName, [board]]) =>
     board.extra
       ? [sql`WHEN ${sql.lit(pathName)} THEN ${extraScore(board.extra.key)}`]
       : [],

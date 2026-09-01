@@ -13,17 +13,15 @@ import {
   boardsFor,
   findBoard,
   tagHash,
-  yearBoard,
 } from "../../app/boards.js";
 import { TagType } from "../../app/db.js";
-import { NS13, SITE_URL, pastYearsOfStandard } from "../../app/utils.js";
+import { NS13, SITE_URL } from "../../app/utils.js";
 import { db } from "./client.js";
 
 export async function tagAscensions(sendWebhook: boolean) {
   await tagRecordBreaking();
   await tagPersonalBest();
   await tagPyrites(sendWebhook);
-  await tagStandard();
   await tagLeaderboard();
 }
 
@@ -395,16 +393,22 @@ async function tagLeaderboard() {
   await db.transaction().execute(async (trx) => {
     await trx
       .deleteFrom("Tag")
-      .where("type", "in", [TagType.LEADERBOARD, TagType.LEADERBOARD_SPECIAL])
+      .where("type", "in", [
+        TagType.LEADERBOARD,
+        TagType.LEADERBOARD_SPECIAL,
+        TagType.STANDARD,
+      ])
       .execute();
 
     await Promise.all([
       ...boardQueries((path, board) =>
-        getLeaderboardQuery(TagType.LEADERBOARD, {
-          path,
-          board,
-          inSeason: true,
-        }),
+        board.trackLeaderboard === false
+          ? undefined
+          : getLeaderboardQuery(TagType.LEADERBOARD, {
+              path,
+              board,
+              inSeason: !board.ownSeason,
+            }),
       ).map((q) => q.execute(trx)),
       getLeaderboardQuery(TagType.LEADERBOARD, {
         inSeason: true,
@@ -413,20 +417,4 @@ async function tagLeaderboard() {
     ]);
   });
   console.timeLog("etl", `Finished tagging leaderboards`);
-}
-
-async function tagStandard() {
-  console.timeLog("etl", `Tagging standard leaderboards`);
-  const yearQueries = pastYearsOfStandard().map((year) =>
-    getLeaderboardQuery(TagType.STANDARD, {
-      path: "Standard",
-      board: yearBoard(year),
-    }),
-  );
-
-  await db.transaction().execute(async (trx) => {
-    await trx.deleteFrom("Tag").where("type", "=", TagType.STANDARD).execute();
-    await Promise.all(yearQueries.map((q) => q.execute(trx)));
-  });
-  console.timeLog("etl", `Finished tagging standard leaderboards`);
 }

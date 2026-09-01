@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_BOARD,
   OVERALL_BOARD,
-  PATH_BOARDS,
+  allBoards,
   boardHash,
   boardTitle,
   boardsFor,
@@ -27,8 +27,8 @@ describe("boardsFor", () => {
   });
 
   it("puts the whole-path board last, the official cohorts being the draw", () => {
-    for (const boards of PATH_BOARDS.values()) {
-      const overall = boards.indexOf(OVERALL_BOARD);
+    for (const [, boards] of allBoards()) {
+      const overall = boards.findIndex((b) => b.key === OVERALL_BOARD.key);
       if (overall >= 0) expect(overall).toBe(boards.length - 1);
     }
   });
@@ -120,8 +120,10 @@ describe("tagHash", () => {
     expect(hashSection(tagHash("Grey Goo", "PYRITE", "goo")!)).toBe("pyrites");
   });
 
-  it("sends Standard to its year", () => {
-    expect(tagHash("Standard", "STANDARD", "2024")).toBe("2024");
+  it("sends a Standard season to the year under its section", () => {
+    expect(tagHash("Standard", "LEADERBOARD", "2024")).toBe(
+      boardHash("2024", "leaderboards"),
+    );
   });
 
   it("names a measure board like any other", () => {
@@ -152,10 +154,35 @@ describe("tagHash", () => {
 
 describe("yearBoard", () => {
   it("bounds a Standard season to its calendar year", () => {
-    expect(yearBoard(2024)).toEqual({
+    expect(yearBoard(2024)).toMatchObject({
       key: "2024",
       label: "2024",
       dateRange: { from: "2024-01-01", to: "2024-12-31" },
+      ownSeason: true,
     });
+  });
+});
+
+describe("Standard", () => {
+  const boards = boardsFor({ name: "Standard" });
+  const thisYear = new Date().getFullYear();
+
+  it("gains the year in progress without waiting for a redeploy", () => {
+    expect(boards[0].key).toBe(String(thisYear));
+  });
+
+  it("runs from the first season to this one, newest first", () => {
+    const years = boards.filter((b) => b.ownSeason).map((b) => Number(b.key));
+    expect(years).toEqual(
+      [...years].sort((a, b) => b - a),
+    );
+    expect(years.at(-1)).toBe(2015);
+  });
+
+  it("keeps one board for every season at once, and only that one ranks all time", () => {
+    const allTime = boards.filter((b) => !b.ownSeason);
+    expect(allTime).toHaveLength(1);
+    expect(allTime[0].key).toBe(OVERALL_BOARD.key);
+    expect(allTime[0].trackLeaderboard).toBe(false);
   });
 });

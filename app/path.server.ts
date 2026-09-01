@@ -11,7 +11,7 @@ import {
   getRecentAscensions,
   getRecordBreaking,
 } from "./db.server";
-import { NS13, calculateRange, pastYearsOfStandard } from "./utils";
+import { NS13, calculateRange } from "./utils";
 
 export function inSeason(path: Path) {
   return (
@@ -144,12 +144,16 @@ async function boardData(path: Path & { class: Class[] }, board: Board) {
 
 export type BoardData = Awaited<ReturnType<typeof boardData>>;
 
-export async function getPathData(path: Path & { class: Class[] }) {
+/** A route with many boards can name the few it renders rather than fetching all of them. */
+export async function getPathData(
+  path: Path & { class: Class[] },
+  only: Board[] = boardsFor(path),
+) {
   const [frequency, totalRuns, totalRunsInSeason, ...boards] = await Promise.all([
     getFrequency({ path, range: calculateRange(path.start ?? new Date(0), new Date()) }),
     countAscensions(path.name),
     path.end ? countAscensions(path.name, path.end) : Promise.resolve(0),
-    ...boardsFor(path).map((board) => boardData(path, board)),
+    ...only.map((board) => boardData(path, board)),
   ]);
 
   return {
@@ -162,20 +166,28 @@ export async function getPathData(path: Path & { class: Class[] }) {
   };
 }
 
-export async function getPastStandardLeaderboards(
-  path: Path & { class: Class[] },
-) {
-  return Object.fromEntries(
-    await Promise.all(
-      pastYearsOfStandard().map(async (year) => {
-        // Run softcore and hardcore queries in parallel for each year
-        const [softcore, hardcore] = await Promise.all([
-          getLeaderboard({ path, lifestyle: Lifestyle.SOFTCORE, type: TagType.STANDARD, board: String(year) }),
-          getLeaderboard({ path, lifestyle: Lifestyle.HARDCORE, type: TagType.STANDARD, board: String(year) }),
-        ]);
-        return [year, { softcore, hardcore }] as const;
-      }),
-    ),
+/** Every season Standard has run, the one in progress included. */
+export async function getStandardSeasons(path: Path & { class: Class[] }) {
+  const seasons = boardsFor(path).filter((board) => board.ownSeason);
+
+  return await Promise.all(
+    seasons.map(async (board) => {
+      const [softcore, hardcore] = await Promise.all([
+        getLeaderboard({
+          path,
+          lifestyle: Lifestyle.SOFTCORE,
+          type: TagType.LEADERBOARD,
+          board: board.key!,
+        }),
+        getLeaderboard({
+          path,
+          lifestyle: Lifestyle.HARDCORE,
+          type: TagType.LEADERBOARD,
+          board: board.key!,
+        }),
+      ]);
+      return { board, softcore, hardcore };
+    }),
   );
 }
 
@@ -186,10 +198,7 @@ export type ClassComparisonYear = {
   hardcore: ClassComparisonRow[];
 };
 
-/**
- * Finished seasons are tagged STANDARD per year; the season in progress only holds
- * LEADERBOARD tags, which carry no year of their own.
- */
+/** Every season's tags carry its year, so one query covers them all. */
 export async function getStandardClassComparison(path: Path) {
   const past = await getClassComparison({ path });
 

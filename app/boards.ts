@@ -5,7 +5,7 @@
  */
 
 import type { TagType } from "./db";
-import { pastYearsOfStandard } from "./utils";
+import { STANDARD } from "./utils";
 
 export type Board = {
   /** Stored in Tag.board. Null where the path ranks a single board. */
@@ -18,7 +18,10 @@ export type Board = {
   familiarAt100?: string;
   /** Ranks on this entry of `extra`, highest first, rather than on days and turns. */
   extra?: { key: string; label: string };
+  /** Its dateRange is the season, so the path's start and end do not also apply. */
+  ownSeason?: boolean;
   trackRecords?: boolean;
+  trackLeaderboard?: boolean;
   /** Off where a board cannot gain runs, so its pyrite would repeat its leaderboard. */
   trackPyrites?: boolean;
 };
@@ -34,7 +37,29 @@ const classBoards = (...classNames: string[]): Board[] =>
 /** Declare last: unofficial, and it matches every run the cohorts do. */
 export const OVERALL_BOARD: Board = { key: "overall", label: "Overall" };
 
-export const PATH_BOARDS = new Map<string, Board[]>([
+/**
+ * Bounded by its own season rather than the path's, which describes only the year in
+ * progress, and unable to gain a run once the year is out.
+ */
+export const yearBoard = (year: number): Board => ({
+  key: String(year),
+  label: String(year),
+  dateRange: { from: `${year}-01-01`, to: `${year}-12-31` },
+  ownSeason: true,
+  trackRecords: false,
+  trackPyrites: false,
+});
+
+/** Newest first, and generated on the call so a new year needs no redeploy. */
+const standardBoards = (): Board[] => [
+  ...Array.from({ length: new Date().getFullYear() - STANDARD + 1 }, (_, i) =>
+    yearBoard(STANDARD + i),
+  ).reverse(),
+  // Every season at once, the one Standard ranking that is not a season.
+  { ...OVERALL_BOARD, trackLeaderboard: false },
+];
+
+const PATH_BOARDS = new Map<string, Board[] | (() => Board[])>([
   [
     // A set of commendations goes to each team.
     "Blue vs. Red",
@@ -78,6 +103,7 @@ export const PATH_BOARDS = new Map<string, Board[]>([
       { key: "time", label: "Days/Turns" },
     ],
   ],
+  ["Standard", standardBoards],
   [
     // The eras are not comparable. The path's own route titles these sections.
     "11,037 Leagues Under the Sea",
@@ -95,35 +121,25 @@ export const PATH_BOARDS = new Map<string, Board[]>([
 
 export const DEFAULT_BOARD: Board = { key: null, label: "" };
 
-/** Generated rather than declared, since Standard gains a season every year. */
-export const yearBoard = (year: number): Board => ({
-  key: String(year),
-  label: String(year),
-  dateRange: { from: `${year}-01-01`, to: `${year}-12-31` },
-});
-
-export const boardsFor = (path: { name: string }) =>
-  PATH_BOARDS.get(path.name) ?? [DEFAULT_BOARD];
+export function boardsFor(path: { name: string }) {
+  const boards = PATH_BOARDS.get(path.name);
+  if (!boards) return [DEFAULT_BOARD];
+  return typeof boards === "function" ? boards() : boards;
+}
 
 export const boardPathNames = () => [...PATH_BOARDS.keys()];
+
+export const allBoards = (): [string, Board[]][] =>
+  boardPathNames().map((name) => [name, boardsFor({ name })]);
 
 /** The measure a path's official leaderboard used, which is its first board's. */
 export const pathExtra = (pathName: string) =>
   boardsFor({ name: pathName })[0].extra;
 
-/**
- * Standard's years are boards too, but generated per season and tagged by their own pass
- * rather than declared, so they resolve here without joining the fan-out.
- */
-const namedBoards = (pathName: string) =>
-  pathName === "Standard"
-    ? pastYearsOfStandard().map(yearBoard)
-    : (PATH_BOARDS.get(pathName) ?? []);
-
 export const findBoard = (pathName: string, key: string | null) =>
   key === null
     ? undefined
-    : namedBoards(pathName).find((board) => board.key === key);
+    : boardsFor({ name: pathName }).find((board) => board.key === key);
 
 /** Section first, so everything before the dot names the section, however deeply nested. */
 export const boardHash = (key: string | null, suffix: string) =>
@@ -150,8 +166,6 @@ const PATH_TAG_HASH = new Map<
 export function tagHash(pathName: string, type: TagType, board: string | null) {
   const override = PATH_TAG_HASH.get(pathName);
   if (override) return override(type, board);
-  // Each Standard year is its own section.
-  if (type === "STANDARD") return board;
   if (type.startsWith("LEADERBOARD")) return boardHash(board, "leaderboards");
   return boardHash(board, "pyrites");
 }

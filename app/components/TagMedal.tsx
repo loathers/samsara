@@ -32,8 +32,6 @@ function formatTag(tag: Tag, board?: Board) {
         : `Currently #${tag.value} on the pyrite leaderboard`;
     case "PYRITE_SPECIAL":
       return `Currently #${tag.value} on the special path pyrite leaderboard`;
-    case "STANDARD":
-      return `#${tag.value} on the official leaderboard for ${tag.board}`;
     default:
       return tag.type;
   }

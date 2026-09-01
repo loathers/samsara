@@ -568,15 +568,15 @@ export type ClassComparisonRow = {
  * within a player before across them so the grinders do not carry it. It is null where too
  * few players explored.
  *
- * `window` bounds the comparison. Omit it for STANDARD tags, which carry a year each and are
- * bucketed into calendar years; pass one for a path's season or for all time.
+ * `window` bounds the comparison. Omit it for Standard, whose boards carry a year each and
+ * bucket into calendar years; pass one for a path's season or for all time.
  *
  * `board` has to restrict the untagged runs too, or a player's runs on another board would
  * be compared against their runs on this one.
  */
 export async function getClassComparison({
   path,
-  tagType = TagType.STANDARD,
+  tagType = TagType.LEADERBOARD,
   window,
   board,
 }: {
@@ -614,7 +614,7 @@ export async function getClassComparison({
         AND "Ascension"."playerId" = "Tag"."playerId"
       WHERE
         "Tag"."type" = ${sql.literal(tagType)}::"TagType" AND
-        ${window ? sql`` : sql`"Tag"."board" IS NOT NULL AND`}
+        ${window ? sql`` : sql`"Tag"."board" ~ '^\\d+$' AND`}
         ${board?.key ? sql`"Tag"."board" = ${board.key} AND` : sql``}
         "Tag"."value" <= ${CLASS_COMPARISON_RANK_CUTOFF} AND
         "Ascension"."pathName" = ${path.name} AND

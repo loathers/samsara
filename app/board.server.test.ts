@@ -10,7 +10,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 import { boardFilter, boardOrder, boardScore, primaryScore } from "./board.server";
-import { Board, DEFAULT_BOARD, OVERALL_BOARD, PATH_BOARDS } from "./boards";
+import { Board, DEFAULT_BOARD, OVERALL_BOARD, allBoards, boardsFor } from "./boards";
 
 const db = new Kysely<Record<string, never>>({
   dialect: {
@@ -23,7 +23,7 @@ const db = new Kysely<Record<string, never>>({
 
 const compile = (fragment: RawBuilder<unknown>) => fragment.compile(db);
 
-const BLUE = PATH_BOARDS.get("Blue vs. Red")!.find((b) => b.key === "blue")!;
+const BLUE = boardsFor({ name: "Blue vs. Red" }).find((b) => b.key === "blue")!;
 
 const PRE_NERF: Board = {
   key: "pre-nerf",
@@ -59,7 +59,7 @@ describe("boardFilter", () => {
   });
 
   it("matches a familiar only at 100%", () => {
-    const kittycore = PATH_BOARDS.get("Bad Moon")!.find(
+    const kittycore = boardsFor({ name: "Bad Moon" }).find(
       (b) => b.key === "kittycore",
     )!;
     expect(compile(boardFilter(kittycore)).sql).toBe(
@@ -82,7 +82,7 @@ describe("boardFilter", () => {
 });
 
 describe("scoring", () => {
-  const GOO = PATH_BOARDS.get("Grey Goo")![0];
+  const GOO = boardsFor({ name: "Grey Goo" })[0];
 
   it("scores a plain board so that fewer days and turns rank higher", () => {
     expect(compile(boardScore(DEFAULT_BOARD)).sql).toBe(
@@ -108,7 +108,7 @@ describe("scoring", () => {
   it("gives the boardless pass a branch per path that ranks on a measure", () => {
     const { sql: text } = compile(primaryScore());
 
-    for (const [pathName, [board]] of PATH_BOARDS) {
+    for (const [pathName, [board]] of allBoards()) {
       if (!board.extra) continue;
       expect(text).toContain(
         `WHEN '${pathName.replaceAll("'", "''")}' THEN ${compile(boardScore(board)).sql}`,
