@@ -43,7 +43,7 @@ export function BoardSection({ slug, title, description, boards }: Props) {
       stacked
     >
       {/* No mapping, so opening a section leaves its boards closed. */}
-      <LeaderboardAccordion>
+      <LeaderboardAccordion leaf>
         {boards.map((board) => (
           <LeaderboardAccordionItem
             key={board.key ?? "default"}

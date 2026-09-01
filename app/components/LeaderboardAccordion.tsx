@@ -2,23 +2,24 @@ import { AccordionValueChangeDetails } from "@chakra-ui/react";
 import { useCallback } from "react";
 import { useLocation, useNavigate } from "react-router";
 
+import { hashSection } from "~/boards";
 import { Accordion } from "~/components/Accordion";
 import { useIsHydrated } from "~/hooks/useIsHydrated";
 
 type Props = {
   children?: React.ReactNode;
-  /** Nested accordions share one hash, which points at a leaf. This maps it here. */
-  toItemValue?: (hash: string) => string;
+  /** Nested inside a section, so its items are the leaves the hash names. */
+  leaf?: boolean;
 };
 
-export function LeaderboardAccordion({ children, toItemValue }: Props) {
+export function LeaderboardAccordion({ children, leaf = false }: Props) {
   const { hash } = useLocation();
   const navigate = useNavigate();
 
   const hydrated = useIsHydrated();
 
   const current = hydrated ? hash.slice(1) : "";
-  const value = current && toItemValue ? toItemValue(current) : current;
+  const value = leaf ? current : hashSection(current);
 
   const onChange = useCallback(
     (details: AccordionValueChangeDetails) => {

@@ -1,7 +1,6 @@
 import { Stack } from "@chakra-ui/react";
 import { data, useLoaderData } from "react-router";
 
-import { hashSection } from "~/boards";
 import { BoardSection } from "~/components/BoardSection";
 import { ClassComparisonChart } from "~/components/ClassComparisonChart/ClassComparisonChart";
 import { Dedication } from "~/components/Dedication";
@@ -79,7 +78,7 @@ export default function SeaPath() {
         totalRuns={totalRuns}
         totalRunsInSeason={totalRunsInSeason}
       />
-      <LeaderboardAccordion toItemValue={hashSection}>
+      <LeaderboardAccordion>
         <BoardSection
           slug="leaderboards"
           title="Leaderboards"

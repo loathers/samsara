@@ -7,7 +7,6 @@ import {
   useLoaderData,
 } from "react-router";
 
-import { hashSection } from "~/boards";
 import { BoardSection } from "~/components/BoardSection";
 import { ClassComparisonChart } from "~/components/ClassComparisonChart/ClassComparisonChart";
 import { Dedication } from "~/components/Dedication";
@@ -166,7 +165,7 @@ export default function PathPage() {
         totalRuns={totalRuns}
         totalRunsInSeason={totalRunsInSeason}
       />
-      <LeaderboardAccordion toItemValue={hashSection}>
+      <LeaderboardAccordion>
         {CATEGORIES.map((category) => (
           <BoardSection
             key={category.slug}
