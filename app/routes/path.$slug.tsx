@@ -83,10 +83,9 @@ function BoardSections({
         slug={boardHash(board.key, "leaderboards")}
         title={boardTitle(board.label, "Leaderboards")}
         description={
-          board.description ??
-          (current
+          current
             ? "The official leaderboards as they currently stand"
-            : "The official leaderboards frozen once the path went out-of-season")
+            : "The official leaderboards frozen once the path went out-of-season"
         }
       >
         <Leaderboard

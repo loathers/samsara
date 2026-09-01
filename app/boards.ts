@@ -17,8 +17,6 @@ export type Board = {
   key: string | null;
   /** Heading text, e.g. "Blue Team". Empty for a path that has only one board. */
   label: string;
-  /** Overrides the leaderboard section's usual description. */
-  description?: string;
   /** Restricts the cohort to runs whose `extra` holds this key/value pair. */
   extraEquals?: [key: string, value: string];
   /** Restricts the cohort to runs in this date range, both bounds inclusive. */
@@ -38,24 +36,12 @@ export const PATH_BOARDS = new Map<string, Board[]>([
     ],
   ],
   [
-    // The nerf split the season in two. The post-nerf board is the path's "true" one, so
-    // it comes first and takes the unprefixed hashes.
+    // The nerf split the season in two, and the two eras are not comparable. The path has
+    // its own route, which titles these sections itself.
     "11,037 Leagues Under the Sea",
     [
-      {
-        key: "post-nerf",
-        label: "Post-Nerf",
-        description:
-          'The official leaderboards frozen once the path went out-of-season. These leaderboards only include post-nerf runs, and are considered the "true" leaderboards for the path.',
-        dateRange: { from: "2025-09-01" },
-      },
-      {
-        key: "pre-nerf",
-        label: "Pre-Nerf",
-        description:
-          "The official leaderboards for the pre-nerf path, for which commendations were issued.",
-        dateRange: { to: "2025-08-31" },
-      },
+      { key: "post-nerf", label: "Post-Nerf", dateRange: { from: "2025-09-01" } },
+      { key: "pre-nerf", label: "Pre-Nerf", dateRange: { to: "2025-08-31" } },
     ],
   ],
 ]);

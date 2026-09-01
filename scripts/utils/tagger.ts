@@ -242,17 +242,24 @@ function getLeaderboardQuery(
 }
 
 /**
+ * The pre-nerf Sea cannot be run any more, so that board can never gain a run and a
+ * pyrite there would only repeat its leaderboard.
+ */
+const NO_PYRITE_BOARD = ["11,037 Leagues Under the Sea/pre-nerf"];
+
+/**
  * One query per board, for every path that ranks more than one. Each carves out its own
  * cohort, so the boards never compete with each other.
  */
 function boardQueries(
   tagType: TagType,
   options: Parameters<typeof getLeaderboardQuery>[1],
+  skip: string[] = [],
 ) {
   return boardPathNames().flatMap((path) =>
-    boardsFor({ name: path }).map((board) =>
-      getLeaderboardQuery(tagType, { ...options, path, board }),
-    ),
+    boardsFor({ name: path })
+      .filter((board) => !skip.includes(`${path}/${board.key}`))
+      .map((board) => getLeaderboardQuery(tagType, { ...options, path, board })),
   );
 }
 
@@ -327,7 +334,9 @@ async function tagPyrites(sendWebhook: boolean) {
       ...[...SPECIAL_RANKINGS].map(([path, extra]) =>
         getLeaderboardQuery(TagType.PYRITE_SPECIAL, { path, extra }).execute(trx),
       ),
-      ...boardQueries(TagType.PYRITE, {}).map((q) => q.execute(trx)),
+      ...boardQueries(TagType.PYRITE, {}, NO_PYRITE_BOARD).map((q) =>
+        q.execute(trx),
+      ),
       getLeaderboardQuery(TagType.PYRITE, {
         excludePaths: [...NEVER_RANK_BY_TURNCOUNT, ...boardPathNames()],
       }).execute(trx),
