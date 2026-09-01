@@ -1,6 +1,6 @@
-import { sql } from "kysely";
+import { RawBuilder, sql } from "kysely";
 
-import { boardCase, boardFilter } from "../../app/board.server.js";
+import { boardFilter } from "../../app/board.server.js";
 import {
   Board,
   DEFAULT_BOARD,
@@ -32,7 +32,16 @@ export async function tagAscensions(sendWebhook: boolean) {
   await tagLeaderboard();
 }
 
-function getRecordBreakingQuery() {
+function getRecordBreakingQuery({
+  path,
+  excludePaths,
+  board = DEFAULT_BOARD,
+}: {
+  path?: string;
+  excludePaths?: string[];
+  /** Its own query, so the CTE holds this board's runs alone. */
+  board?: Board;
+} = {}) {
   return sql`
     WITH "filteredAscensions" AS (
       SELECT
@@ -47,13 +56,15 @@ function getRecordBreakingQuery() {
           WHEN 'Grey Goo' THEN ("extra" ->> 'Goo Score')::bigint
           WHEN 'One Crazy Random Summer' THEN ("extra" ->> 'Fun')::bigint
           ELSE -1 * ("days"::bigint * 1000000::bigint + "turns"::bigint)
-        END AS "score",
-        ${boardCase()} AS "board"
+        END AS "score"
       FROM
         "Ascension"
       WHERE
         "dropped" = FALSE
         AND "abandoned" = FALSE
+        ${path ? sql`AND "pathName" = ${path}` : sql``}
+        ${excludePaths ? sql`AND "pathName" NOT IN (${sql.join(excludePaths)})` : sql``}
+        AND ${boardFilter(board)}
         AND "date" >= ${NS13}::date
     ),
     "precedingScore" AS (
@@ -66,8 +77,7 @@ function getRecordBreakingQuery() {
         "pathName",
         "lifestyle",
         "score",
-        "board",
-        max("score") OVER (PARTITION BY "pathName", "lifestyle", "board" ORDER BY "date" ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS "precedingMaxScore"
+        max("score") OVER (PARTITION BY "pathName", "lifestyle" ORDER BY "date" ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS "precedingMaxScore"
       FROM
         "filteredAscensions"),
     "rankedRecords" AS (
@@ -80,9 +90,8 @@ function getRecordBreakingQuery() {
         "pathName",
         "lifestyle",
         "score",
-        "board",
         "precedingMaxScore",
-        ROW_NUMBER() OVER (PARTITION BY "pathName", "lifestyle", "board", "date" ORDER BY "score") AS "rankForDate"
+        ROW_NUMBER() OVER (PARTITION BY "pathName", "lifestyle", "date" ORDER BY "score") AS "rankForDate"
       FROM
         "precedingScore"
       WHERE
@@ -95,7 +104,7 @@ function getRecordBreakingQuery() {
       NULL AS "value",
       "ascensionNumber",
       "playerId",
-      "board"
+      ${board.key}::text AS "board"
     FROM
       "rankedRecords"
     WHERE
@@ -107,7 +116,15 @@ async function tagRecordBreaking() {
   console.timeLog("etl", "Tagging record-breaking ascensions");
   await db.transaction().execute(async (trx) => {
     await trx.deleteFrom("Tag").where("type", "=", TagType.RECORD_BREAKING).execute();
-    await getRecordBreakingQuery().execute(trx);
+
+    await Promise.all([
+      getRecordBreakingQuery({ excludePaths: boardPathNames() }).execute(trx),
+      ...boardQueries((path, board) =>
+        board.trackRecords === false
+          ? undefined
+          : getRecordBreakingQuery({ path, board }),
+      ).map((q) => q.execute(trx)),
+    ]);
   });
   console.timeLog("etl", "Finished tagging record-breaking ascensions");
 }
@@ -247,18 +264,12 @@ function getLeaderboardQuery(
   `;
 }
 
-/** Boards that can never gain a run, whose pyrite would repeat their leaderboard. */
-const NO_PYRITE_BOARD = ["11,037 Leagues Under the Sea/pre-nerf"];
-
+/** One query per board of every path that declares boards; return nothing to skip one. */
 function boardQueries(
-  tagType: TagType,
-  options: Parameters<typeof getLeaderboardQuery>[1],
-  skip: string[] = [],
+  query: (path: string, board: Board) => RawBuilder<unknown> | undefined,
 ) {
   return boardPathNames().flatMap((path) =>
-    boardsFor({ name: path })
-      .filter((board) => !skip.includes(`${path}/${board.key}`))
-      .map((board) => getLeaderboardQuery(tagType, { ...options, path, board })),
+    boardsFor({ name: path }).flatMap((board) => query(path, board) ?? []),
   );
 }
 
@@ -315,7 +326,7 @@ async function getBestRuns() {
               // raw key beats announcing the gold with no cohort at all.
               { value: board, label: findBoard(rest.pathName, board)?.label ?? board },
         // The link a TagMedal for this tag would use, so both open the same section.
-        url: `${SITE_URL}/path/${pathSlug}#${tagHash(type, board)}`,
+        url: `${SITE_URL}/path/${pathSlug}#${tagHash(rest.pathName, type, board)}`,
         player: { id: playerId, name: playerName },
       },
     }),
@@ -344,9 +355,11 @@ async function tagPyrites(sendWebhook: boolean) {
       ...[...SPECIAL_RANKINGS].map(([path, extra]) =>
         getLeaderboardQuery(TagType.PYRITE_SPECIAL, { path, extra }).execute(trx),
       ),
-      ...boardQueries(TagType.PYRITE, {}, NO_PYRITE_BOARD).map((q) =>
-        q.execute(trx),
-      ),
+      ...boardQueries((path, board) =>
+        board.trackPyrites === false
+          ? undefined
+          : getLeaderboardQuery(TagType.PYRITE, { path, board }),
+      ).map((q) => q.execute(trx)),
       getLeaderboardQuery(TagType.PYRITE, {
         excludePaths: [...NEVER_RANK_BY_TURNCOUNT, ...boardPathNames()],
       }).execute(trx),
@@ -414,9 +427,13 @@ async function tagLeaderboard() {
           extra,
         }).execute(trx),
       ),
-      ...boardQueries(TagType.LEADERBOARD, {
-        inSeason: true,
-      }).map((q) => q.execute(trx)),
+      ...boardQueries((path, board) =>
+        getLeaderboardQuery(TagType.LEADERBOARD, {
+          path,
+          board,
+          inSeason: true,
+        }),
+      ).map((q) => q.execute(trx)),
       getLeaderboardQuery(TagType.LEADERBOARD, {
         inSeason: true,
         excludePaths: [...NEVER_RANK_BY_TURNCOUNT, ...boardPathNames()],

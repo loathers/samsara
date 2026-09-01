@@ -257,15 +257,12 @@ export async function getLeaderboard({
 export async function getRecentAscensions({
   path,
   lifestyle,
-  familiar,
   board,
   limit = 11,
 }: {
   path: { name: string };
   lifestyle: Lifestyle;
-  /** Restrict to runs completed with this familiar at 100% (e.g. Kittycore). */
-  familiar?: string;
-  /** A date sort rather than a ranking, so there is no tag to carry the cohort. */
+  /** A date sort rather than a ranking, so there is no tag to carry the board. */
   board?: Board;
   limit?: number;
 }) {
@@ -293,12 +290,6 @@ export async function getRecentAscensions({
     .where("a.lifestyle", "=", lifestyle);
 
   if (board !== undefined) query = query.where(boardFilter(board, "a"));
-
-  if (familiar !== undefined) {
-    query = query
-      .where("a.familiarName", "=", familiar)
-      .where("a.familiarPercentage", "=", 100);
-  }
 
   const rows = await query
     .orderBy("a.date", "desc")
@@ -925,40 +916,6 @@ export async function findPathWithClasses({
 }
 
 // ── Misc ────────────────────────────────────────────────────────────────────
-
-export async function getKittycoreLeaderboard(): Promise<LeaderboardEntry[]> {
-  const result = await sql<LeaderboardEntry>`
-    SELECT
-      "Ascension".*,
-      TO_JSON("Player") AS "player",
-      TO_JSON("Class") AS "class"
-    FROM (
-      SELECT DISTINCT ON ("playerId")
-        *
-      FROM "Ascension"
-      WHERE
-        "pathName" = 'Bad Moon'
-        AND "lifestyle" = 'HARDCORE'
-        AND "familiarName" = 'Black Cat'
-        AND "familiarPercentage" = 100
-        AND "dropped" = False
-        AND "abandoned" = False
-      ORDER BY
-        "playerId",
-        "days" ASC,
-        "turns" ASC,
-        "date" ASC
-    ) AS "Ascension"
-    LEFT JOIN "Player" ON "Ascension"."playerId" = "Player"."id"
-    LEFT JOIN "Class" ON "Ascension"."className" = "Class"."name"
-    ORDER BY
-      "days" ASC,
-      "turns" ASC,
-      "date" ASC
-    LIMIT 35
-  `.execute(kysely);
-  return result.rows;
-}
 
 export async function getMaxAge() {
   const row = await kysely

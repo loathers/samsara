@@ -7,12 +7,7 @@ import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
-import {
-  findPathWithClasses,
-  getKittycoreLeaderboard,
-  getLeaderboard,
-  getRecentAscensions,
-} from "~/db.server";
+import { findPathWithClasses, getLeaderboard } from "~/db.server";
 import { getPathData } from "~/path.server";
 
 export const loader = async () => {
@@ -20,20 +15,13 @@ export const loader = async () => {
 
   if (!path) throw data({ message: "Invalid path name" }, { status: 400 });
 
-  const [pathData, casualLeaderboard, kittycoreLeaderboard, kittycoreRecent] =
-    await Promise.all([
-      getPathData(path),
-      getLeaderboard({ path, lifestyle: "CASUAL" }),
-      getKittycoreLeaderboard(),
-      getRecentAscensions({ path, lifestyle: "HARDCORE", familiar: "Black Cat" }),
-    ]);
+  const [pathData, casualLeaderboard] = await Promise.all([
+    getPathData(path),
+    // Without a board it would match both boards' tags.
+    getLeaderboard({ path, lifestyle: "CASUAL", board: "overall" }),
+  ]);
 
-  return {
-    ...pathData,
-    casualLeaderboard,
-    kittycoreLeaderboard,
-    kittycoreRecent,
-  };
+  return { ...pathData, casualLeaderboard };
 };
 
 export const meta = () => {
@@ -47,24 +35,14 @@ export const meta = () => {
 };
 
 export default function BadMoonPath() {
-  const {
-    casualLeaderboard,
-    frequency,
-    kittycoreLeaderboard,
-    kittycoreRecent,
-    path,
-    totalRuns,
-    boards,
-  } = useLoaderData<typeof loader>();
+  const { casualLeaderboard, frequency, path, totalRuns, boards } =
+    useLoaderData<typeof loader>();
 
-  const {
-    classes,
-    hcDedication,
-    hcLeaderboard,
-    hcRecent,
-    scLeaderboard,
-    scRecent,
-  } = boards[0];
+  const overall = boards.find((b) => b.board.key === "overall")!;
+  const kittycore = boards.find((b) => b.board.key === "kittycore")!;
+
+  const { classes, hcDedication, hcLeaderboard, hcRecent, scLeaderboard } =
+    overall;
 
   return (
     <Stack gap={10}>
@@ -86,10 +64,34 @@ export default function BadMoonPath() {
           </Leaderboard>
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
+          slug="kittycore"
           title="Kittycore"
           description="Who has managed to condense the worst experience in the game into the smallest amount of time"
+          stacked
         >
-          <Leaderboard ascensions={kittycoreLeaderboard} />
+          <LeaderboardAccordion leaf>
+            <LeaderboardAccordionItem
+              slug="kittycore.leaderboard"
+              title="Leaderboard"
+              description="The best runs anyone has managed"
+            >
+              <Leaderboard ascensions={kittycore.hcLeaderboard} />
+            </LeaderboardAccordionItem>
+            <LeaderboardAccordionItem
+              slug="kittycore.recent"
+              title="Recent Ascensions"
+              description="A chronological catalogue of psychosis"
+            >
+              <Leaderboard ascensions={kittycore.hcRecent} ranked={false} />
+            </LeaderboardAccordionItem>
+            <LeaderboardAccordionItem
+              slug="kittycore.dedication"
+              title="Dedication"
+              description="The community's most gluttonous masochists"
+            >
+              <Dedication dedication={kittycore.hcDedication} />
+            </LeaderboardAccordionItem>
+          </LeaderboardAccordion>
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
           slug="weird"
@@ -110,13 +112,7 @@ export default function BadMoonPath() {
           title="Recent Ascensions"
           description="The most recent ascensions on this path"
         >
-          <Leaderboard title="Softcore" ascensions={scRecent} ranked={false} />
-          <Leaderboard title="Hardcore" ascensions={hcRecent} ranked={false} />
-          <Leaderboard
-            title="Kittycore"
-            ascensions={kittycoreRecent}
-            ranked={false}
-          />
+          <Leaderboard ascensions={hcRecent} ranked={false} />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
           title="Dedication"

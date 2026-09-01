@@ -65,7 +65,7 @@ export function TagMedal({ tag, path }: Props) {
   return (
     <Link asChild>
       <RRLink
-        to={`/path/${path.slug}#${tagHash(tag.type, tag.board)}`}
+        to={`/path/${path.slug}#${tagHash(path.name, tag.type, tag.board)}`}
         title={formatTag(tag, board)}
       >
         {image}

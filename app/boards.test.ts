@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   DEFAULT_BOARD,
+  OVERALL_BOARD,
+  PATH_BOARDS,
   boardHash,
   boardTitle,
   boardsFor,
@@ -16,16 +18,50 @@ describe("boardsFor", () => {
     expect(boardsFor({ name: "Wildfire" })).toEqual([DEFAULT_BOARD]);
   });
 
-  it("gives Blue vs. Red a board per team", () => {
+  it("gives Blue vs. Red a board per team, over a whole-path board", () => {
     expect(boardsFor({ name: "Blue vs. Red" }).map((b) => b.key)).toEqual([
       "blue",
       "red",
+      "overall",
+    ]);
+  });
+
+  it("puts the whole-path board last, the official cohorts being the draw", () => {
+    for (const boards of PATH_BOARDS.values()) {
+      const overall = boards.indexOf(OVERALL_BOARD);
+      if (overall >= 0) expect(overall).toBe(boards.length - 1);
+    }
+  });
+
+  it("leaves a path that did not opt in without a whole-path board", () => {
+    expect(
+      boardsFor({ name: "11,037 Leagues Under the Sea" }).map((b) => b.key),
+    ).not.toContain(OVERALL_BOARD.key);
+  });
+
+  it("lets Bad Moon's boards leave the catless runs to the overall one", () => {
+    expect(boardsFor({ name: "Bad Moon" }).map((b) => b.key)).toEqual([
+      "kittycore",
+      "overall",
     ]);
   });
 
   it("puts the Sea's true board first, so it takes the unprefixed hashes", () => {
     expect(boardsFor({ name: "11,037 Leagues Under the Sea" })[0].key).toBe(
       "post-nerf",
+    );
+  });
+});
+
+describe("OVERALL_BOARD", () => {
+  it("declares no predicates, so it takes every run on the path", () => {
+    expect(OVERALL_BOARD).toEqual({ key: "overall", label: "Overall" });
+  });
+
+  it("resolves like any other board, so a medal can name it", () => {
+    expect(findBoard("Blue vs. Red", "overall")?.label).toBe("Overall");
+    expect(tagHash("Blue vs. Red", "PYRITE", "overall")).toBe(
+      boardHash("overall", "pyrites"),
     );
   });
 });
@@ -64,26 +100,59 @@ describe("findBoard", () => {
 
 describe("tagHash", () => {
   it("matches the section a single-board path renders", () => {
-    expect(tagHash("LEADERBOARD", null)).toBe("leaderboards");
-    expect(tagHash("PYRITE", null)).toBe("pyrites");
+    expect(tagHash("Wildfire", "LEADERBOARD", null)).toBe("leaderboards");
+    expect(tagHash("Wildfire", "PYRITE", null)).toBe("pyrites");
   });
 
   it("matches the section a named board renders", () => {
-    expect(tagHash("LEADERBOARD", "blue")).toBe(
+    expect(tagHash("Blue vs. Red", "LEADERBOARD", "blue")).toBe(
       boardHash("blue", "leaderboards"),
     );
-    expect(tagHash("PYRITE", "pre-nerf")).toBe(
-      boardHash("pre-nerf", "pyrites"),
-    );
+    expect(
+      tagHash("11,037 Leagues Under the Sea", "PYRITE", "pre-nerf"),
+    ).toBe(boardHash("pre-nerf", "pyrites"));
   });
 
   it("sends the special rankings to the same sections as their plain siblings", () => {
-    expect(tagHash("LEADERBOARD_SPECIAL", null)).toBe("leaderboards");
-    expect(tagHash("PYRITE_SPECIAL", null)).toBe("pyrites");
+    expect(tagHash("Grey Goo", "LEADERBOARD_SPECIAL", null)).toBe(
+      "leaderboards",
+    );
+    expect(tagHash("Grey Goo", "PYRITE_SPECIAL", null)).toBe("pyrites");
   });
 
   it("sends Standard to its year", () => {
-    expect(tagHash("STANDARD", "2024")).toBe("2024");
+    expect(tagHash("Standard", "STANDARD", "2024")).toBe("2024");
+  });
+
+  it("splits One Crazy Random Summer by the measure it ranked", () => {
+    expect(tagHash("One Crazy Random Summer", "PYRITE_SPECIAL", null)).toBe(
+      "fun-pyrites",
+    );
+    expect(tagHash("One Crazy Random Summer", "PYRITE", null)).toBe(
+      "time-pyrites",
+    );
+    expect(
+      tagHash("One Crazy Random Summer", "LEADERBOARD_SPECIAL", null),
+    ).toBe("fun-leaderboards");
+    expect(tagHash("One Crazy Random Summer", "LEADERBOARD", null)).toBe(
+      "time-leaderboards",
+    );
+  });
+
+  it("follows Bad Moon's board-first layout", () => {
+    expect(tagHash("Bad Moon", "PYRITE", "kittycore")).toBe(
+      "kittycore.leaderboard",
+    );
+    expect(tagHash("Bad Moon", "PYRITE", "overall")).toBe("leaderboard");
+  });
+
+  it("keeps every override pointing at a section its route renders", () => {
+    expect(hashSection(tagHash("Bad Moon", "PYRITE", "kittycore")!)).toBe(
+      "kittycore",
+    );
+    expect(
+      hashSection(tagHash("One Crazy Random Summer", "PYRITE", null)!),
+    ).toBe("time-pyrites");
   });
 });
 

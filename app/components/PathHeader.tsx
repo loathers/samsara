@@ -105,22 +105,25 @@ export function PathHeader({
           <FrequencyGraph data={frequency} lines={lines} />
           <Text fontSize="2xs">Ascension frequency over time</Text>
         </Box>
-        {boards.map(({ board, recordBreaking }) => (
-          <Box
-            key={board.label}
-            textAlign="center"
-            mt={8}
-            height={150}
-            width="100%"
-            alignSelf="center"
-          >
-            <RecordGraph data={recordBreaking} extra={extra} />
-            <Text fontSize="2xs">
-              Progression of best runs over time
-              {board.label && ` (${board.label})`}
-            </Text>
-          </Box>
-        ))}
+        {/* A board that does not track records has none to draw. */}
+        {boards
+          .filter(({ recordBreaking }) => recordBreaking.length > 0)
+          .map(({ board, recordBreaking }) => (
+            <Box
+              key={board.label}
+              textAlign="center"
+              mt={8}
+              height={150}
+              width="100%"
+              alignSelf="center"
+            >
+              <RecordGraph data={recordBreaking} extra={extra} />
+              <Text fontSize="2xs">
+                Progression of best runs over time
+                {board.label && ` (${board.label})`}
+              </Text>
+            </Box>
+          ))}
       </Stack>
     </Stack>
   );

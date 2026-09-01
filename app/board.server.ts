@@ -1,6 +1,6 @@
 import { RawBuilder, sql } from "kysely";
 
-import { Board, PATH_BOARDS } from "./boards";
+import { Board } from "./boards";
 
 const column = (name: string, alias?: string) =>
   sql.ref(alias ? `${alias}.${name}` : name);
@@ -35,6 +35,13 @@ function predicates(board: Board, alias?: string) {
     );
   }
 
+  if (board.familiarAt100) {
+    parts.push(
+      sql<boolean>`${column("familiarName", alias)} = ${sql.lit(board.familiarAt100)}`,
+      sql<boolean>`${column("familiarPercentage", alias)} = 100`,
+    );
+  }
+
   return parts;
 }
 
@@ -42,21 +49,4 @@ export function boardFilter(board: Board, alias?: string): RawBuilder<boolean> {
   const parts = predicates(board, alias);
   if (parts.length === 0) return sql<boolean>`TRUE`;
   return sql<boolean>`(${sql.join(parts, sql` AND `)})`;
-}
-
-/** For the whole-database queries that cannot fan out into one query per board. */
-export function boardCase(alias?: string): RawBuilder<string | null> {
-  const branches = [...PATH_BOARDS].flatMap(([pathName, boards]) =>
-    boards.map(
-      (board) =>
-        sql`WHEN ${column("pathName", alias)} = ${sql.lit(pathName)} AND ${boardFilter(
-          board,
-          alias,
-        )} THEN ${sql.lit(board.key!)}`,
-    ),
-  );
-
-  if (branches.length === 0) return sql<string | null>`NULL`;
-
-  return sql<string | null>`CASE ${sql.join(branches, sql` `)} END`;
 }
