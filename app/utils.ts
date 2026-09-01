@@ -1,5 +1,7 @@
 import { JsonValue } from "~/db";
 
+export const SITE_URL = "https://samsara.loathers.net";
+
 export type ShortenStyle = null | "acronyms" | "symbols" | "full-symbols";
 
 export const yearFormatter = new Intl.DateTimeFormat(undefined, {

@@ -7,10 +7,16 @@ import {
   boardPathNames,
   boardsFor,
   findBoard,
+  tagHash,
   yearBoard,
 } from "../../app/boards.js";
 import { TagType } from "../../app/db.js";
-import { NS13, SPECIAL_RANKINGS, pastYearsOfStandard } from "../../app/utils.js";
+import {
+  NS13,
+  SITE_URL,
+  SPECIAL_RANKINGS,
+  pastYearsOfStandard,
+} from "../../app/utils.js";
 import { db } from "./client.js";
 
 /**
@@ -265,6 +271,7 @@ async function getBestRuns() {
         .onRef("Ascension.playerId", "=", "Tag.playerId"),
     )
     .innerJoin("Player", "Player.id", "Ascension.playerId")
+    .innerJoin("Path", "Path.name", "Ascension.pathName")
     .select([
       "Ascension.ascensionNumber",
       "Ascension.days",
@@ -273,6 +280,7 @@ async function getBestRuns() {
       "Ascension.pathName",
       "Tag.type",
       "Tag.board",
+      "Path.slug as pathSlug",
       "Player.id as playerId",
       "Player.name as playerName",
     ])
@@ -291,11 +299,12 @@ async function getBestRuns() {
         lifestyle: string;
         pathName: string;
         board: { value: string; label: string } | null;
+        url: string;
         player: { id: number; name: string };
       }
     >
   >(
-    (acc, { playerId, playerName, type, board, ...rest }) => ({
+    (acc, { playerId, playerName, type, board, pathSlug, ...rest }) => ({
       ...acc,
       [`${rest.pathName}_${rest.lifestyle}_${type}_${board ?? ""}`]: {
         ...rest,
@@ -305,6 +314,8 @@ async function getBestRuns() {
             : // findBoard misses a key left over from an older boards.ts. Naming the
               // raw key beats announcing the gold with no cohort at all.
               { value: board, label: findBoard(rest.pathName, board)?.label ?? board },
+        // The link a TagMedal for this tag would use, so both open the same section.
+        url: `${SITE_URL}/path/${pathSlug}#${tagHash(type, board)}`,
         player: { id: playerId, name: playerName },
       },
     }),

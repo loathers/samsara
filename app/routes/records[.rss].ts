@@ -4,7 +4,7 @@ import { data } from "react-router";
 import { findBoard } from "~/boards";
 import { formatLifestyle } from "~/components/Lifestyle";
 import { getMaxAge, getRecordsForRSS } from "~/db.server";
-import { SPECIAL_RANKINGS, hasExtra } from "~/utils";
+import { SITE_URL, SPECIAL_RANKINGS, hasExtra } from "~/utils";
 
 export const loader = async () => {
   const headers = {
@@ -18,8 +18,8 @@ export const loader = async () => {
     title: "Record-Breaking Ascensions",
     description:
       "The latest record-breaking ascensions in Kingdom of Loathing, brought to you by Samsara.",
-    id: "https://samsara.loathers.net/records.rss",
-    link: "https://samsara.loathers.net/",
+    id: `${SITE_URL}/records.rss`,
+    link: `${SITE_URL}/`,
     copyright: "none",
     updated: records[0].date,
   });
@@ -38,8 +38,8 @@ export const loader = async () => {
     const description = `${record.player.name} (#${record.player.id}) has achieved the best ${formatLifestyle(record.lifestyle)} ${path} with ${score}`;
     feed.addItem({
       title: description,
-      id: `https://samsara.loathers.net/player/${record.player.id}#${record.ascensionNumber}`,
-      link: `https://samsara.loathers.net/player/${record.player.id}#${record.ascensionNumber}`,
+      id: `${SITE_URL}/player/${record.player.id}#${record.ascensionNumber}`,
+      link: `${SITE_URL}/player/${record.player.id}#${record.ascensionNumber}`,
       content: description,
       date: record.date,
     });
