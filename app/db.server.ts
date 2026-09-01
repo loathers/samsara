@@ -630,13 +630,32 @@ export async function getClassComparison({
           >= ${seasonStart}
     ),
     -- Before the exploration filter, so a class only the unadventurous ran still counts.
-    "share" AS (
+    "runsByClass" AS (
       SELECT
         "season", "lifestyle", "className",
         COUNT(*)::float
           / SUM(COUNT(*)) OVER (PARTITION BY "season", "lifestyle") AS "share"
       FROM "playerRuns"
       GROUP BY "season", "lifestyle", "className"
+    ),
+    -- Only paths without classes of their own get compared, so every board is open to the
+    -- six standard classes. Give each one a row per bucket, because a class nobody picked
+    -- is a finding and should read as an empty bar rather than a missing one.
+    "boardClass" AS (
+      SELECT "name" FROM "Class" WHERE "id" BETWEEN 1 AND 6
+      UNION
+      SELECT DISTINCT "className" FROM "playerRuns"
+    ),
+    "share" AS (
+      SELECT
+        "bucket"."season", "bucket"."lifestyle", "boardClass"."name" AS "className",
+        COALESCE("runsByClass"."share", 0) AS "share"
+      FROM (SELECT DISTINCT "season", "lifestyle" FROM "playerRuns") AS "bucket"
+      CROSS JOIN "boardClass"
+      LEFT JOIN "runsByClass"
+        ON "runsByClass"."season" = "bucket"."season"
+        AND "runsByClass"."lifestyle" = "bucket"."lifestyle"
+        AND "runsByClass"."className" = "boardClass"."name"
     ),
     -- Ranking twice counts how many other-class runs each run beats. Measured 4x faster
     -- than the self join it replaces, which the planner cannot cost and rescans per row.

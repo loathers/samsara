@@ -46,6 +46,17 @@ describe("formatClassComparison", () => {
     );
   });
 
+  it("says nobody picked a class that has no runs", () => {
+    const unplayed = formatClassComparison({
+      ...row,
+      share: 0,
+      winRate: null,
+      turnDelta: null,
+    });
+    expect(unplayed.share).toBe("Nobody ran this class on this board");
+    expect(unplayed.headline).toBeNull();
+  });
+
   it("always reports the share of runs", () => {
     expect(formatClassComparison({ ...row, share: 0.442 }).share).toBe(
       "44% of runs on this board",

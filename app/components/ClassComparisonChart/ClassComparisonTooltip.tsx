@@ -14,6 +14,15 @@ const NEGLIGIBLE_WIN_RATE = 0.01;
 const NEGLIGIBLE_TURNS = 0.5;
 
 export function formatClassComparison(row: ClassComparisonRow) {
+  // Every class gets a row whether or not anyone ran it, so the empty ones say why.
+  if (row.share === 0) {
+    return {
+      share: "Nobody ran this class on this board",
+      headline: null,
+      detail: null,
+    };
+  }
+
   const share = `${percentFormatter.format(row.share)} of runs on this board`;
 
   const against = row.year
@@ -59,7 +68,7 @@ export function ClassComparisonTooltip({ active, payload }: Props) {
         {row.className}
       </Text>
       <Text fontSize="xs">{share}</Text>
-      <Text fontSize="xs">{headline}</Text>
+      {headline && <Text fontSize="xs">{headline}</Text>}
       {detail && (
         <Text fontSize="xs" color="fg.muted">
           {detail}
