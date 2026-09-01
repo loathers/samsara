@@ -18,6 +18,9 @@ export const TagType = {
 } as const;
 export type TagType = (typeof TagType)[keyof typeof TagType];
 
+/** Anything above is a path's own class, whether or not that path is in the database yet. */
+export const LAST_STANDARD_CLASS_ID = 6;
+
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonArray = JsonValue[];
 export type JsonObject = { [key: string]: JsonValue };

@@ -1,6 +1,7 @@
 type Props = {
-  cx?: number;
-  cy?: number;
+  /** Recharts passes null, not undefined, for a row with no win rate. */
+  cx?: number | null;
+  cy?: number | null;
   fill: string;
   /** Inverse of the fill, so the star reads where it overlaps a bar. */
   stroke: string;
@@ -23,7 +24,7 @@ function starPoints(outer: number, inner: number) {
 const POINTS = starPoints(SIZE / 2, SIZE / 5);
 
 export function WinRateStar({ cx, cy, fill, stroke }: Props) {
-  if (cx === undefined || cy === undefined) return null;
+  if (cx == null || cy == null) return null;
 
   return (
     <polygon

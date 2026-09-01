@@ -3,7 +3,7 @@ import { Kysely, PostgresDialect, sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { Database, JsonValue, Path } from "./db";
-import { Lifestyle, TagType } from "./db";
+import { LAST_STANDARD_CLASS_ID, Lifestyle, TagType } from "./db";
 import { NS13 } from "./utils";
 
 declare global {
@@ -630,13 +630,33 @@ export async function getClassComparison({
           >= ${seasonStart}
     ),
     -- Before the exploration filter, so a class only the unadventurous ran still counts.
-    "share" AS (
+    "runsByClass" AS (
       SELECT
         "season", "lifestyle", "className",
         COUNT(*)::float
           / SUM(COUNT(*)) OVER (PARTITION BY "season", "lifestyle") AS "share"
       FROM "playerRuns"
       GROUP BY "season", "lifestyle", "className"
+    ),
+    -- Only paths without classes of their own get compared, so every board is open to the
+    -- six starting classes and a class nobody picked should read as an empty bar rather
+    -- than a missing one. The union still matters: a few runs carry a path's class on a
+    -- path that does not grant it.
+    "boardClass" AS (
+      SELECT "name" FROM "Class" WHERE "id" BETWEEN 1 AND ${LAST_STANDARD_CLASS_ID}
+      UNION
+      SELECT "className" FROM "runsByClass"
+    ),
+    "share" AS (
+      SELECT
+        "bucket"."season", "bucket"."lifestyle", "boardClass"."name" AS "className",
+        COALESCE("runsByClass"."share", 0) AS "share"
+      FROM (SELECT DISTINCT "season", "lifestyle" FROM "runsByClass") AS "bucket"
+      CROSS JOIN "boardClass"
+      LEFT JOIN "runsByClass"
+        ON "runsByClass"."season" = "bucket"."season"
+        AND "runsByClass"."lifestyle" = "bucket"."lifestyle"
+        AND "runsByClass"."className" = "boardClass"."name"
     ),
     -- Ranking twice counts how many other-class runs each run beats. Measured 4x faster
     -- than the self join it replaces, which the planner cannot cost and rescans per row.
