@@ -2,6 +2,8 @@ import pg from "pg";
 import { Kysely, PostgresDialect, sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
+import { boardFilter } from "./board.server";
+import { Board, DEFAULT_BOARD } from "./boards";
 import type { Database, JsonValue, Path } from "./db";
 import { Lifestyle, TagType } from "./db";
 import { MIN_CLASSES_PER_PLAYER, NS13 } from "./utils";
@@ -126,15 +128,21 @@ export async function getStat({
   return [stat, stat / previousStat - 1] as [stat: number, change: number];
 }
 
-export async function getRecordBreaking(path: Path, lifestyle?: Lifestyle) {
+export async function getRecordBreaking(
+  path: Path,
+  lifestyle?: Lifestyle,
+  board?: string,
+) {
   const rows = await kysely
     .selectFrom("Ascension as a")
-    .innerJoin("Tag as t", (join) =>
-      join
+    .innerJoin("Tag as t", (join) => {
+      let j = join
         .onRef("t.ascensionNumber", "=", "a.ascensionNumber")
         .onRef("t.playerId", "=", "a.playerId")
-        .on("t.type", "=", "RECORD_BREAKING"),
-    )
+        .on("t.type", "=", "RECORD_BREAKING");
+      if (board !== undefined) j = j.on("t.board", "=", board);
+      return j;
+    })
     .innerJoin("Player as p", "p.id", "a.playerId")
     .select(["a.days", "a.turns", "a.date", "a.lifestyle", "a.extra", "p.id as playerId", "p.name as playerName"])
     .where("a.pathName", "=", path.name)
@@ -194,14 +202,15 @@ export async function getLeaderboard({
   inSeason,
   special,
   type,
-  year,
+  board,
 }: {
   path: { name: string; start: Date | null; end: Date | null };
   lifestyle: Lifestyle;
   inSeason?: boolean;
   special?: boolean;
   type?: TagType;
-  year?: number;
+  /** Which of the path's parallel boards to read, where it ranks more than one. */
+  board?: string;
 }) {
   if (inSeason && (!path.start || !path.end)) return [];
 
@@ -216,7 +225,7 @@ export async function getLeaderboard({
         .onRef("t.ascensionNumber", "=", "a.ascensionNumber")
         .onRef("t.playerId", "=", "a.playerId")
         .on("t.type", "=", tagType);
-      if (year !== undefined) j = j.on("t.year", "=", year);
+      if (board !== undefined) j = j.on("t.board", "=", board);
       return j;
     })
     .innerJoin("Player as p", "p.id", "a.playerId")
@@ -250,12 +259,18 @@ export async function getRecentAscensions({
   path,
   lifestyle,
   familiar,
+  board,
   limit = 11,
 }: {
   path: { name: string };
   lifestyle: Lifestyle;
   /** Restrict to runs completed with this familiar at 100% (e.g. Kittycore). */
   familiar?: string;
+  /**
+   * Restrict to one of the path's boards. Unlike the leaderboards there is no tag to
+   * carry the cohort here, since this is a date sort rather than a ranking.
+   */
+  board?: Board;
   limit?: number;
 }) {
   let query = kysely
@@ -281,6 +296,8 @@ export async function getRecentAscensions({
     .where("a.pathName", "=", path.name)
     .where("a.lifestyle", "=", lifestyle);
 
+  if (board !== undefined) query = query.where(boardFilter(board, "a"));
+
   if (familiar !== undefined) {
     query = query
       .where("a.familiarName", "=", familiar)
@@ -299,6 +316,7 @@ export async function getRecentAscensions({
 export async function getDedication(
   path: { name: string },
   lifestyle: Lifestyle,
+  board: Board = DEFAULT_BOARD,
 ) {
   return (
     await sql<{ id: number; name: string; runs: number }>`
@@ -312,6 +330,7 @@ export async function getDedication(
         "Ascension"."lifestyle" = ${sql.literal(lifestyle)}::"Lifestyle" AND
         "Ascension"."abandoned" = false AND
         "Ascension"."dropped" = false AND
+        ${boardFilter(board, "Ascension")} AND
         "Ascension"."date" > ${NS13}::date
       GROUP BY "Player"."id"
       ORDER BY "runs" DESC
@@ -354,6 +373,7 @@ export async function getRecordsForRSS() {
       "a.date",
       "a.lifestyle",
       "a.extra",
+      "t.board",
       "p.id as playerId",
       "p.name as playerName",
       "path.name as pathName",
@@ -368,6 +388,7 @@ export async function getRecordsForRSS() {
     date: r.date,
     lifestyle: r.lifestyle,
     extra: r.extra,
+    board: r.board,
     player: { id: r.playerId, name: r.playerName },
     path: { name: r.pathName },
   }));
@@ -566,7 +587,9 @@ export async function getClassComparison({
     CLASS_COMPARISON_LIFESTYLES.map((l) => sql`${sql.literal(l)}::"Lifestyle"`),
   );
 
-  const season = year === undefined ? sql`"Tag"."year"` : sql`${year}::integer`;
+  // Standard's boards are years, so the discriminator comes back out as a number here.
+  const season =
+    year === undefined ? sql`"Tag"."board"::integer` : sql`${year}::integer`;
 
   const result = await sql<ClassComparisonRow>`
     WITH "qualifying" AS (
@@ -580,7 +603,7 @@ export async function getClassComparison({
         AND "Ascension"."playerId" = "Tag"."playerId"
       WHERE
         "Tag"."type" = ${sql.literal(tagType)}::"TagType" AND
-        ${year === undefined ? sql`"Tag"."year" IS NOT NULL AND` : sql``}
+        ${year === undefined ? sql`"Tag"."board" IS NOT NULL AND` : sql``}
         "Tag"."value" <= ${CLASS_COMPARISON_RANK_CUTOFF} AND
         "Ascension"."pathName" = ${path.name} AND
         "Ascension"."lifestyle" IN (${lifestyles})
@@ -749,7 +772,7 @@ export async function findPlayerWithAscensions(id: number) {
             jsonArrayFrom(
               eb2
                 .selectFrom("Tag as tag")
-                .select(["tag.type", "tag.value", "tag.year"])
+                .select(["tag.type", "tag.value", "tag.board"])
                 .whereRef("tag.ascensionNumber", "=", "a.ascensionNumber")
                 .whereRef("tag.playerId", "=", "a.playerId"),
             ).as("tags"),

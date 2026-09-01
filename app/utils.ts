@@ -150,7 +150,6 @@ export const pastYearsOfStandard = () =>
 export const SPECIAL_RANKINGS = new Map<string, string | undefined>([
   ["Grey Goo", "Goo Score"],
   ["One Crazy Random Summer", "Fun"],
-  ["11,037 Leagues Under the Sea", undefined],
 ]);
 
 export const getDifferenceInMonths = (start: Date, end = new Date()) =>

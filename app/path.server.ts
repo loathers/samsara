@@ -1,3 +1,4 @@
+import { Board, DEFAULT_BOARD, boardsFor } from "./boards";
 import { Class, Lifestyle, Path, TagType } from "./db";
 
 import {
@@ -49,9 +50,11 @@ async function leaderboardsForLifestyle(
   path: Path,
   special: boolean,
   lifestyle: "HARDCORE" | "SOFTCORE",
+  board: Board = DEFAULT_BOARD,
 ) {
   const pyrites = hasPyrites(path);
   const prefix = lifestyle === "HARDCORE" ? "hc" : "sc";
+  const key = board.key ?? undefined;
 
   const [
     dedication,
@@ -61,15 +64,23 @@ async function leaderboardsForLifestyle(
     specialLeaderboard,
     specialPyrite,
   ] = await Promise.all([
-    getDedication(path, lifestyle),
-    getLeaderboard({ path, lifestyle, inSeason: path.seasonal }),
-    pyrites ? getLeaderboard({ path, lifestyle }) : Promise.resolve([]),
-    getRecentAscensions({ path, lifestyle }),
+    getDedication(path, lifestyle, board),
+    getLeaderboard({ path, lifestyle, inSeason: path.seasonal, board: key }),
+    pyrites
+      ? getLeaderboard({ path, lifestyle, board: key })
+      : Promise.resolve([]),
+    getRecentAscensions({ path, lifestyle, board }),
     special
-      ? getLeaderboard({ path, lifestyle, special, inSeason: path.seasonal })
+      ? getLeaderboard({
+          path,
+          lifestyle,
+          special,
+          inSeason: path.seasonal,
+          board: key,
+        })
       : Promise.resolve([]),
     special && pyrites
-      ? getLeaderboard({ path, lifestyle, special: true })
+      ? getLeaderboard({ path, lifestyle, special: true, board: key })
       : Promise.resolve([]),
   ]);
 
@@ -83,33 +94,45 @@ async function leaderboardsForLifestyle(
   };
 }
 
+/** Everything a single board contributes to a path page. */
+async function boardData(
+  path: Path & { class: Class[] },
+  special: boolean,
+  board: Board,
+) {
+  const [recordBreaking, hardcoreLeaderboards, softcoreLeaderboards] =
+    await Promise.all([
+      getRecordBreaking(path, undefined, board.key ?? undefined),
+      leaderboardsForLifestyle(path, special, "HARDCORE", board),
+      leaderboardsForLifestyle(path, special, "SOFTCORE", board),
+    ]);
+
+  return {
+    board,
+    recordBreaking,
+    ...(hardcoreLeaderboards as HardcoreLeaderboards),
+    ...(softcoreLeaderboards as SoftcoreLeaderboards),
+  };
+}
+
+export type BoardData = Awaited<ReturnType<typeof boardData>>;
+
 export async function getPathData(
   path: Path & { class: Class[] },
   special = false,
 ) {
-  const [
-    frequency,
-    recordBreaking,
-    hardcoreLeaderboards,
-    softcoreLeaderboards,
-    totalRuns,
-    totalRunsInSeason,
-  ] = await Promise.all([
+  const [frequency, totalRuns, totalRunsInSeason, ...boards] = await Promise.all([
     getFrequency({ path, range: calculateRange(path.start ?? new Date(0), new Date()) }),
-    getRecordBreaking(path),
-    leaderboardsForLifestyle(path, special, "HARDCORE"),
-    leaderboardsForLifestyle(path, special, "SOFTCORE"),
     countAscensions(path.name),
     path.end ? countAscensions(path.name, path.end) : Promise.resolve(0),
+    ...boardsFor(path).map((board) => boardData(path, special, board)),
   ]);
 
   return {
     current: inSeason(path),
     frequency,
     path,
-    recordBreaking,
-    ...(hardcoreLeaderboards as HardcoreLeaderboards),
-    ...(softcoreLeaderboards as SoftcoreLeaderboards),
+    boards,
     totalRuns,
     totalRunsInSeason,
   };
@@ -123,8 +146,8 @@ export async function getPastStandardLeaderboards(
       pastYearsOfStandard().map(async (year) => {
         // Run softcore and hardcore queries in parallel for each year
         const [softcore, hardcore] = await Promise.all([
-          getLeaderboard({ path, lifestyle: Lifestyle.SOFTCORE, type: TagType.STANDARD, year }),
-          getLeaderboard({ path, lifestyle: Lifestyle.HARDCORE, type: TagType.STANDARD, year }),
+          getLeaderboard({ path, lifestyle: Lifestyle.SOFTCORE, type: TagType.STANDARD, board: String(year) }),
+          getLeaderboard({ path, lifestyle: Lifestyle.HARDCORE, type: TagType.STANDARD, board: String(year) }),
         ]);
         return [year, { softcore, hardcore }] as const;
       }),

@@ -32,30 +32,34 @@ export const meta = () => {
 export default function OCRSPath() {
   const {
     frequency,
+    path,
+    totalRuns,
+    totalRunsInSeason,
+    boards,
+  } = useLoaderData<typeof loader>();
+
+  // A single-board path, so everything comes from the one board.
+  const {
     hcDedication,
     hcLeaderboard,
     hcPyrite,
+    hcRecent,
     hcSpecialLeaderboard,
     hcSpecialPyrite,
-    path,
-    recordBreaking,
-    hcRecent,
     scDedication,
     scLeaderboard,
     scPyrite,
     scRecent,
     scSpecialLeaderboard,
     scSpecialPyrite,
-    totalRuns,
-    totalRunsInSeason,
-  } = useLoaderData<typeof loader>();
+  } = boards[0];
 
   return (
     <Stack gap={10}>
       <PathHeader
         path={path}
         frequency={frequency}
-        recordBreaking={recordBreaking}
+        boards={boards}
         extra="Fun"
         totalRuns={totalRuns}
         totalRunsInSeason={totalRunsInSeason}

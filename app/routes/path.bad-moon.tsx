@@ -49,24 +49,28 @@ export default function BadMoonPath() {
   const {
     casualLeaderboard,
     frequency,
-    hcDedication,
-    hcLeaderboard,
-    hcRecent,
     kittycoreLeaderboard,
     kittycoreRecent,
     path,
-    recordBreaking,
+    totalRuns,
+    boards,
+  } = useLoaderData<typeof loader>();
+
+  // A single-board path, so everything comes from the one board.
+  const {
+    hcDedication,
+    hcLeaderboard,
+    hcRecent,
     scLeaderboard,
     scRecent,
-    totalRuns,
-  } = useLoaderData<typeof loader>();
+  } = boards[0];
 
   return (
     <Stack gap={10}>
       <PathHeader
         path={path}
         frequency={frequency}
-        recordBreaking={recordBreaking}
+        boards={boards}
         totalRuns={totalRuns}
       />
       <LeaderboardAccordion>

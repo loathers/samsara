@@ -77,7 +77,8 @@ export interface AscensionTable {
 export interface TagTable {
   type: TagType;
   value: number | null;
-  year: number | null;
+  /** Which of a path's parallel boards this rank is on. See app/boards.ts. */
+  board: string | null;
   ascensionNumber: number;
   playerId: number;
 }

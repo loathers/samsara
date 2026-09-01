@@ -7,13 +7,14 @@ import {
   useLoaderData,
 } from "react-router";
 
+import { boardHash, boardTitle } from "~/boards";
 import { Dedication } from "~/components/Dedication";
 import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
 import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
 import { findPathWithClasses } from "~/db.server";
-import { getPathData } from "~/path.server";
+import { type BoardData, getPathData } from "~/path.server";
 import { formatPathName } from "~/utils";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -45,95 +46,133 @@ export const meta = ({ data }: MetaArgs<typeof loader>) => {
   ];
 };
 
-export default function PathPage() {
-  const {
-    current,
-    frequency,
+/**
+ * A path's sections. Most paths have a single unnamed board, in which case the titles
+ * and hashes are exactly what they have always been; a path that ranks several boards
+ * gets one set of sections per board, labelled and hashed by board.
+ */
+function BoardSections({
+  board: {
+    board,
     hcDedication,
     hcLeaderboard,
     hcPyrite,
-    path,
     hcRecent,
-    recordBreaking,
     scDedication,
     scLeaderboard,
     scPyrite,
     scRecent,
-    totalRuns,
-    totalRunsInSeason,
-  } = useLoaderData<typeof loader>();
+  },
+  current,
+  showClass,
+}: {
+  board: BoardData;
+  current: boolean;
+  showClass: boolean;
+}) {
+  const showPyrites = scPyrite.length + hcPyrite.length > 0;
+
+  return (
+    <>
+      <LeaderboardAccordionItem
+        slug={boardHash(board.key, "leaderboards")}
+        title={boardTitle(board.label, "Leaderboards")}
+        description={
+          board.description ??
+          (current
+            ? "The official leaderboards as they currently stand"
+            : "The official leaderboards frozen once the path went out-of-season")
+        }
+      >
+        <Leaderboard
+          title="Softcore Leaderboard"
+          ascensions={scLeaderboard}
+          showClass={showClass}
+          omitExtra={board.extraEquals?.[0]}
+        />
+        <Leaderboard
+          title="Hardcore Leaderboard"
+          ascensions={hcLeaderboard}
+          showClass={showClass}
+          omitExtra={board.extraEquals?.[0]}
+        />
+      </LeaderboardAccordionItem>
+      {showPyrites && (
+        <LeaderboardAccordionItem
+          slug={boardHash(board.key, "pyrites")}
+          title={boardTitle(board.label, "Pyrites")}
+          description="{PYRITE}"
+        >
+          <Leaderboard
+            title="Softcore Pyrites"
+            ascensions={scPyrite}
+            showClass={showClass}
+            omitExtra={board.extraEquals?.[0]}
+          />
+          <Leaderboard
+            title="Hardcore Pyrites"
+            ascensions={hcPyrite}
+            showClass={showClass}
+            omitExtra={board.extraEquals?.[0]}
+          />
+        </LeaderboardAccordionItem>
+      )}
+      <LeaderboardAccordionItem
+        slug={boardHash(board.key, "recent")}
+        title={boardTitle(board.label, "Recent Ascensions")}
+        description="The most recent ascensions on this path"
+      >
+        <Leaderboard
+          title="Softcore"
+          ascensions={scRecent}
+          ranked={false}
+          showClass={showClass}
+          omitExtra={board.extraEquals?.[0]}
+        />
+        <Leaderboard
+          title="Hardcore"
+          ascensions={hcRecent}
+          ranked={false}
+          showClass={showClass}
+          omitExtra={board.extraEquals?.[0]}
+        />
+      </LeaderboardAccordionItem>
+      <LeaderboardAccordionItem
+        slug={boardHash(board.key, "dedication")}
+        title={boardTitle(board.label, "Dedication")}
+        description="Players who have completed the most ascensions for this path"
+      >
+        <Dedication title="Softcore Dedication" dedication={scDedication} />
+        <Dedication title="Hardcore Dedication" dedication={hcDedication} />
+      </LeaderboardAccordionItem>
+    </>
+  );
+}
+
+export default function PathPage() {
+  const { boards, current, frequency, path, totalRuns, totalRunsInSeason } =
+    useLoaderData<typeof loader>();
 
   const showClass = path.class.length !== 1;
-  const showPyrites = scPyrite.length + hcPyrite.length > 0;
 
   return (
     <Stack gap={10}>
       <PathHeader
         path={path}
         frequency={frequency}
-        recordBreaking={recordBreaking}
+        boards={boards}
         totalRuns={totalRuns}
         totalRunsInSeason={totalRunsInSeason}
       />
       <LeaderboardAccordion>
-        <LeaderboardAccordionItem
-          title="Leaderboards"
-          description={
-            current
-              ? "The official leaderboards as they currently stand"
-              : "The official leaderboards frozen once the path went out-of-season"
-          }
-        >
-          <Leaderboard
-            title="Softcore Leaderboard"
-            ascensions={scLeaderboard}
+        {boards.map((board) => (
+          <BoardSections
+            key={board.board.key ?? "default"}
+            board={board}
+            current={current}
             showClass={showClass}
           />
-          <Leaderboard
-            title="Hardcore Leaderboard"
-            ascensions={hcLeaderboard}
-            showClass={showClass}
-          />
-        </LeaderboardAccordionItem>
-        {showPyrites && (
-          <LeaderboardAccordionItem title="Pyrites" description="{PYRITE}">
-            <Leaderboard
-              title="Softcore Pyrites"
-              ascensions={scPyrite}
-              showClass={showClass}
-            />
-            <Leaderboard
-              title="Hardcore Pyrites"
-              ascensions={hcPyrite}
-              showClass={showClass}
-            />
-          </LeaderboardAccordionItem>
-        )}
-        <LeaderboardAccordionItem
-          slug="recent"
-          title="Recent Ascensions"
-          description="The most recent ascensions on this path"
-        >
-          <Leaderboard
-            title="Softcore"
-            ascensions={scRecent}
-            ranked={false}
-            showClass={showClass}
-          />
-          <Leaderboard
-            title="Hardcore"
-            ascensions={hcRecent}
-            ranked={false}
-            showClass={showClass}
-          />
-        </LeaderboardAccordionItem>
-        <LeaderboardAccordionItem
-          title="Dedication"
-          description="Players who have completed the most ascensions for this path"
-        >
-          <Dedication title="Softcore Dedication" dedication={scDedication} />
-          <Dedication title="Hardcore Dedication" dedication={hcDedication} />
-        </LeaderboardAccordionItem>
+        ))}
       </LeaderboardAccordion>
     </Stack>
   );

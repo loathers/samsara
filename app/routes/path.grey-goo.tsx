@@ -29,24 +29,28 @@ export const meta = () => {
 export default function GreyGooPath() {
   const {
     frequency,
+    path,
+    totalRuns,
+    totalRunsInSeason,
+    boards,
+  } = useLoaderData<typeof loader>();
+
+  // A single-board path, so everything comes from the one board.
+  const {
+    hcRecent,
     hcSpecialLeaderboard,
     hcSpecialPyrite,
-    hcRecent,
-    path,
-    recordBreaking,
     scRecent,
     scSpecialLeaderboard,
     scSpecialPyrite,
-    totalRuns,
-    totalRunsInSeason,
-  } = useLoaderData<typeof loader>();
+  } = boards[0];
 
   return (
     <Stack gap={10}>
       <PathHeader
         path={path}
         frequency={frequency}
-        recordBreaking={recordBreaking}
+        boards={boards}
         extra="Goo Score"
         totalRuns={totalRuns}
         totalRunsInSeason={totalRunsInSeason}

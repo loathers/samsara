@@ -46,22 +46,26 @@ export const meta = () => {
 
 export default function PathPage() {
   const {
+    classComparison,
+    currentYear,
     frequency,
+    path,
+    totalRuns,
+    years,
+    boards,
+  } = useLoaderData<typeof loader>();
+
+  // A single-board path, so everything comes from the one board.
+  const {
     hcDedication,
     hcLeaderboard,
     hcPyrite,
-    path,
     hcRecent,
-    recordBreaking,
     scDedication,
     scLeaderboard,
     scPyrite,
     scRecent,
-    years,
-    totalRuns,
-    classComparison,
-    currentYear,
-  } = useLoaderData<typeof loader>();
+  } = boards[0];
 
   const yearBoards = useMemo(
     () =>
@@ -104,7 +108,7 @@ export default function PathPage() {
       <PathHeader
         path={path}
         frequency={frequency}
-        recordBreaking={recordBreaking}
+        boards={boards}
         totalRuns={totalRuns}
       />
       <LeaderboardAccordion>

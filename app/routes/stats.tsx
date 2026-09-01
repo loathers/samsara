@@ -19,6 +19,7 @@ import { PlayerLink } from "~/components/PlayerLink";
 import { ResponsiveContent } from "~/components/ResponsiveContent";
 import { StatsTable } from "~/components/StatsTable";
 import { Turncount } from "~/components/Turncount";
+import { compareDaycount } from "~/utils";
 import {
   countAscensionsByPath,
   countAscensionsInSeasonByPath,
@@ -93,25 +94,40 @@ export const loader = async () => {
     softcore?: PyriteAscension["ascension"];
   };
 
+  /**
+   * A path can hold several golds per lifestyle, and only one belongs in its row. A
+   * _SPECIAL gold ranks the same runs by a truer score (Fun, Goo), so it wins outright;
+   * otherwise the boards rank the same way on different cohorts, so the faster run does.
+   */
+  const preferred = (
+    incumbent: AscensionData | undefined,
+    tag: PyriteAscension,
+  ) => {
+    if (!incumbent) return true;
+    if (tag.type === "PYRITE_SPECIAL") return true;
+    return compareDaycount(tag.ascension, incumbent) < 0;
+  };
+
   const paths = Object.values(
-    separatePyrites.reduce<Record<string, PathPyrites>>(
-      (acc, tag) => ({
+    separatePyrites.reduce<Record<string, PathPyrites>>((acc, tag) => {
+      const name = tag.ascension.path.name;
+      const lifestyle = tag.ascension.lifestyle.toLowerCase() as
+        | "hardcore"
+        | "softcore";
+
+      return {
         ...acc,
-        [tag.ascension.path.name]: {
-          ...acc[tag.ascension.path.name],
+        [name]: {
+          ...acc[name],
           path: tag.ascension.path,
-          totalRuns: totalRunsPerPath[tag.ascension.path.name] ?? 0,
-          totalRunsInSeason:
-            totalRunsInSeasonPerPath[tag.ascension.path.name] ?? 0,
-          // If we have no ascension for this path/lifestyle, then use this one. Or overwrite if we have a PYRITE_SPECIAL as those are the true pyrites
-          ...(!acc[tag.ascension.lifestyle.toLowerCase()] ||
-          tag.type === "PYRITE_SPECIAL"
-            ? { [tag.ascension.lifestyle.toLowerCase()]: tag.ascension }
+          totalRuns: totalRunsPerPath[name] ?? 0,
+          totalRunsInSeason: totalRunsInSeasonPerPath[name] ?? 0,
+          ...(preferred(acc[name]?.[lifestyle], tag)
+            ? { [lifestyle]: tag.ascension }
             : {}),
         },
-      }),
-      {},
-    ),
+      };
+    }, {}),
   );
 
   // Count up all the pyrite holders for the ultimate leaderboard of fools
