@@ -23,7 +23,9 @@ function starPoints(outer: number, inner: number) {
 const POINTS = starPoints(SIZE / 2, SIZE / 5);
 
 export function WinRateStar({ cx, cy, fill, stroke }: Props) {
-  if (cx === undefined || cy === undefined) return null;
+  // Recharts hands a custom shape null coordinates for rows with no value, which
+  // would otherwise stamp an untransformed star on the chart's top left corner.
+  if (!Number.isFinite(cx) || !Number.isFinite(cy)) return null;
 
   return (
     <polygon

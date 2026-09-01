@@ -82,6 +82,8 @@ export function ClassComparisonChart({
 
   if (data.length === 0) return null;
 
+  const hasWinRates = data.some((d) => d.winRate !== null);
+
   return (
     <Stack gap={2} mt={10} width="100%">
       <Heading textAlign="center" as="h3" size="sm" color="fg">
@@ -109,7 +111,13 @@ export function ClassComparisonChart({
               />
               <ReferenceLine x={0.5} stroke={zero} />
               <Bar dataKey="share" fill={bar} barSize={14} isAnimationActive={false} />
-              <Scatter dataKey="winRate" shape={winRateShape} isAnimationActive={false} />
+              {hasWinRates && (
+                <Scatter
+                  dataKey="winRate"
+                  shape={winRateShape}
+                  isAnimationActive={false}
+                />
+              )}
               <Tooltip cursor={CURSOR} content={TOOLTIP} />
             </ComposedChart>
           </ResponsiveContainer>
@@ -117,7 +125,7 @@ export function ClassComparisonChart({
       </Box>
       <Text fontSize="2xs" textAlign="center" color="fg.muted">
         Bar is the share of runs using each class.
-        {data.some((d) => d.winRate !== null) &&
+        {hasWinRates &&
           " Star is the share of the same players' other runs it beats."}
       </Text>
     </Stack>
