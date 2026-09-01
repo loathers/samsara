@@ -7,12 +7,12 @@ import {
   useLoaderData,
 } from "react-router";
 
-import { boardHash, hashSection } from "~/boards";
+import { hashSection } from "~/boards";
+import { BoardSection } from "~/components/BoardSection";
 import { ClassComparisonChart } from "~/components/ClassComparisonChart/ClassComparisonChart";
 import { Dedication } from "~/components/Dedication";
 import { Leaderboard } from "~/components/Leaderboard";
 import { LeaderboardAccordion } from "~/components/LeaderboardAccordion";
-import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem";
 import { PathHeader } from "~/components/PathHeader";
 import { findPathWithClasses } from "~/db.server";
 import { type BoardData, getPathData } from "~/path.server";
@@ -157,7 +157,6 @@ export default function PathPage() {
     useLoaderData<typeof loader>();
 
   const showClass = path.class.length !== 1;
-  const split = boards.length > 1;
 
   return (
     <Stack gap={10}>
@@ -168,38 +167,24 @@ export default function PathPage() {
         totalRuns={totalRuns}
         totalRunsInSeason={totalRunsInSeason}
       />
-      <LeaderboardAccordion toItemValue={split ? hashSection : undefined}>
-        {CATEGORIES.filter((category) =>
-          boards.some((board) => category.show?.(board) ?? true),
-        ).map((category) => (
-          <LeaderboardAccordionItem
+      <LeaderboardAccordion toItemValue={hashSection}>
+        {CATEGORIES.map((category) => (
+          <BoardSection
             key={category.slug}
             slug={category.slug}
             title={category.title}
             description={category.description(current)}
-            stacked={split}
-          >
-            {split ? (
-              // No mapping here: the bare section hash matches no board, so opening a
-              // section leaves its boards closed until one is picked.
-              <LeaderboardAccordion>
-                {boards
-                  .filter((board) => category.show?.(board) ?? true)
-                  .map((board) => (
-                    <LeaderboardAccordionItem
-                      key={board.board.key ?? "default"}
-                      slug={boardHash(board.board.key, category.slug)}
-                      title={board.board.label}
-                      description=""
-                    >
-                      {category.content(board, showClassFor(board, showClass))}
-                    </LeaderboardAccordionItem>
-                  ))}
-              </LeaderboardAccordion>
-            ) : (
-              category.content(boards[0], showClassFor(boards[0], showClass))
-            )}
-          </LeaderboardAccordionItem>
+            boards={boards
+              .filter((board) => category.show?.(board) ?? true)
+              .map((board) => ({
+                key: board.board.key,
+                label: board.board.label,
+                content: category.content(
+                  board,
+                  showClassFor(board, showClass),
+                ),
+              }))}
+          />
         ))}
       </LeaderboardAccordion>
     </Stack>
