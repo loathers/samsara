@@ -6,6 +6,7 @@ import {
   DEFAULT_BOARD,
   boardPathNames,
   boardsFor,
+  findBoard,
   yearBoard,
 } from "../../app/boards.js";
 import { TagType } from "../../app/db.js";
@@ -289,15 +290,21 @@ async function getBestRuns() {
         turns: number;
         lifestyle: string;
         pathName: string;
-        board: string | null;
+        board: { value: string; label: string } | null;
         player: { id: number; name: string };
       }
     >
   >(
-    (acc, { playerId, playerName, type, ...rest }) => ({
+    (acc, { playerId, playerName, type, board, ...rest }) => ({
       ...acc,
-      [`${rest.pathName}_${rest.lifestyle}_${type}_${rest.board ?? ""}`]: {
+      [`${rest.pathName}_${rest.lifestyle}_${type}_${board ?? ""}`]: {
         ...rest,
+        board:
+          board === null
+            ? null
+            : // findBoard misses a key left over from an older boards.ts. Naming the
+              // raw key beats announcing the gold with no cohort at all.
+              { value: board, label: findBoard(rest.pathName, board)?.label ?? board },
         player: { id: playerId, name: playerName },
       },
     }),
