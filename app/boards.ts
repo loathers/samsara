@@ -174,6 +174,6 @@ export function tagHash(
 ) {
   const override = PATH_TAG_HASH.get(pathName);
   if (override) return override(type, board, lifestyle);
-  if (type.startsWith("LEADERBOARD")) return boardHash(board, "leaderboards");
+  if (type === "LEADERBOARD") return boardHash(board, "leaderboards");
   return boardHash(board, "pyrites");
 }

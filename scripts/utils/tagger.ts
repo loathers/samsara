@@ -332,7 +332,7 @@ async function tagPyrites(sendWebhook: boolean) {
   await db.transaction().execute(async (trx) => {
     await trx
       .deleteFrom("Tag")
-      .where("type", "in", [TagType.PYRITE, TagType.PYRITE_SPECIAL])
+      .where("type", "=", TagType.PYRITE)
       .execute();
 
     await Promise.all([
@@ -395,11 +395,7 @@ async function tagLeaderboard() {
   await db.transaction().execute(async (trx) => {
     await trx
       .deleteFrom("Tag")
-      .where("type", "in", [
-        TagType.LEADERBOARD,
-        TagType.LEADERBOARD_SPECIAL,
-        TagType.STANDARD,
-      ])
+      .where("type", "=", TagType.LEADERBOARD)
       .execute();
 
     await Promise.all([

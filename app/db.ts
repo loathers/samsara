@@ -12,9 +12,6 @@ export const TagType = {
   PERSONAL_BEST: "PERSONAL_BEST",
   LEADERBOARD: "LEADERBOARD",
   PYRITE: "PYRITE",
-  LEADERBOARD_SPECIAL: "LEADERBOARD_SPECIAL",
-  PYRITE_SPECIAL: "PYRITE_SPECIAL",
-  STANDARD: "STANDARD",
 } as const;
 export type TagType = (typeof TagType)[keyof typeof TagType];
 

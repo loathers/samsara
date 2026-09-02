@@ -5,7 +5,7 @@ import { findPath, getLeaderboard, getMaxAge } from "~/db.server";
 
 const isTagType = (input?: string): input is TagType => {
   if (!input) return false;
-  return /(LEADERBOARD|PYRITE)(_SPECIAL)?/i.test(input);
+  return /^(LEADERBOARD|PYRITE)$/i.test(input);
 };
 
 export const loader = async ({ params, request }: LoaderFunctionArgs) => {

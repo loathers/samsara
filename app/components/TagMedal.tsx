@@ -38,10 +38,7 @@ const TAG_MEDAL: Record<TagType, string> = {
   RECORD_BREAKING: "wossname",
   PERSONAL_BEST: "hmedheart",
   LEADERBOARD: "hmedstar",
-  LEADERBOARD_SPECIAL: "hmedstar",
-  STANDARD: "hmedstar",
   PYRITE: "fdkol_medal",
-  PYRITE_SPECIAL: "fdkol_medal",
 };
 
 export function TagMedal({ tag, lifestyle, path }: Props) {
