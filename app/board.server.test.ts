@@ -10,7 +10,14 @@ import {
 import { describe, expect, it } from "vitest";
 
 import { boardFilter, boardOrder, boardScore, primaryScore } from "./board.server";
-import { Board, DEFAULT_BOARD, OVERALL_BOARD, allBoards, boardsFor } from "./boards";
+import {
+  Board,
+  DEFAULT_BOARD,
+  OVERALL_BOARD,
+  boardPathNames,
+  boardsFor,
+  findBoard,
+} from "./boards";
 
 const db = new Kysely<Record<string, never>>({
   dialect: {
@@ -23,7 +30,7 @@ const db = new Kysely<Record<string, never>>({
 
 const compile = (fragment: RawBuilder<unknown>) => fragment.compile(db);
 
-const BLUE = boardsFor({ name: "Blue vs. Red" }).find((b) => b.key === "blue")!;
+const BLUE = findBoard("Blue vs. Red", "blue")!;
 
 const PRE_NERF: Board = {
   key: "pre-nerf",
@@ -59,9 +66,7 @@ describe("boardFilter", () => {
   });
 
   it("matches a familiar only at 100%", () => {
-    const kittycore = boardsFor({ name: "Bad Moon" }).find(
-      (b) => b.key === "kittycore",
-    )!;
+    const kittycore = findBoard("Bad Moon", "kittycore")!;
     expect(compile(boardFilter(kittycore)).sql).toBe(
       `("familiarName" = 'Black Cat' AND "familiarPercentage" = 100)`,
     );
@@ -96,19 +101,20 @@ describe("scoring", () => {
     );
   });
 
-  it("orders a measure board by that key, best first", () => {
+  it("orders any board by its own score, best first", () => {
     expect(compile(boardOrder(GOO)).sql).toBe(
-      `(("extra" ->> 'Goo Score')::bigint) DESC`,
+      `("extra" ->> 'Goo Score')::bigint DESC`,
     );
     expect(compile(boardOrder(DEFAULT_BOARD)).sql).toBe(
-      `"days" ASC, "turns" ASC`,
+      `-1 * ("days"::bigint * 1000000::bigint + "turns"::bigint) DESC`,
     );
   });
 
   it("gives the boardless pass a branch per path that ranks on a measure", () => {
     const { sql: text } = compile(primaryScore());
 
-    for (const [pathName, [board]] of allBoards()) {
+    for (const pathName of boardPathNames()) {
+      const [board] = boardsFor({ name: pathName });
       if (!board.extra) continue;
       expect(text).toContain(
         `WHEN '${pathName.replaceAll("'", "''")}' THEN ${compile(boardScore(board)).sql}`,

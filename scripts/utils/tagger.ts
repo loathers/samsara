@@ -9,14 +9,31 @@ import {
 import {
   Board,
   DEFAULT_BOARD,
+  allBoards,
   boardPathNames,
-  boardsFor,
   findBoard,
   tagHash,
 } from "../../app/boards.js";
 import { TagType } from "../../app/db.js";
 import { NS13, SITE_URL } from "../../app/utils.js";
 import { db } from "./client.js";
+
+/** The runs a board holds: every query below ranks the same population. */
+const runScope = ({
+  path,
+  excludePaths,
+  board,
+}: {
+  path?: string;
+  excludePaths?: string[];
+  board: Board;
+}) => sql`
+  "dropped" IS FALSE
+  AND "abandoned" IS FALSE
+  ${path ? sql`AND "pathName" = ${path}` : sql``}
+  ${excludePaths ? sql`AND "pathName" NOT IN (${sql.join(excludePaths)})` : sql``}
+  AND ${boardFilter(board)}
+  AND "date" >= ${NS13}::date`;
 
 export async function tagAscensions(sendWebhook: boolean) {
   await tagRecordBreaking();
@@ -48,13 +65,7 @@ function getRecordBreakingQuery({
         ${boardScore(board)} AS "score"
       FROM
         "Ascension"
-      WHERE
-        "dropped" = FALSE
-        AND "abandoned" = FALSE
-        ${path ? sql`AND "pathName" = ${path}` : sql``}
-        ${excludePaths ? sql`AND "pathName" NOT IN (${sql.join(excludePaths)})` : sql``}
-        AND ${boardFilter(board)}
-        AND "date" >= ${NS13}::date
+      WHERE ${runScope({ path, excludePaths, board })}
     ),
     "precedingScore" AS (
       SELECT
@@ -108,10 +119,8 @@ async function tagRecordBreaking() {
 
     await Promise.all([
       getRecordBreakingQuery({ excludePaths: boardPathNames() }).execute(trx),
-      ...boardQueries((path, board) =>
-        board.trackRecords === false
-          ? undefined
-          : getRecordBreakingQuery({ path, board }),
+      ...boardQueries("trackRecords", (path, board) =>
+        getRecordBreakingQuery({ path, board }),
       ).map((q) => q.execute(trx)),
     ]);
   });
@@ -197,14 +206,8 @@ function getLeaderboardQuery(
       FROM
         "Ascension"
       LEFT JOIN "Path" on "Ascension"."pathName" = "Path"."name"
-      WHERE
-      "dropped" IS FALSE
-      AND "abandoned" IS FALSE
-      ${path ? sql`AND "pathName" = ${path}` : sql``}
-      ${inSeason ? sql`AND "date" >= "Path"."start" AND "date" <= "Path"."end"` : sql``}
-      ${excludePaths ? sql`AND "pathName" NOT IN (${sql.join(excludePaths)})` : sql``}
-      AND ${boardFilter(board)}
-      AND "date" >= ${NS13}::date),
+      WHERE ${runScope({ path, excludePaths, board })}
+      ${inSeason ? sql`AND "date" >= "Path"."start" AND "date" <= "Path"."end"` : sql``}),
     "best" AS (
       SELECT
         "pathName",
@@ -244,12 +247,13 @@ function getLeaderboardQuery(
   `;
 }
 
-/** One query per board of every path that declares boards; return nothing to skip one. */
+/** One query per board that carries this tag, of every path that declares boards. */
 function boardQueries(
-  query: (path: string, board: Board) => RawBuilder<unknown> | undefined,
+  tracks: "trackRecords" | "trackLeaderboard" | "trackPyrites",
+  query: (path: string, board: Board) => RawBuilder<unknown>,
 ) {
-  return boardPathNames().flatMap((path) =>
-    boardsFor({ name: path }).flatMap((board) => query(path, board) ?? []),
+  return allBoards().flatMap(([path, boards]) =>
+    boards.filter((board) => board[tracks] !== false).map((board) => query(path, board)),
   );
 }
 
@@ -332,10 +336,8 @@ async function tagPyrites(sendWebhook: boolean) {
       .execute();
 
     await Promise.all([
-      ...boardQueries((path, board) =>
-        board.trackPyrites === false
-          ? undefined
-          : getLeaderboardQuery(TagType.PYRITE, { path, board }),
+      ...boardQueries("trackPyrites", (path, board) =>
+        getLeaderboardQuery(TagType.PYRITE, { path, board }),
       ).map((q) => q.execute(trx)),
       getLeaderboardQuery(TagType.PYRITE, {
         excludePaths: boardPathNames(),
@@ -401,14 +403,12 @@ async function tagLeaderboard() {
       .execute();
 
     await Promise.all([
-      ...boardQueries((path, board) =>
-        board.trackLeaderboard === false
-          ? undefined
-          : getLeaderboardQuery(TagType.LEADERBOARD, {
-              path,
-              board,
-              inSeason: !board.ownSeason,
-            }),
+      ...boardQueries("trackLeaderboard", (path, board) =>
+        getLeaderboardQuery(TagType.LEADERBOARD, {
+          path,
+          board,
+          inSeason: !board.ownSeason,
+        }),
       ).map((q) => q.execute(trx)),
       getLeaderboardQuery(TagType.LEADERBOARD, {
         inSeason: true,

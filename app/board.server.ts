@@ -1,6 +1,6 @@
 import { RawBuilder, sql } from "kysely";
 
-import { Board, allBoards } from "./boards";
+import { Board, boardPathNames, pathExtra } from "./boards";
 
 const column = (name: string, alias?: string) =>
   sql.ref(alias ? `${alias}.${name}` : name);
@@ -60,18 +60,16 @@ const extraScore = (key: string) => sql`("extra" ->> ${sql.lit(key)})::bigint`;
 export const boardScore = (board: Board) =>
   board.extra ? extraScore(board.extra.key) : daycountScore();
 
-export const boardOrder = (board: Board) =>
-  board.extra
-    ? sql`(${extraScore(board.extra.key)}) DESC`
-    : sql`"days" ASC, "turns" ASC`;
+export const boardOrder = (board: Board) => sql`${boardScore(board)} DESC`;
 
 /** For the one pass that has no board: each path scores by its first board's measure. */
 export function primaryScore(): RawBuilder<unknown> {
-  const branches = allBoards().flatMap(([pathName, [board]]) =>
-    board.extra
-      ? [sql`WHEN ${sql.lit(pathName)} THEN ${extraScore(board.extra.key)}`]
-      : [],
-  );
+  const branches = boardPathNames().flatMap((pathName) => {
+    const extra = pathExtra(pathName);
+    return extra
+      ? [sql`WHEN ${sql.lit(pathName)} THEN ${extraScore(extra.key)}`]
+      : [];
+  });
 
   if (branches.length === 0) return daycountScore();
 

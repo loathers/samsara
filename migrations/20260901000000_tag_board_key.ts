@@ -16,13 +16,14 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 export async function down(db: Kysely<unknown>): Promise<void> {
   // Lossy: a run ranked on two boards has two rows and the old key holds one of them.
   await sql`
-    DELETE FROM "Tag" t
-    WHERE t."ctid" <> (
-      SELECT MIN(o."ctid")
-      FROM "Tag" o
-      WHERE o."type" = t."type"
-        AND o."ascensionNumber" = t."ascensionNumber"
-        AND o."playerId" = t."playerId"
+    DELETE FROM "Tag"
+    WHERE "ctid" IN (
+      SELECT "ctid" FROM (
+        SELECT "ctid", ROW_NUMBER() OVER (
+          PARTITION BY "type", "ascensionNumber", "playerId"
+        ) AS "copy"
+        FROM "Tag"
+      ) t WHERE t."copy" > 1
     )
   `.execute(db);
 

@@ -10,6 +10,7 @@ import {
 import { useMemo } from "react";
 import { Link } from "react-router";
 
+import type { Board } from "~/boards";
 import { FormattedDate } from "~/components/FormattedDate";
 import { FrequencyGraph } from "~/components/FrequencyGraph";
 import { Path } from "~/components/Path";
@@ -30,10 +31,7 @@ type Props = {
   totalRunsInSeason?: number;
   frequency: Datum[];
   /** Boards rank independently, so each gets its own progression graph. */
-  boards: {
-    board: { label: string; extra?: { key: string } };
-    recordBreaking: RecordDatum[];
-  }[];
+  boards: { board: Pick<Board, "label" | "extra">; recordBreaking: RecordDatum[] }[];
 };
 
 export function PathHeader({

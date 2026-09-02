@@ -250,6 +250,62 @@ export async function getLeaderboard({
   return rows.map((r) => toLeaderboardEntry(r, [{ value: r.tagValue }]));
 }
 
+/** getLeaderboard for many boards at once, so a page of them costs one query. */
+export async function getLeaderboardsByBoard({
+  path,
+  boards,
+  type,
+}: {
+  path: { name: string };
+  boards: string[];
+  type: TagType;
+}) {
+  if (boards.length === 0) return {};
+
+  const rows = await kysely
+    .selectFrom("Ascension as a")
+    .innerJoin("Tag as t", (join) =>
+      join
+        .onRef("t.ascensionNumber", "=", "a.ascensionNumber")
+        .onRef("t.playerId", "=", "a.playerId")
+        .on("t.type", "=", type)
+        .on("t.board", "in", boards),
+    )
+    .innerJoin("Player as p", "p.id", "a.playerId")
+    .leftJoin("Class as c", "c.name", "a.className")
+    .select([
+      "a.ascensionNumber",
+      "a.date",
+      "a.dropped",
+      "a.abandoned",
+      "a.level",
+      "a.sign",
+      "a.turns",
+      "a.days",
+      "a.lifestyle",
+      "a.extra",
+      "t.board",
+      "t.value as tagValue",
+      "p.id as playerId",
+      "p.name as playerName",
+      "c.name as className",
+      "c.id as classId",
+    ])
+    .where("a.pathName", "=", path.name)
+    .orderBy("t.value", "asc")
+    .execute();
+
+  return rows.reduce<
+    Record<string, Partial<Record<Lifestyle, LeaderboardEntry[]>>>
+  >((acc, r) => {
+    const board = (acc[r.board!] ??= {});
+    (board[r.lifestyle] ??= []).push(
+      toLeaderboardEntry(r, [{ value: r.tagValue }]),
+    );
+    return acc;
+  }, {});
+}
+
 export async function getRecentAscensions({
   path,
   lifestyle,
@@ -577,11 +633,14 @@ export type ClassComparisonRow = {
 export async function getClassComparison({
   path,
   tagType = TagType.LEADERBOARD,
+  boards,
   window,
   board,
 }: {
   path: { name: string };
   tagType?: TagType;
+  /** The boards to compare across, where the caller buckets by them rather than by date. */
+  boards?: string[];
   /** `end` is exclusive. */
   window?: { start: Date; end: Date; year?: number };
   board?: Board;
@@ -591,7 +650,7 @@ export async function getClassComparison({
   );
 
   // Kept non-null so the joins below match; the final select turns 0 back into null.
-  // Without a window the boards are Standard's years, so the key is a number.
+  // Without a window the boards are seasons, whose keys are their years.
   const season = window
     ? sql`${window.year ?? 0}::integer`
     : sql`"Tag"."board"::integer`;
@@ -614,7 +673,7 @@ export async function getClassComparison({
         AND "Ascension"."playerId" = "Tag"."playerId"
       WHERE
         "Tag"."type" = ${sql.literal(tagType)}::"TagType" AND
-        ${window ? sql`` : sql`"Tag"."board" ~ '^\\d+$' AND`}
+        ${boards ? sql`"Tag"."board" IN (${sql.join(boards)}) AND` : sql``}
         ${board?.key ? sql`"Tag"."board" = ${board.key} AND` : sql``}
         "Tag"."value" <= ${CLASS_COMPARISON_RANK_CUTOFF} AND
         "Ascension"."pathName" = ${path.name} AND

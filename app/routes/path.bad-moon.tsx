@@ -1,6 +1,7 @@
 import { Stack } from "@chakra-ui/react";
 import { data, useLoaderData } from "react-router";
 
+import { OVERALL_BOARD } from "~/boards";
 import { ClassComparisonChart } from "~/components/ClassComparisonChart/ClassComparisonChart";
 import { Dedication } from "~/components/Dedication";
 import { Leaderboard } from "~/components/Leaderboard";
@@ -18,7 +19,7 @@ export const loader = async () => {
   const [pathData, casualLeaderboard] = await Promise.all([
     getPathData(path),
     // Without a board it would match both boards' tags.
-    getLeaderboard({ path, lifestyle: "CASUAL", board: "overall" }),
+    getLeaderboard({ path, lifestyle: "CASUAL", board: OVERALL_BOARD.key! }),
   ]);
 
   return { ...pathData, casualLeaderboard };
@@ -38,7 +39,7 @@ export default function BadMoonPath() {
   const { casualLeaderboard, frequency, path, totalRuns, boards } =
     useLoaderData<typeof loader>();
 
-  const overall = boards.find((b) => b.board.key === "overall")!;
+  const overall = boards.find((b) => b.board.key === OVERALL_BOARD.key)!;
   const kittycore = boards.find((b) => b.board.key === "kittycore")!;
 
   const { classes, hcDedication, hcLeaderboard, hcRecent, scLeaderboard } =

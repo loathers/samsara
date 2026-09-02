@@ -100,10 +100,13 @@ export const loader = async () => {
   const boardRank = (tag: PyriteAscension) =>
     boardsFor(tag.ascension.path).findIndex((b) => b.key === tag.board);
 
-  const ranked = [...separatePyrites].sort(
-    (a, b) =>
-      boardRank(a) - boardRank(b) || compareDaycount(a.ascension, b.ascension),
-  );
+  const ranked = separatePyrites
+    .map((tag) => ({ tag, rank: boardRank(tag) }))
+    .sort(
+      (a, b) =>
+        a.rank - b.rank || compareDaycount(a.tag.ascension, b.tag.ascension),
+    )
+    .map(({ tag }) => tag);
 
   const paths = Object.values(
     ranked.reduce<Record<string, PathPyrites>>((acc, tag) => {
