@@ -2,7 +2,7 @@ import { AccordionValueChangeDetails } from "@chakra-ui/react";
 import { useCallback } from "react";
 import { useLocation, useNavigate } from "react-router";
 
-import { hashSection } from "~/boards";
+import { hashSection, nextHash } from "~/boards";
 import { Accordion } from "~/components/Accordion";
 import { useIsHydrated } from "~/hooks/useIsHydrated";
 
@@ -23,9 +23,12 @@ export function LeaderboardAccordion({ children, leaf = false }: Props) {
 
   const onChange = useCallback(
     (details: AccordionValueChangeDetails) => {
-      navigate({ hash: details.value[0] ?? "" }, { replace: true });
+      navigate(
+        { hash: nextHash(details.value[0], current, leaf) },
+        { replace: true },
+      );
     },
-    [navigate],
+    [navigate, current, leaf],
   );
 
   return (
