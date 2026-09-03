@@ -1,4 +1,4 @@
-import { Box, Heading, Stack, Text, useToken } from "@chakra-ui/react";
+import { Box, Heading, Stack, Text } from "@chakra-ui/react";
 import { useTheme } from "next-themes";
 import { useCallback } from "react";
 import {
@@ -17,6 +17,7 @@ import { ClassIconDot } from "~/components/ClassComparisonChart/ClassIconDot";
 import { WinRateStar } from "~/components/ClassComparisonChart/WinRateStar";
 import { ClientOnly } from "~/components/ClientOnly";
 import type { ClassComparisonRow } from "~/db.server";
+import { useTokenVar } from "~/hooks/useTokenVar";
 import { percentFormatter } from "~/utils";
 
 type Props = {
@@ -38,16 +39,14 @@ export function ClassComparisonChart({
   title = "Class Performance",
   data,
 }: Props) {
-  const [zero, bar, starOutline] = useToken("colors", [
+  const [zero, bar, star, starOutline] = useTokenVar("colors", [
     "gray.500",
     "bg.emphasized",
+    "fg",
     "bg",
   ]);
   const { resolvedTheme } = useTheme();
   const invert = resolvedTheme === "dark";
-
-  // Hardcoded because useToken does not resolve `fg` to a colour usable as an SVG fill.
-  const star = invert ? "white" : "black";
 
   const axisTick = useCallback(
     ({

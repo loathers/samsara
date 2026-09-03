@@ -1,5 +1,3 @@
-import { useToken } from "@chakra-ui/react";
-import { JsonObject, JsonValue, Lifestyle } from "~/db";
 import { useState } from "react";
 import {
   Legend,
@@ -15,6 +13,8 @@ import { ClientOnly } from "~/components/ClientOnly";
 import { formatLifestyle } from "~/components/Lifestyle";
 import { DaysDot } from "~/components/RecordGraph/DaysDot";
 import { TogglableLegend } from "~/components/TogglableLegend";
+import { JsonObject, JsonValue, Lifestyle } from "~/db";
+import { useTokenVar } from "~/hooks/useTokenVar";
 import {
   backwardsSearchFrom,
   calculateRange,
@@ -66,7 +66,7 @@ export function RecordGraph({ data, extra }: Props) {
     return `${run.days}/${run.turns} ${run.player.name} (#${run.player.id})`;
   };
 
-  const [bg] = useToken("colors", ["bg"]);
+  const [bg, fg, border] = useTokenVar("colors", ["bg", "fg", "border"]);
 
   return (
     <ClientOnly>
@@ -145,6 +145,8 @@ export function RecordGraph({ data, extra }: Props) {
             ]}
             contentStyle={{
               backgroundColor: bg,
+              borderColor: border,
+              color: fg,
             }}
           />
           {lifestyles.length > 1 && (
