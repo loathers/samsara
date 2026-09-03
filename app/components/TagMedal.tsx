@@ -1,5 +1,5 @@
 import { Link } from "@chakra-ui/react";
-import { Tag as FullTag, Path, TagType } from "~/db";
+import { Tag as FullTag, Lifestyle, Path, TagType } from "~/db";
 import { Link as RRLink } from "react-router";
 
 import { KoLImage } from "~/components/KoLImage";
@@ -9,6 +9,7 @@ type Tag = Pick<FullTag, "type" | "value" | "board">;
 
 type Props = {
   tag: Tag;
+  lifestyle: Lifestyle;
   path?: Pick<Path, "slug" | "name">;
 };
 
@@ -24,16 +25,10 @@ function formatTag(tag: Tag, board?: Board) {
       return board
         ? `#${tag.value} on the ${board.label} leaderboard`
         : `#${tag.value} on the official leaderboard`;
-    case "LEADERBOARD_SPECIAL":
-      return `#${tag.value} on the special path leaderboard`;
     case "PYRITE":
       return board
         ? `Currently #${tag.value} on the ${board.label} pyrite leaderboard`
         : `Currently #${tag.value} on the pyrite leaderboard`;
-    case "PYRITE_SPECIAL":
-      return `Currently #${tag.value} on the special path pyrite leaderboard`;
-    case "STANDARD":
-      return `#${tag.value} on the official leaderboard for ${tag.board}`;
     default:
       return tag.type;
   }
@@ -43,13 +38,10 @@ const TAG_MEDAL: Record<TagType, string> = {
   RECORD_BREAKING: "wossname",
   PERSONAL_BEST: "hmedheart",
   LEADERBOARD: "hmedstar",
-  LEADERBOARD_SPECIAL: "hmedstar",
-  STANDARD: "hmedstar",
   PYRITE: "fdkol_medal",
-  PYRITE_SPECIAL: "fdkol_medal",
 };
 
-export function TagMedal({ tag, path }: Props) {
+export function TagMedal({ tag, lifestyle, path }: Props) {
   const board = path && findBoard(path.name, tag.board);
 
   const image = (
@@ -65,7 +57,7 @@ export function TagMedal({ tag, path }: Props) {
   return (
     <Link asChild>
       <RRLink
-        to={`/path/${path.slug}#${tagHash(tag.type, tag.board)}`}
+        to={`/path/${path.slug}#${tagHash(path.name, tag.type, tag.board, lifestyle)}`}
         title={formatTag(tag, board)}
       >
         {image}

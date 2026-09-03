@@ -94,7 +94,12 @@ const columns = [
       <HStack>
         <Turncount days={info.getValue()} turns={info.row.original.turns} />
         {info.row.original.tags.map((t) => (
-          <TagMedal key={t.type} tag={t} path={info.row.original.path} />
+          <TagMedal
+            key={t.type}
+            tag={t}
+            lifestyle={info.row.original.lifestyle}
+            path={info.row.original.path}
+          />
         ))}
       </HStack>
     ),

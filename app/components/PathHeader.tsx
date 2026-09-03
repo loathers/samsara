@@ -10,6 +10,7 @@ import {
 import { useMemo } from "react";
 import { Link } from "react-router";
 
+import type { Board } from "~/boards";
 import { FormattedDate } from "~/components/FormattedDate";
 import { FrequencyGraph } from "~/components/FrequencyGraph";
 import { Path } from "~/components/Path";
@@ -30,15 +31,13 @@ type Props = {
   totalRunsInSeason?: number;
   frequency: Datum[];
   /** Boards rank independently, so each gets its own progression graph. */
-  boards: { board: { label: string }; recordBreaking: RecordDatum[] }[];
-  extra?: string;
+  boards: { board: Pick<Board, "label" | "extra">; recordBreaking: RecordDatum[] }[];
 };
 
 export function PathHeader({
   path,
   frequency,
   boards,
-  extra,
   totalRuns,
   totalRunsInSeason,
 }: Props) {
@@ -105,22 +104,25 @@ export function PathHeader({
           <FrequencyGraph data={frequency} lines={lines} />
           <Text fontSize="2xs">Ascension frequency over time</Text>
         </Box>
-        {boards.map(({ board, recordBreaking }) => (
-          <Box
-            key={board.label}
-            textAlign="center"
-            mt={8}
-            height={150}
-            width="100%"
-            alignSelf="center"
-          >
-            <RecordGraph data={recordBreaking} extra={extra} />
-            <Text fontSize="2xs">
-              Progression of best runs over time
-              {board.label && ` (${board.label})`}
-            </Text>
-          </Box>
-        ))}
+        {/* A board that does not track records has none to draw. */}
+        {boards
+          .filter(({ recordBreaking }) => recordBreaking.length > 0)
+          .map(({ board, recordBreaking }) => (
+            <Box
+              key={board.label}
+              textAlign="center"
+              mt={8}
+              height={150}
+              width="100%"
+              alignSelf="center"
+            >
+              <RecordGraph data={recordBreaking} extra={board.extra?.key} />
+              <Text fontSize="2xs">
+                Progression of best runs over time
+                {board.label && ` (${board.label})`}
+              </Text>
+            </Box>
+          ))}
       </Stack>
     </Stack>
   );

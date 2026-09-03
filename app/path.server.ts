@@ -8,10 +8,11 @@ import {
   getDedication,
   getFrequency,
   getLeaderboard,
+  getLeaderboardsByBoard,
   getRecentAscensions,
   getRecordBreaking,
 } from "./db.server";
-import { NS13, calculateRange, pastYearsOfStandard } from "./utils";
+import { NS13, calculateRange } from "./utils";
 
 export function inSeason(path: Path) {
   return (
@@ -33,8 +34,6 @@ type SoftcoreLeaderboards = {
   scLeaderboard: Awaited<ReturnType<typeof getLeaderboard>>;
   scPyrite: Awaited<ReturnType<typeof getLeaderboard>>;
   scRecent: Awaited<ReturnType<typeof getRecentAscensions>>;
-  scSpecialLeaderboard: Awaited<ReturnType<typeof getLeaderboard>>;
-  scSpecialPyrite: Awaited<ReturnType<typeof getLeaderboard>>;
 };
 
 type HardcoreLeaderboards = {
@@ -42,46 +41,26 @@ type HardcoreLeaderboards = {
   hcLeaderboard: Awaited<ReturnType<typeof getLeaderboard>>;
   hcPyrite: Awaited<ReturnType<typeof getLeaderboard>>;
   hcRecent: Awaited<ReturnType<typeof getRecentAscensions>>;
-  hcSpecialLeaderboard: Awaited<ReturnType<typeof getLeaderboard>>;
-  hcSpecialPyrite: Awaited<ReturnType<typeof getLeaderboard>>;
 };
 
 async function leaderboardsForLifestyle(
   path: Path,
-  special: boolean,
   lifestyle: "HARDCORE" | "SOFTCORE",
   board: Board = DEFAULT_BOARD,
 ) {
-  const pyrites = hasPyrites(path);
   const prefix = lifestyle === "HARDCORE" ? "hc" : "sc";
   const key = board.key ?? undefined;
 
-  const [
-    dedication,
-    leaderboard,
-    pyrite,
-    recent,
-    specialLeaderboard,
-    specialPyrite,
-  ] = await Promise.all([
+  // The tagger writes what each board tracks, so there is nothing to ask for otherwise.
+  const [dedication, leaderboard, pyrite, recent] = await Promise.all([
     getDedication(path, lifestyle, board),
-    getLeaderboard({ path, lifestyle, inSeason: path.seasonal, board: key }),
-    pyrites
+    board.trackLeaderboard === false
+      ? Promise.resolve([])
+      : getLeaderboard({ path, lifestyle, inSeason: path.seasonal, board: key }),
+    hasPyrites(path) && board.trackPyrites !== false
       ? getLeaderboard({ path, lifestyle, board: key })
       : Promise.resolve([]),
     getRecentAscensions({ path, lifestyle, board }),
-    special
-      ? getLeaderboard({
-          path,
-          lifestyle,
-          special,
-          inSeason: path.seasonal,
-          board: key,
-        })
-      : Promise.resolve([]),
-    special && pyrites
-      ? getLeaderboard({ path, lifestyle, special: true, board: key })
-      : Promise.resolve([]),
   ]);
 
   return {
@@ -89,8 +68,6 @@ async function leaderboardsForLifestyle(
     [`${prefix}Leaderboard`]: leaderboard,
     [`${prefix}Pyrite`]: pyrite,
     [`${prefix}Recent`]: recent,
-    [`${prefix}SpecialLeaderboard`]: specialLeaderboard,
-    [`${prefix}SpecialPyrite`]: specialPyrite,
   };
 }
 
@@ -104,21 +81,20 @@ function byLifestyle(rows: ClassComparisonRow[]): ClassComparisonYear {
   );
 }
 
-/** Grey Goo carries no days/turns tags at all, so there is no board to describe. */
-const NO_CLASS_COMPARISON = ["Grey Goo"];
 
 /**
  * Mirrors leaderboardsForLifestyle: the headline board is tagged LEADERBOARD while a path is
  * seasonal and PYRITE otherwise, so the comparison has to follow the same window.
  *
  * Paths with their own classes are excluded because those run a board per class in game, so
- * a combined comparison would not describe any board anyone sees.
+ * a combined comparison would not describe any board anyone sees. So are boards ranked on
+ * something other than speed, which the chart has no way to draw.
  */
 export async function getPathClassComparison(
   path: Path & { class: Class[] },
   board: Board = DEFAULT_BOARD,
 ) {
-  if (path.class.length > 0 || NO_CLASS_COMPARISON.includes(path.name)) {
+  if (path.class.length > 0 || board.extra) {
     return { main: byLifestyle([]), pyrite: byLifestyle([]) };
   }
 
@@ -152,16 +128,14 @@ export async function getPathClassComparison(
   return { main: byLifestyle(main), pyrite: byLifestyle(pyrite) };
 }
 
-async function boardData(
-  path: Path & { class: Class[] },
-  special: boolean,
-  board: Board,
-) {
+async function boardData(path: Path & { class: Class[] }, board: Board) {
   const [recordBreaking, hardcoreLeaderboards, softcoreLeaderboards, classes] =
     await Promise.all([
-      getRecordBreaking(path, undefined, board.key ?? undefined),
-      leaderboardsForLifestyle(path, special, "HARDCORE", board),
-      leaderboardsForLifestyle(path, special, "SOFTCORE", board),
+      board.trackRecords === false
+        ? Promise.resolve([])
+        : getRecordBreaking(path, undefined, board.key ?? undefined),
+      leaderboardsForLifestyle(path, "HARDCORE", board),
+      leaderboardsForLifestyle(path, "SOFTCORE", board),
       getPathClassComparison(path, board),
     ]);
 
@@ -176,15 +150,16 @@ async function boardData(
 
 export type BoardData = Awaited<ReturnType<typeof boardData>>;
 
+/** A route with many boards can name the few it renders rather than fetching all of them. */
 export async function getPathData(
   path: Path & { class: Class[] },
-  special = false,
+  only: Board[] = boardsFor(path),
 ) {
   const [frequency, totalRuns, totalRunsInSeason, ...boards] = await Promise.all([
     getFrequency({ path, range: calculateRange(path.start ?? new Date(0), new Date()) }),
     countAscensions(path.name),
     path.end ? countAscensions(path.name, path.end) : Promise.resolve(0),
-    ...boardsFor(path).map((board) => boardData(path, special, board)),
+    ...only.map((board) => boardData(path, board)),
   ]);
 
   return {
@@ -197,21 +172,25 @@ export async function getPathData(
   };
 }
 
-export async function getPastStandardLeaderboards(
-  path: Path & { class: Class[] },
-) {
-  return Object.fromEntries(
-    await Promise.all(
-      pastYearsOfStandard().map(async (year) => {
-        // Run softcore and hardcore queries in parallel for each year
-        const [softcore, hardcore] = await Promise.all([
-          getLeaderboard({ path, lifestyle: Lifestyle.SOFTCORE, type: TagType.STANDARD, board: String(year) }),
-          getLeaderboard({ path, lifestyle: Lifestyle.HARDCORE, type: TagType.STANDARD, board: String(year) }),
-        ]);
-        return [year, { softcore, hardcore }] as const;
-      }),
-    ),
-  );
+const seasonBoards = (path: { name: string }) =>
+  boardsFor(path).filter((board) => board.ownSeason);
+
+export const seasonKeys = (path: { name: string }) =>
+  seasonBoards(path).map((board) => board.key!);
+
+/** Every season Standard has run, the one in progress included, in one query. */
+export async function getStandardSeasons(path: Path & { class: Class[] }) {
+  const ranked = await getLeaderboardsByBoard({
+    path,
+    boards: seasonKeys(path),
+    type: TagType.LEADERBOARD,
+  });
+
+  return seasonBoards(path).map((board) => ({
+    board,
+    softcore: ranked[board.key!]?.SOFTCORE ?? [],
+    hardcore: ranked[board.key!]?.HARDCORE ?? [],
+  }));
 }
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -221,12 +200,9 @@ export type ClassComparisonYear = {
   hardcore: ClassComparisonRow[];
 };
 
-/**
- * Finished seasons are tagged STANDARD per year; the season in progress only holds
- * LEADERBOARD tags, which carry no year of their own.
- */
+/** Every season's tags carry its year, so one query covers them all. */
 export async function getStandardClassComparison(path: Path) {
-  const past = await getClassComparison({ path });
+  const past = await getClassComparison({ path, boards: seasonKeys(path) });
 
   const byRow = past.reduce<Record<number, ClassComparisonRow[]>>((acc, row) => {
     if (row.year !== null) (acc[row.year] ??= []).push(row);

@@ -2,14 +2,10 @@ import { HStack, Text } from "@chakra-ui/react";
 import { CellContext } from "@tanstack/react-table";
 import { JSX, useMemo } from "react";
 
+import { pathExtra } from "~/boards";
 import { Turncount } from "~/components/Turncount";
 import { RowData } from "~/routes/stats";
-import {
-  SPECIAL_RANKINGS,
-  compareDaycount,
-  getExtra,
-  numberFormatter,
-} from "~/utils";
+import { compareDaycount, getExtra, numberFormatter } from "~/utils";
 
 type Props = {
   info: CellContext<RowData, number>;
@@ -21,10 +17,10 @@ export function SpeedCell({ info, type }: Props) {
   if (!data) return null;
 
   const [turncount, slow] = useMemo<[value: JSX.Element, slow: boolean]>(() => {
-    const special = SPECIAL_RANKINGS.get(info.row.original.path.name);
+    const special = pathExtra(info.row.original.path.name);
 
     if (special) {
-      const getter = getExtra(special);
+      const getter = getExtra(special.key);
       const value = getter(data);
       return [
         <Text>{numberFormatter.format(value)}</Text>,

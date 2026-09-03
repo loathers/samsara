@@ -200,22 +200,18 @@ export async function getLeaderboard({
   path,
   lifestyle,
   inSeason,
-  special,
   type,
   board,
 }: {
   path: { name: string; start: Date | null; end: Date | null };
   lifestyle: Lifestyle;
   inSeason?: boolean;
-  special?: boolean;
   type?: TagType;
   board?: string;
 }) {
   if (inSeason && (!path.start || !path.end)) return [];
 
-  const tagType =
-    type ||
-    (((inSeason ? "LEADERBOARD" : "PYRITE") + (special ? "_SPECIAL" : "")) as TagType);
+  const tagType = type || ((inSeason ? "LEADERBOARD" : "PYRITE") as TagType);
 
   const rows = await kysely
     .selectFrom("Ascension as a")
@@ -254,18 +250,71 @@ export async function getLeaderboard({
   return rows.map((r) => toLeaderboardEntry(r, [{ value: r.tagValue }]));
 }
 
+/** getLeaderboard for many boards at once, so a page of them costs one query. */
+export async function getLeaderboardsByBoard({
+  path,
+  boards,
+  type,
+}: {
+  path: { name: string };
+  boards: string[];
+  type: TagType;
+}) {
+  if (boards.length === 0) return {};
+
+  const rows = await kysely
+    .selectFrom("Ascension as a")
+    .innerJoin("Tag as t", (join) =>
+      join
+        .onRef("t.ascensionNumber", "=", "a.ascensionNumber")
+        .onRef("t.playerId", "=", "a.playerId")
+        .on("t.type", "=", type)
+        .on("t.board", "in", boards),
+    )
+    .innerJoin("Player as p", "p.id", "a.playerId")
+    .leftJoin("Class as c", "c.name", "a.className")
+    .select([
+      "a.ascensionNumber",
+      "a.date",
+      "a.dropped",
+      "a.abandoned",
+      "a.level",
+      "a.sign",
+      "a.turns",
+      "a.days",
+      "a.lifestyle",
+      "a.extra",
+      "t.board",
+      "t.value as tagValue",
+      "p.id as playerId",
+      "p.name as playerName",
+      "c.name as className",
+      "c.id as classId",
+    ])
+    .where("a.pathName", "=", path.name)
+    .orderBy("t.value", "asc")
+    .execute();
+
+  return rows.reduce<
+    Record<string, Partial<Record<Lifestyle, LeaderboardEntry[]>>>
+  >((acc, r) => {
+    const board = (acc[r.board!] ??= {});
+    (board[r.lifestyle] ??= []).push(
+      toLeaderboardEntry(r, [{ value: r.tagValue }]),
+    );
+    return acc;
+  }, {});
+}
+
 export async function getRecentAscensions({
   path,
   lifestyle,
-  familiar,
   board,
   limit = 11,
 }: {
   path: { name: string };
   lifestyle: Lifestyle;
-  /** Restrict to runs completed with this familiar at 100% (e.g. Kittycore). */
-  familiar?: string;
-  /** A date sort rather than a ranking, so there is no tag to carry the cohort. */
+  /** A date sort rather than a ranking, so there is no tag to carry the board. */
   board?: Board;
   limit?: number;
 }) {
@@ -293,12 +342,6 @@ export async function getRecentAscensions({
     .where("a.lifestyle", "=", lifestyle);
 
   if (board !== undefined) query = query.where(boardFilter(board, "a"));
-
-  if (familiar !== undefined) {
-    query = query
-      .where("a.familiarName", "=", familiar)
-      .where("a.familiarPercentage", "=", 100);
-  }
 
   const rows = await query
     .orderBy("a.date", "desc")
@@ -402,6 +445,7 @@ export async function getPyritesWithAscensions() {
     .innerJoin("Path as path", "path.name", "a.pathName")
     .select([
       "t.type",
+      "t.board",
       "a.ascensionNumber",
       "a.days",
       "a.turns",
@@ -420,7 +464,7 @@ export async function getPyritesWithAscensions() {
       "path.start as pathStart",
       "path.end as pathEnd",
     ])
-    .where("t.type", "in", ["PYRITE", "PYRITE_SPECIAL"])
+    .where("t.type", "=", "PYRITE")
     .where("t.value", "=", 1)
     .where((eb) =>
       eb.not(eb.and([eb("path.id", "=", 999), eb("a.lifestyle", "=", "SOFTCORE")])),
@@ -430,6 +474,7 @@ export async function getPyritesWithAscensions() {
 
   return rows.map((r) => ({
     type: r.type,
+    board: r.board,
     ascension: {
       ascensionNumber: r.ascensionNumber,
       days: r.days,
@@ -579,20 +624,23 @@ export type ClassComparisonRow = {
  * within a player before across them so the grinders do not carry it. It is null where too
  * few players explored.
  *
- * `window` bounds the comparison. Omit it for STANDARD tags, which carry a year each and are
- * bucketed into calendar years; pass one for a path's season or for all time.
+ * `window` bounds the comparison. Omit it for Standard, whose boards carry a year each and
+ * bucket into calendar years; pass one for a path's season or for all time.
  *
  * `board` has to restrict the untagged runs too, or a player's runs on another board would
  * be compared against their runs on this one.
  */
 export async function getClassComparison({
   path,
-  tagType = TagType.STANDARD,
+  tagType = TagType.LEADERBOARD,
+  boards,
   window,
   board,
 }: {
   path: { name: string };
   tagType?: TagType;
+  /** The boards to compare across, where the caller buckets by them rather than by date. */
+  boards?: string[];
   /** `end` is exclusive. */
   window?: { start: Date; end: Date; year?: number };
   board?: Board;
@@ -602,7 +650,7 @@ export async function getClassComparison({
   );
 
   // Kept non-null so the joins below match; the final select turns 0 back into null.
-  // Without a window the boards are Standard's years, so the key is a number.
+  // Without a window the boards are seasons, whose keys are their years.
   const season = window
     ? sql`${window.year ?? 0}::integer`
     : sql`"Tag"."board"::integer`;
@@ -625,7 +673,7 @@ export async function getClassComparison({
         AND "Ascension"."playerId" = "Tag"."playerId"
       WHERE
         "Tag"."type" = ${sql.literal(tagType)}::"TagType" AND
-        ${window ? sql`` : sql`"Tag"."board" IS NOT NULL AND`}
+        ${boards ? sql`"Tag"."board" IN (${sql.join(boards)}) AND` : sql``}
         ${board?.key ? sql`"Tag"."board" = ${board.key} AND` : sql``}
         "Tag"."value" <= ${CLASS_COMPARISON_RANK_CUTOFF} AND
         "Ascension"."pathName" = ${path.name} AND
@@ -925,40 +973,6 @@ export async function findPathWithClasses({
 }
 
 // ── Misc ────────────────────────────────────────────────────────────────────
-
-export async function getKittycoreLeaderboard(): Promise<LeaderboardEntry[]> {
-  const result = await sql<LeaderboardEntry>`
-    SELECT
-      "Ascension".*,
-      TO_JSON("Player") AS "player",
-      TO_JSON("Class") AS "class"
-    FROM (
-      SELECT DISTINCT ON ("playerId")
-        *
-      FROM "Ascension"
-      WHERE
-        "pathName" = 'Bad Moon'
-        AND "lifestyle" = 'HARDCORE'
-        AND "familiarName" = 'Black Cat'
-        AND "familiarPercentage" = 100
-        AND "dropped" = False
-        AND "abandoned" = False
-      ORDER BY
-        "playerId",
-        "days" ASC,
-        "turns" ASC,
-        "date" ASC
-    ) AS "Ascension"
-    LEFT JOIN "Player" ON "Ascension"."playerId" = "Player"."id"
-    LEFT JOIN "Class" ON "Ascension"."className" = "Class"."name"
-    ORDER BY
-      "days" ASC,
-      "turns" ASC,
-      "date" ASC
-    LIMIT 35
-  `.execute(kysely);
-  return result.rows;
-}
 
 export async function getMaxAge() {
   const row = await kysely

@@ -12,6 +12,7 @@ import {
 import { Lifestyle as LifestyleEnum, type Player } from "~/db";
 import { Link as RRLink, useLoaderData } from "react-router";
 
+import { boardsFor } from "~/boards";
 import { AscensionDate } from "~/components/AscensionDate";
 import { KoLImage } from "~/components/KoLImage";
 import { Lifestyle } from "~/components/Lifestyle";
@@ -94,19 +95,21 @@ export const loader = async () => {
     softcore?: PyriteAscension["ascension"];
   };
 
-  // Of the several golds a path can hold per lifestyle, a _SPECIAL one ranks by a truer
-  // score and wins outright. Otherwise the boards rank alike, so the faster run wins.
-  const preferred = (
-    incumbent: AscensionData | undefined,
-    tag: PyriteAscension,
-  ) => {
-    if (!incumbent) return true;
-    if (tag.type === "PYRITE_SPECIAL") return true;
-    return compareDaycount(tag.ascension, incumbent) < 0;
-  };
+  // Of the several golds a path can hold per lifestyle, the one on the board it declares
+  // first is the official ranking; within a board the faster run wins.
+  const boardRank = (tag: PyriteAscension) =>
+    boardsFor(tag.ascension.path).findIndex((b) => b.key === tag.board);
+
+  const ranked = separatePyrites
+    .map((tag) => ({ tag, rank: boardRank(tag) }))
+    .sort(
+      (a, b) =>
+        a.rank - b.rank || compareDaycount(a.tag.ascension, b.tag.ascension),
+    )
+    .map(({ tag }) => tag);
 
   const paths = Object.values(
-    separatePyrites.reduce<Record<string, PathPyrites>>((acc, tag) => {
+    ranked.reduce<Record<string, PathPyrites>>((acc, tag) => {
       const name = tag.ascension.path.name;
       const lifestyle = tag.ascension.lifestyle.toLowerCase() as
         | "hardcore"
@@ -119,9 +122,7 @@ export const loader = async () => {
           path: tag.ascension.path,
           totalRuns: totalRunsPerPath[name] ?? 0,
           totalRunsInSeason: totalRunsInSeasonPerPath[name] ?? 0,
-          ...(preferred(acc[name]?.[lifestyle], tag)
-            ? { [lifestyle]: tag.ascension }
-            : {}),
+          ...(acc[name]?.[lifestyle] ? {} : { [lifestyle]: tag.ascension }),
         },
       };
     }, {}),
@@ -129,7 +130,7 @@ export const loader = async () => {
 
   // Count up all the pyrite holders for the ultimate leaderboard of fools
   const leaderboard = [
-    ...separatePyrites
+    ...ranked
       .reduce<Map<Player, number>>((acc, p) => {
         const key =
           [...acc.keys()].find((k) => k.id === p.ascension.player.id) ??

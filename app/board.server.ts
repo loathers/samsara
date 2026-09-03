@@ -1,6 +1,6 @@
 import { RawBuilder, sql } from "kysely";
 
-import { Board, PATH_BOARDS } from "./boards";
+import { Board, boardPathNames, pathExtra } from "./boards";
 
 const column = (name: string, alias?: string) =>
   sql.ref(alias ? `${alias}.${name}` : name);
@@ -35,6 +35,13 @@ function predicates(board: Board, alias?: string) {
     );
   }
 
+  if (board.familiarAt100) {
+    parts.push(
+      sql<boolean>`${column("familiarName", alias)} = ${sql.lit(board.familiarAt100)}`,
+      sql<boolean>`${column("familiarPercentage", alias)} = 100`,
+    );
+  }
+
   return parts;
 }
 
@@ -44,19 +51,27 @@ export function boardFilter(board: Board, alias?: string): RawBuilder<boolean> {
   return sql<boolean>`(${sql.join(parts, sql` AND `)})`;
 }
 
-/** For the whole-database queries that cannot fan out into one query per board. */
-export function boardCase(alias?: string): RawBuilder<string | null> {
-  const branches = [...PATH_BOARDS].flatMap(([pathName, boards]) =>
-    boards.map(
-      (board) =>
-        sql`WHEN ${column("pathName", alias)} = ${sql.lit(pathName)} AND ${boardFilter(
-          board,
-          alias,
-        )} THEN ${sql.lit(board.key!)}`,
-    ),
-  );
+const daycountScore = () =>
+  sql`-1 * ("days"::bigint * 1000000::bigint + "turns"::bigint)`;
 
-  if (branches.length === 0) return sql<string | null>`NULL`;
+const extraScore = (key: string) => sql`("extra" ->> ${sql.lit(key)})::bigint`;
 
-  return sql<string | null>`CASE ${sql.join(branches, sql` `)} END`;
+/** Higher is better whichever the measure, so a record is always a rise. */
+export const boardScore = (board: Board) =>
+  board.extra ? extraScore(board.extra.key) : daycountScore();
+
+export const boardOrder = (board: Board) => sql`${boardScore(board)} DESC`;
+
+/** For the one pass that has no board: each path scores by its first board's measure. */
+export function primaryScore(): RawBuilder<unknown> {
+  const branches = boardPathNames().flatMap((pathName) => {
+    const extra = pathExtra(pathName);
+    return extra
+      ? [sql`WHEN ${sql.lit(pathName)} THEN ${extraScore(extra.key)}`]
+      : [];
+  });
+
+  if (branches.length === 0) return daycountScore();
+
+  return sql`CASE "pathName" ${sql.join(branches, sql` `)} ELSE ${daycountScore()} END`;
 }

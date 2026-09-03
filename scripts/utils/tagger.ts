@@ -1,38 +1,57 @@
-import { sql } from "kysely";
+import { RawBuilder, sql } from "kysely";
 
-import { boardCase, boardFilter } from "../../app/board.server.js";
+import {
+  boardFilter,
+  boardOrder,
+  boardScore,
+  primaryScore,
+} from "../../app/board.server.js";
 import {
   Board,
   DEFAULT_BOARD,
+  allBoards,
   boardPathNames,
-  boardsFor,
   findBoard,
   tagHash,
-  yearBoard,
 } from "../../app/boards.js";
 import { TagType } from "../../app/db.js";
-import {
-  NS13,
-  SITE_URL,
-  SPECIAL_RANKINGS,
-  pastYearsOfStandard,
-} from "../../app/utils.js";
+import { NS13, SITE_URL } from "../../app/utils.js";
 import { db } from "./client.js";
 
-/**
- * These paths should never be ranked by Days / Turns, only by their special ranking.
- */
-const NEVER_RANK_BY_TURNCOUNT = ["Grey Goo"];
+/** The runs a board holds: every query below ranks the same population. */
+const runScope = ({
+  path,
+  excludePaths,
+  board,
+}: {
+  path?: string;
+  excludePaths?: string[];
+  board: Board;
+}) => sql`
+  "dropped" IS FALSE
+  AND "abandoned" IS FALSE
+  ${path ? sql`AND "pathName" = ${path}` : sql``}
+  ${excludePaths ? sql`AND "pathName" NOT IN (${sql.join(excludePaths)})` : sql``}
+  AND ${boardFilter(board)}
+  AND "date" >= ${NS13}::date`;
 
 export async function tagAscensions(sendWebhook: boolean) {
   await tagRecordBreaking();
   await tagPersonalBest();
   await tagPyrites(sendWebhook);
-  await tagStandard();
   await tagLeaderboard();
 }
 
-function getRecordBreakingQuery() {
+function getRecordBreakingQuery({
+  path,
+  excludePaths,
+  board = DEFAULT_BOARD,
+}: {
+  path?: string;
+  excludePaths?: string[];
+  /** Its own query, so the CTE holds this board's runs alone. */
+  board?: Board;
+} = {}) {
   return sql`
     WITH "filteredAscensions" AS (
       SELECT
@@ -43,18 +62,10 @@ function getRecordBreakingQuery() {
         "turns",
         "pathName",
         "lifestyle",
-        CASE "pathName"
-          WHEN 'Grey Goo' THEN ("extra" ->> 'Goo Score')::bigint
-          WHEN 'One Crazy Random Summer' THEN ("extra" ->> 'Fun')::bigint
-          ELSE -1 * ("days"::bigint * 1000000::bigint + "turns"::bigint)
-        END AS "score",
-        ${boardCase()} AS "board"
+        ${boardScore(board)} AS "score"
       FROM
         "Ascension"
-      WHERE
-        "dropped" = FALSE
-        AND "abandoned" = FALSE
-        AND "date" >= ${NS13}::date
+      WHERE ${runScope({ path, excludePaths, board })}
     ),
     "precedingScore" AS (
       SELECT
@@ -66,8 +77,7 @@ function getRecordBreakingQuery() {
         "pathName",
         "lifestyle",
         "score",
-        "board",
-        max("score") OVER (PARTITION BY "pathName", "lifestyle", "board" ORDER BY "date" ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS "precedingMaxScore"
+        max("score") OVER (PARTITION BY "pathName", "lifestyle" ORDER BY "date" ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS "precedingMaxScore"
       FROM
         "filteredAscensions"),
     "rankedRecords" AS (
@@ -80,9 +90,8 @@ function getRecordBreakingQuery() {
         "pathName",
         "lifestyle",
         "score",
-        "board",
         "precedingMaxScore",
-        ROW_NUMBER() OVER (PARTITION BY "pathName", "lifestyle", "board", "date" ORDER BY "score") AS "rankForDate"
+        ROW_NUMBER() OVER (PARTITION BY "pathName", "lifestyle", "date" ORDER BY "score") AS "rankForDate"
       FROM
         "precedingScore"
       WHERE
@@ -95,7 +104,7 @@ function getRecordBreakingQuery() {
       NULL AS "value",
       "ascensionNumber",
       "playerId",
-      "board"
+      ${board.key}::text AS "board"
     FROM
       "rankedRecords"
     WHERE
@@ -107,7 +116,13 @@ async function tagRecordBreaking() {
   console.timeLog("etl", "Tagging record-breaking ascensions");
   await db.transaction().execute(async (trx) => {
     await trx.deleteFrom("Tag").where("type", "=", TagType.RECORD_BREAKING).execute();
-    await getRecordBreakingQuery().execute(trx);
+
+    await Promise.all([
+      getRecordBreakingQuery({ excludePaths: boardPathNames() }).execute(trx),
+      ...boardQueries("trackRecords", (path, board) =>
+        getRecordBreakingQuery({ path, board }),
+      ).map((q) => q.execute(trx)),
+    ]);
   });
   console.timeLog("etl", "Finished tagging record-breaking ascensions");
 }
@@ -124,12 +139,7 @@ function getPersonalBestQuery() {
         "turns",
         ROW_NUMBER() OVER (
           PARTITION BY "playerId", "pathName", "lifestyle"
-          ORDER BY
-            CASE "pathName"
-              WHEN 'Grey Goo' THEN ("extra" ->> 'Goo Score')::bigint
-              WHEN 'One Crazy Random Summer' THEN ("extra" ->> 'Fun')::bigint
-              ELSE -1 * ("days"::bigint * 1000000::bigint + "turns"::bigint)
-            END DESC
+          ORDER BY ${primaryScore()} DESC
         ) AS "rank"
       FROM
         "Ascension"
@@ -165,14 +175,12 @@ function getLeaderboardQuery(
     path,
     inSeason,
     excludePaths,
-    extra,
     limit = 35,
     board = DEFAULT_BOARD,
   }: {
     path?: string;
     excludePaths?: string[];
     inSeason?: boolean;
-    extra?: string;
     limit?: number;
     /**
      * A board is tagged by its own query, so the other boards' runs are absent from the
@@ -181,9 +189,7 @@ function getLeaderboardQuery(
     board?: Board;
   } = {},
 ) {
-  const order = extra
-    ? sql`("extra"->>${extra})::integer DESC`
-    : sql`"days" ASC, "turns" ASC`;
+  const order = boardOrder(board);
 
   return sql`
     WITH "ranked" AS (
@@ -200,14 +206,8 @@ function getLeaderboardQuery(
       FROM
         "Ascension"
       LEFT JOIN "Path" on "Ascension"."pathName" = "Path"."name"
-      WHERE
-      "dropped" IS FALSE
-      AND "abandoned" IS FALSE
-      ${path ? sql`AND "pathName" = ${path}` : sql``}
-      ${inSeason ? sql`AND "date" >= "Path"."start" AND "date" <= "Path"."end"` : sql``}
-      ${excludePaths ? sql`AND "pathName" NOT IN (${sql.join(excludePaths)})` : sql``}
-      AND ${boardFilter(board)}
-      AND "date" >= ${NS13}::date),
+      WHERE ${runScope({ path, excludePaths, board })}
+      ${inSeason ? sql`AND "date" >= "Path"."start" AND "date" <= "Path"."end"` : sql``}),
     "best" AS (
       SELECT
         "pathName",
@@ -247,18 +247,13 @@ function getLeaderboardQuery(
   `;
 }
 
-/** Boards that can never gain a run, whose pyrite would repeat their leaderboard. */
-const NO_PYRITE_BOARD = ["11,037 Leagues Under the Sea/pre-nerf"];
-
+/** One query per board that carries this tag, of every path that declares boards. */
 function boardQueries(
-  tagType: TagType,
-  options: Parameters<typeof getLeaderboardQuery>[1],
-  skip: string[] = [],
+  tracks: "trackRecords" | "trackLeaderboard" | "trackPyrites",
+  query: (path: string, board: Board) => RawBuilder<unknown>,
 ) {
-  return boardPathNames().flatMap((path) =>
-    boardsFor({ name: path })
-      .filter((board) => !skip.includes(`${path}/${board.key}`))
-      .map((board) => getLeaderboardQuery(tagType, { ...options, path, board })),
+  return allBoards().flatMap(([path, boards]) =>
+    boards.filter((board) => board[tracks] !== false).map((board) => query(path, board)),
   );
 }
 
@@ -285,7 +280,7 @@ async function getBestRuns() {
       "Player.name as playerName",
     ])
     // A gold per board and per ranking, each its own thing to announce.
-    .where("Tag.type", "in", [TagType.PYRITE, TagType.PYRITE_SPECIAL])
+    .where("Tag.type", "=", TagType.PYRITE)
     .where("Tag.value", "=", 1)
     .execute();
 
@@ -315,7 +310,7 @@ async function getBestRuns() {
               // raw key beats announcing the gold with no cohort at all.
               { value: board, label: findBoard(rest.pathName, board)?.label ?? board },
         // The link a TagMedal for this tag would use, so both open the same section.
-        url: `${SITE_URL}/path/${pathSlug}#${tagHash(type, board)}`,
+        url: `${SITE_URL}/path/${pathSlug}#${tagHash(rest.pathName, type, board, rest.lifestyle)}`,
         player: { id: playerId, name: playerName },
       },
     }),
@@ -337,18 +332,15 @@ async function tagPyrites(sendWebhook: boolean) {
   await db.transaction().execute(async (trx) => {
     await trx
       .deleteFrom("Tag")
-      .where("type", "in", [TagType.PYRITE, TagType.PYRITE_SPECIAL])
+      .where("type", "=", TagType.PYRITE)
       .execute();
 
     await Promise.all([
-      ...[...SPECIAL_RANKINGS].map(([path, extra]) =>
-        getLeaderboardQuery(TagType.PYRITE_SPECIAL, { path, extra }).execute(trx),
-      ),
-      ...boardQueries(TagType.PYRITE, {}, NO_PYRITE_BOARD).map((q) =>
-        q.execute(trx),
-      ),
+      ...boardQueries("trackPyrites", (path, board) =>
+        getLeaderboardQuery(TagType.PYRITE, { path, board }),
+      ).map((q) => q.execute(trx)),
       getLeaderboardQuery(TagType.PYRITE, {
-        excludePaths: [...NEVER_RANK_BY_TURNCOUNT, ...boardPathNames()],
+        excludePaths: boardPathNames(),
       }).execute(trx),
     ]);
   });
@@ -403,41 +395,22 @@ async function tagLeaderboard() {
   await db.transaction().execute(async (trx) => {
     await trx
       .deleteFrom("Tag")
-      .where("type", "in", [TagType.LEADERBOARD, TagType.LEADERBOARD_SPECIAL])
+      .where("type", "=", TagType.LEADERBOARD)
       .execute();
 
     await Promise.all([
-      ...[...SPECIAL_RANKINGS].map(([path, extra]) =>
-        getLeaderboardQuery(TagType.LEADERBOARD_SPECIAL, {
+      ...boardQueries("trackLeaderboard", (path, board) =>
+        getLeaderboardQuery(TagType.LEADERBOARD, {
           path,
-          inSeason: true,
-          extra,
-        }).execute(trx),
-      ),
-      ...boardQueries(TagType.LEADERBOARD, {
-        inSeason: true,
-      }).map((q) => q.execute(trx)),
+          board,
+          inSeason: !board.ownSeason,
+        }),
+      ).map((q) => q.execute(trx)),
       getLeaderboardQuery(TagType.LEADERBOARD, {
         inSeason: true,
-        excludePaths: [...NEVER_RANK_BY_TURNCOUNT, ...boardPathNames()],
+        excludePaths: boardPathNames(),
       }).execute(trx),
     ]);
   });
   console.timeLog("etl", `Finished tagging leaderboards`);
-}
-
-async function tagStandard() {
-  console.timeLog("etl", `Tagging standard leaderboards`);
-  const yearQueries = pastYearsOfStandard().map((year) =>
-    getLeaderboardQuery(TagType.STANDARD, {
-      path: "Standard",
-      board: yearBoard(year),
-    }),
-  );
-
-  await db.transaction().execute(async (trx) => {
-    await trx.deleteFrom("Tag").where("type", "=", TagType.STANDARD).execute();
-    await Promise.all(yearQueries.map((q) => q.execute(trx)));
-  });
-  console.timeLog("etl", `Finished tagging standard leaderboards`);
 }

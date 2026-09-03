@@ -9,8 +9,15 @@ import {
 } from "kysely";
 import { describe, expect, it } from "vitest";
 
-import { boardCase, boardFilter } from "./board.server";
-import { Board, DEFAULT_BOARD, PATH_BOARDS } from "./boards";
+import { boardFilter, boardOrder, boardScore, primaryScore } from "./board.server";
+import {
+  Board,
+  DEFAULT_BOARD,
+  OVERALL_BOARD,
+  boardPathNames,
+  boardsFor,
+  findBoard,
+} from "./boards";
 
 const db = new Kysely<Record<string, never>>({
   dialect: {
@@ -23,7 +30,7 @@ const db = new Kysely<Record<string, never>>({
 
 const compile = (fragment: RawBuilder<unknown>) => fragment.compile(db);
 
-const BLUE = PATH_BOARDS.get("Blue vs. Red")![0];
+const BLUE = findBoard("Blue vs. Red", "blue")!;
 
 const PRE_NERF: Board = {
   key: "pre-nerf",
@@ -54,6 +61,17 @@ describe("boardFilter", () => {
     expect(compile(boardFilter(DEFAULT_BOARD)).sql).toBe("TRUE");
   });
 
+  it("does not restrict a whole-path board, which ranks every cohort at once", () => {
+    expect(compile(boardFilter(OVERALL_BOARD)).sql).toBe("TRUE");
+  });
+
+  it("matches a familiar only at 100%", () => {
+    const kittycore = findBoard("Bad Moon", "kittycore")!;
+    expect(compile(boardFilter(kittycore)).sql).toBe(
+      `("familiarName" = 'Black Cat' AND "familiarPercentage" = 100)`,
+    );
+  });
+
   it("inlines its values rather than binding them", () => {
     expect(compile(boardFilter(BLUE)).parameters).toEqual([]);
   });
@@ -68,23 +86,45 @@ describe("boardFilter", () => {
   });
 });
 
-describe("boardCase", () => {
-  it("gives every declared board a branch keyed on its path and cohort", () => {
-    const { sql: text } = compile(boardCase());
+describe("scoring", () => {
+  const GOO = boardsFor({ name: "Grey Goo" })[0];
 
-    for (const [pathName, boards] of PATH_BOARDS) {
-      for (const board of boards) {
-        expect(text).toContain(
-          `WHEN "pathName" = '${pathName.replaceAll("'", "''")}' AND ` +
-            `${compile(boardFilter(board)).sql} THEN '${board.key}'`,
-        );
-      }
-    }
-
-    expect(text).toMatch(/^CASE .* END$/);
+  it("scores a plain board so that fewer days and turns rank higher", () => {
+    expect(compile(boardScore(DEFAULT_BOARD)).sql).toBe(
+      `-1 * ("days"::bigint * 1000000::bigint + "turns"::bigint)`,
+    );
   });
 
-  it("has no branch for a path that declares no boards, so it yields NULL there", () => {
-    expect(compile(boardCase()).sql).not.toContain("Wildfire");
+  it("scores a measure board on its own key", () => {
+    expect(compile(boardScore(GOO)).sql).toBe(
+      `("extra" ->> 'Goo Score')::bigint`,
+    );
+  });
+
+  it("orders any board by its own score, best first", () => {
+    expect(compile(boardOrder(GOO)).sql).toBe(
+      `("extra" ->> 'Goo Score')::bigint DESC`,
+    );
+    expect(compile(boardOrder(DEFAULT_BOARD)).sql).toBe(
+      `-1 * ("days"::bigint * 1000000::bigint + "turns"::bigint) DESC`,
+    );
+  });
+
+  it("gives the boardless pass a branch per path that ranks on a measure", () => {
+    const { sql: text } = compile(primaryScore());
+
+    for (const pathName of boardPathNames()) {
+      const [board] = boardsFor({ name: pathName });
+      if (!board.extra) continue;
+      expect(text).toContain(
+        `WHEN '${pathName.replaceAll("'", "''")}' THEN ${compile(boardScore(board)).sql}`,
+      );
+    }
+
+    expect(text).toMatch(/^CASE "pathName" .* ELSE .* END$/);
+  });
+
+  it("has no branch for a path whose official board ranks on speed", () => {
+    expect(compile(primaryScore()).sql).not.toContain("Blue vs. Red");
   });
 });

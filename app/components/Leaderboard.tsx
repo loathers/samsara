@@ -1,5 +1,6 @@
 import { Container, Heading, Table } from "@chakra-ui/react";
 
+import type { Board } from "~/boards";
 import { AscensionDate } from "~/components/AscensionDate";
 import { Class } from "~/components/Class";
 import { PlayerLink } from "~/components/PlayerLink";
@@ -19,7 +20,8 @@ type Props = {
   ascensions: LeaderboardEntry[];
   showClass?: boolean;
   ranked?: boolean;
-  alternativeScore?: [title: string, key: string];
+  /** The board's measure, shown in its own column ahead of the daycount. */
+  alternativeScore?: Board["extra"];
   omitExtra?: string;
   children?: React.ReactNode;
 };
@@ -33,7 +35,7 @@ export function Leaderboard({
   omitExtra,
   children,
 }: Props) {
-  const omit = [alternativeScore?.[1], omitExtra].filter((k) => k !== undefined);
+  const omit = [alternativeScore?.key, omitExtra].filter((k) => k !== undefined);
   const entries = ascensions.map((asc) => getExtraEntries(asc.extra, omit));
   const keys = [...new Set(entries.flat().map(([key]) => key))];
   const extras = entries.map((e) =>
@@ -57,7 +59,7 @@ export function Leaderboard({
               <Table.ColumnHeader>Player</Table.ColumnHeader>
               <Table.ColumnHeader>Date</Table.ColumnHeader>
               {alternativeScore && (
-                <Table.ColumnHeader>{alternativeScore[0]}</Table.ColumnHeader>
+                <Table.ColumnHeader>{alternativeScore.label}</Table.ColumnHeader>
               )}
               {keys.length > 0 && (
                 <Table.ColumnHeader>
@@ -89,7 +91,7 @@ export function Leaderboard({
                 </Table.Cell>
                 {alternativeScore && (
                   <Table.Cell>
-                    {numberFormatter.format(getExtra(alternativeScore[1])(asc))}
+                    {numberFormatter.format(getExtra(alternativeScore.key)(asc))}
                   </Table.Cell>
                 )}
                 {keys.length > 0 && <Table.Cell>{extras[i]}</Table.Cell>}

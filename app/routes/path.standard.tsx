@@ -1,7 +1,8 @@
 import { Stack } from "@chakra-ui/react";
-import { useMemo } from "react";
 import { data, useLoaderData } from "react-router";
 
+import { boardsFor } from "~/boards";
+import { BoardSection } from "~/components/BoardSection";
 import { ClassComparisonChart } from "~/components/ClassComparisonChart/ClassComparisonChart";
 import { Dedication } from "~/components/Dedication";
 import { Leaderboard } from "~/components/Leaderboard";
@@ -10,9 +11,9 @@ import { LeaderboardAccordionItem } from "~/components/LeaderboardAccordionItem"
 import { PathHeader } from "~/components/PathHeader";
 import { findPathWithClasses } from "~/db.server";
 import {
-  getPastStandardLeaderboards,
   getPathData,
   getStandardClassComparison,
+  getStandardSeasons,
 } from "~/path.server";
 
 export const loader = async () => {
@@ -20,13 +21,16 @@ export const loader = async () => {
 
   if (!path) throw data({ message: "Invalid path name" }, { status: 400 });
 
-  const [pathData, years, classes] = await Promise.all([
-    getPathData(path),
-    getPastStandardLeaderboards(path),
+  // Every season is a board, so name the one that is not to keep the page to two queries.
+  const allTime = boardsFor(path).filter((board) => !board.ownSeason);
+
+  const [pathData, seasons, classes] = await Promise.all([
+    getPathData(path, allTime),
+    getStandardSeasons(path),
     getStandardClassComparison(path),
   ]);
 
-  return { ...pathData, years, classComparison: classes };
+  return { ...pathData, seasons, classComparison: classes };
 };
 
 export const meta = () => {
@@ -40,60 +44,18 @@ export const meta = () => {
 };
 
 export default function PathPage() {
-  const {
-    classComparison,
-    frequency,
-    path,
-    totalRuns,
-    years,
-    boards,
-  } = useLoaderData<typeof loader>();
+  const { classComparison, frequency, path, totalRuns, seasons, boards } =
+    useLoaderData<typeof loader>();
 
   const {
     classes,
     hcDedication,
-    hcLeaderboard,
     hcPyrite,
     hcRecent,
     scDedication,
-    scLeaderboard,
     scPyrite,
     scRecent,
   } = boards[0];
-
-  const yearBoards = useMemo(
-    () =>
-      Object.entries(years)
-        .sort(([a], [b]) => Number(b) - Number(a))
-        .map(([year, { softcore, hardcore }]) => (
-          <LeaderboardAccordionItem
-            key={year}
-            title={`${year} Leaderboards`}
-            slug={year}
-            description="The official leaderboards frozen from the end of the year"
-          >
-            <Leaderboard
-              title="Softcore Leaderboard"
-              ascensions={softcore}
-              showClass
-            >
-              <ClassComparisonChart
-                data={classComparison[Number(year)]?.softcore ?? []}
-              />
-            </Leaderboard>
-            <Leaderboard
-              title="Hardcore Leaderboard"
-              ascensions={hardcore}
-              showClass
-            >
-              <ClassComparisonChart
-                data={classComparison[Number(year)]?.hardcore ?? []}
-              />
-            </Leaderboard>
-          </LeaderboardAccordionItem>
-        )),
-    [years, classComparison],
-  );
 
   return (
     <Stack gap={10}>
@@ -104,30 +66,37 @@ export default function PathPage() {
         totalRuns={totalRuns}
       />
       <LeaderboardAccordion>
-        <LeaderboardAccordionItem
+        <BoardSection
+          slug="leaderboards"
           title="Leaderboards"
-          description="This year's official leaderboards as they currently stand"
-        >
-          <Leaderboard
-            title="Softcore Leaderboard"
-            ascensions={scLeaderboard}
-            showClass
-          >
-            <ClassComparisonChart
-              data={classes.main.softcore}
-            />
-          </Leaderboard>
-          <Leaderboard
-            title="Hardcore Leaderboard"
-            ascensions={hcLeaderboard}
-            showClass
-          >
-            <ClassComparisonChart
-              data={classes.main.hardcore}
-            />
-          </Leaderboard>
-        </LeaderboardAccordionItem>
-        {yearBoards}
+          description="The official leaderboards, a season at a time"
+          boards={seasons.map(({ board, softcore, hardcore }) => ({
+            key: board.key,
+            label: board.label,
+            content: (
+              <>
+                <Leaderboard
+                  title="Softcore Leaderboard"
+                  ascensions={softcore}
+                  showClass
+                >
+                  <ClassComparisonChart
+                    data={classComparison[Number(board.key)]?.softcore ?? []}
+                  />
+                </Leaderboard>
+                <Leaderboard
+                  title="Hardcore Leaderboard"
+                  ascensions={hardcore}
+                  showClass
+                >
+                  <ClassComparisonChart
+                    data={classComparison[Number(board.key)]?.hardcore ?? []}
+                  />
+                </Leaderboard>
+              </>
+            ),
+          }))}
+        />
         <LeaderboardAccordionItem title="Pyrites" description="{PYRITE}">
           <Leaderboard
             title="Softcore Pyrites"
