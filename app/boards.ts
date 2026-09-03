@@ -147,6 +147,16 @@ export const boardHash = (key: string | null, suffix: string) =>
 
 export const hashSection = (hash: string) => hash.split(".")[0];
 
+/**
+ * Where the hash goes when an accordion item opens or closes. A nested board falls back to
+ * its section rather than to nothing, which would collapse the section around it too.
+ */
+export const nextHash = (
+  opened: string | undefined,
+  current: string,
+  leaf: boolean,
+) => opened ?? (leaf ? hashSection(current) : "");
+
 export const boardTitle = (label: string, title: string) =>
   label ? `${label} ${title}` : title;
 

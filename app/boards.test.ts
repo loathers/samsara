@@ -9,6 +9,7 @@ import {
   boardsFor,
   hashSection,
   findBoard,
+  nextHash,
   tagHash,
   yearBoard,
 } from "./boards";
@@ -189,5 +190,22 @@ describe("Standard", () => {
     expect(allTime).toHaveLength(1);
     expect(allTime[0].key).toBe(OVERALL_BOARD.key);
     expect(allTime[0].trackLeaderboard).toBe(false);
+  });
+});
+
+describe("nextHash", () => {
+  it("takes the opened item's hash, nested or not", () => {
+    expect(nextHash("leaderboards", "", false)).toBe("leaderboards");
+    expect(nextHash("leaderboards.blue", "leaderboards", true)).toBe(
+      "leaderboards.blue",
+    );
+  });
+
+  it("falls back to the section when a nested board closes, leaving it open", () => {
+    expect(nextHash(undefined, "leaderboards.blue", true)).toBe("leaderboards");
+  });
+
+  it("clears the hash when a section closes", () => {
+    expect(nextHash(undefined, "leaderboards.blue", false)).toBe("");
   });
 });
