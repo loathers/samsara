@@ -117,8 +117,6 @@ export function Counter({ value, lineHeight = 35, spinUpSeconds = 1 }: Props) {
 
           return (
             <Box
-              // Only a remount restarts the animation. Keying on the digit
-              // remounts just the columns that changed.
               key={`${i}-${digit}`}
               margin={0}
               p={0}
