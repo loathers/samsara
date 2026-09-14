@@ -1,8 +1,7 @@
 import { type Kysely, sql } from "kysely";
 
 export async function up(db: Kysely<unknown>): Promise<void> {
-  // Partial because `discoveredAt` postdates almost every row. A comparison
-  // can't match NULL, so the planner still uses it.
+  // discoveredAt is relatively new, so partial index.
   await sql`
     CREATE INDEX IF NOT EXISTS "Ascension_discoveredAt_idx"
     ON "Ascension" ("discoveredAt")
