@@ -1,14 +1,64 @@
 import { Box, Flex } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
+import { useState } from "react";
+
+import { numberFormatter } from "~/utils";
 
 type Props = {
   value: number;
   lineHeight?: number;
-  duration?: number;
+  spinUpSeconds?: number;
 };
 
+const DIGITS = 10;
+
+// Each column is a strip of 0,9,8...1,0 scrolled by one CSS animation, the
+// extra cell being the zero it wraps to. A fractional animation-iteration-count
+// parks a column on any digit, and a negative delay starts it partway along.
+const CELLS = DIGITS + 1;
+
+const STEP_SECONDS = 0.12;
+
+function scrollDigits(lineHeight: number) {
+  return keyframes(
+    Array.from(
+      { length: CELLS },
+      (_, i) =>
+        `${(i / DIGITS) * 100}% { transform: translateY(-${lineHeight * (DIGITS - i)}px); }`,
+    ).join("\n"),
+  );
+}
+
+const restAt = (digit: number, lineHeight: number) => ({
+  transform: `translateY(-${(DIGITS - digit) * lineHeight}px)`,
+});
+
+type Animation = { iterations: number; cycleDuration: number; delay: number };
+
+function windUp(
+  value: number,
+  length: number,
+  index: number,
+  spinUpSeconds: number,
+): Animation | null {
+  const iterations =
+    Math.floor(value / DIGITS ** (length - index - 1)) / DIGITS;
+  if (iterations === 0) return null;
+  return { iterations, cycleDuration: spinUpSeconds / iterations, delay: 0 };
+}
+
+function rollTo(from: number, to: number): Animation | null {
+  const steps = (to - from + DIGITS) % DIGITS;
+  if (steps === 0) return null;
+  return {
+    iterations: (from + steps) / DIGITS,
+    cycleDuration: STEP_SECONDS * DIGITS,
+    delay: -from * STEP_SECONDS,
+  };
+}
+
 function Numbers({ index, lineHeight }: { index: number; lineHeight: number }) {
-  return Array.from({ length: 11 }, (_, i) => (
+  return Array.from({ length: CELLS }, (_, i) => (
     <Box
       height={`${lineHeight}px`}
       key={i}
@@ -22,48 +72,31 @@ function Numbers({ index, lineHeight }: { index: number; lineHeight: number }) {
   )).reverse();
 }
 
-export function Counter({ value, lineHeight = 35, duration = 1 }: Props) {
-  const scrollDigits = (lineHeight: number) => keyframes`
-    0% {
-      transform: translateY(-${lineHeight * 10}px);
-    }
-    10% {
-      transform: translateY(-${lineHeight * 9}px);
-    }
-    20% {
-      transform: translateY(-${lineHeight * 8}px);
-    }
-    30% {
-      transform: translateY(-${lineHeight * 7}px);
-    }
-    40% {
-      transform: translateY(-${lineHeight * 6}px);
-    }
-    50% {
-      transform: translateY(-${lineHeight * 5}px);
-    }
-    60% {
-      transform: translateY(-${lineHeight * 4}px);
-    }
-    70% {
-      transform: translateY(-${lineHeight * 3}px);
-    }
-    80% {
-      transform: translateY(-${lineHeight * 2}px);
-    }
-    90% {
-      transform: translateY(-${lineHeight * 1}px);
-    }
-    100% {
-      transform: translateY(0%);
-    }
-  `;
+export function Counter({ value, lineHeight = 35, spinUpSeconds = 1 }: Props) {
+  // NaN would re-trigger the update forever.
+  const total = Number.isFinite(value) ? Math.max(0, Math.trunc(value)) : 0;
 
-  const length = value ? Math.max(1, Math.floor(Math.log10(value) + 1)) : 1;
+  const [roll, setRoll] = useState({ from: null as number | null, to: total });
+
+  // Adjusting during render puts the roll in the markup React paints.
+  if (roll.to !== total) {
+    setRoll((state) => ({ from: state.to, to: total }));
+  }
+
+  const digits = String(total).split("").map(Number);
+  const { length } = digits;
+
+  // A different column count misaligns every strip.
+  const previous =
+    roll.from !== null && String(roll.from).length === length
+      ? String(roll.from).split("").map(Number)
+      : null;
 
   return (
-    <Box>
+    <Box position="relative">
+      <Box srOnly>{numberFormatter.format(total)}</Box>
       <Flex
+        aria-hidden="true"
         display="inline-flex"
         direction="row"
         overflow="hidden"
@@ -75,24 +108,38 @@ export function Counter({ value, lineHeight = 35, duration = 1 }: Props) {
         justifyContent="center"
         mixBlendMode="luminosity"
       >
-        {[...Array(length).keys()].map((i) => {
-          const iterations = Math.floor(value / 10 ** (length - i - 1)) / 10;
-          const unitDuration = duration / iterations;
+        {digits.map((digit, i) => {
+          const animation = previous
+            ? rollTo(previous[i], digit)
+            : windUp(total, length, i, spinUpSeconds);
+
+          const rest = restAt(digit, lineHeight);
+
           return (
             <Box
+              // Only a remount restarts the animation. Keying on the digit
+              // remounts just the columns that changed.
+              key={`${i}-${digit}`}
               margin={0}
               p={0}
               fontFamily="monospace"
               fontSize={`${lineHeight}px`}
-              key={i}
-              css={{
-                animationName: `${scrollDigits(lineHeight)}`,
-                animationTimingFunction: "ease-in-out",
-                animationDuration: `${unitDuration}s`,
-                animationFillMode: "forwards",
-                animationIterationCount: iterations,
-                "&:first-of-type li": { borderLeft: "none" },
-              }}
+              css={
+                animation
+                  ? {
+                      animationName: `${scrollDigits(lineHeight)}`,
+                      animationTimingFunction: "ease-in-out",
+                      animationDuration: `${animation.cycleDuration}s`,
+                      animationDelay: `${animation.delay}s`,
+                      animationIterationCount: animation.iterations,
+                      animationFillMode: "both",
+                      "@media (prefers-reduced-motion: reduce)": {
+                        animationName: "none",
+                        ...rest,
+                      },
+                    }
+                  : rest
+              }
             >
               <Numbers index={i} lineHeight={lineHeight} />
             </Box>

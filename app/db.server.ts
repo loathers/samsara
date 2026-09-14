@@ -394,6 +394,72 @@ export async function countAscensions(pathName?: string, dateBefore?: Date) {
   return Number(count);
 }
 
+const SECONDS_PER_DAY = 24 * 60 * 60;
+
+/**
+ * On `discoveredAt`, not `date`. Rows appear when the scanner inserts them, so
+ * a backfill of old ascensions has to register as growth, not vanish.
+ */
+export async function getAscensionRate({ days = 7 } = {}) {
+  const { count } = await kysely
+    .selectFrom("Ascension")
+    .select((eb) => eb.fn.countAll<number>().as("count"))
+    .where(
+      "discoveredAt",
+      ">=",
+      sql<Date>`NOW() - make_interval(days => ${days})`,
+    )
+    .executeTakeFirstOrThrow();
+
+  return Number(count) / (days * SECONDS_PER_DAY);
+}
+
+export type CountSnapshot = {
+  totalTracked: number;
+  ascensionsPerSecond: number;
+  takenAtMs: number;
+  nextUpdateMs: number;
+};
+
+// Both queries are whole-table aggregates and every visitor polls on a timer.
+const SNAPSHOT_TTL_MS = 10_000;
+
+let cachedSnapshot: { at: number; pending: Promise<CountSnapshot> } | null = null;
+
+async function buildCountSnapshot(): Promise<CountSnapshot> {
+  try {
+    const [totalTracked, ascensionsPerSecond, nextUpdateMs] =
+      await Promise.all([
+        countAscensions(),
+        getAscensionRate(),
+        getNextUpdateMs(),
+      ]);
+
+    const takenAtMs = Date.now();
+
+    return {
+      totalTracked,
+      ascensionsPerSecond,
+      takenAtMs,
+      nextUpdateMs:
+        nextUpdateMs ?? takenAtMs + DEFAULT_UPDATE_INTERVAL_SECONDS * 1000,
+    };
+  } catch (error) {
+    // Don't serve a failure for the rest of the window.
+    cachedSnapshot = null;
+    throw error;
+  }
+}
+
+export function getCountSnapshot() {
+  if (cachedSnapshot && Date.now() - cachedSnapshot.at < SNAPSHOT_TTL_MS) {
+    return cachedSnapshot.pending;
+  }
+
+  cachedSnapshot = { at: Date.now(), pending: buildCountSnapshot() };
+  return cachedSnapshot.pending;
+}
+
 export async function getRecordsForRSS() {
   const rows = await kysely
     .selectFrom("Ascension as a")
@@ -974,14 +1040,22 @@ export async function findPathWithClasses({
 
 // ── Misc ────────────────────────────────────────────────────────────────────
 
-export async function getMaxAge() {
+// Mirrors the scanner's default SCHEDULE.
+const DEFAULT_UPDATE_INTERVAL_SECONDS = 1800;
+
+/** Absolute, so callers can tell "due now" from "overdue for hours". */
+export async function getNextUpdateMs() {
   const row = await kysely
     .selectFrom("Setting")
     .select("value")
     .where("key", "=", "nextUpdate")
     .executeTakeFirst();
 
-  if (!row?.value) return 1800;
-  const secondsLeft = Math.ceil((Number(row.value) - Date.now()) / 1000);
-  return Math.max(0, secondsLeft);
+  return row?.value ? Number(row.value) : null;
+}
+
+export async function getMaxAge() {
+  const nextUpdateMs = await getNextUpdateMs();
+  if (nextUpdateMs === null) return DEFAULT_UPDATE_INTERVAL_SECONDS;
+  return Math.max(0, Math.ceil((nextUpdateMs - Date.now()) / 1000));
 }
