@@ -29,7 +29,14 @@ import { CoolStat } from "~/components/CoolStat";
 import { PathLink } from "~/components/PathLink";
 import { PopularityGraph } from "~/components/PopularityGraph";
 import { Select } from "~/components/Select.js";
-import { countAscensions, getFrequency, getPopularity, getPaths, getStat } from "~/db.server";
+import {
+  getCountSnapshot,
+  getFrequency,
+  getPopularity,
+  getPaths,
+  getStat,
+} from "~/db.server";
+import { useLiveCount } from "~/hooks/useLiveCount";
 import { formatPathName, getPathAcronym } from "~/utils.js";
 
 export const meta = () => {
@@ -40,13 +47,19 @@ export const meta = () => {
 };
 
 export const loader = async () => {
-  const totalTracked = await countAscensions();
+  const [count, frequency, popularity, unsortedPaths, loopersStat] =
+    await Promise.all([
+      getCountSnapshot(),
+      getFrequency(),
+      getPopularity(),
+      getPaths(),
+      getStat({ numberOfAscensions: 7 }),
+    ]);
 
-  const frequency = await getFrequency();
-  const popularity = await getPopularity();
+  const [loopers, loopersChange] = loopersStat;
 
   // `ORDER BY id = 999, id DESC NULLS LAST, name ASC` — the JS sort moves id=999 to the end
-  const paths = (await getPaths()).sort((a, b) =>
+  const paths = unsortedPaths.sort((a, b) =>
     a.id === 999 ? 1 : b.id === 999 ? -1 : 0,
   );
 
@@ -57,7 +70,6 @@ export const loader = async () => {
       : { name: "Standard", slug: "standard", image: "standard11" };
 
   const [currentPathers, currentPathersChange] = await getStat({ path: currentPath });
-  const [loopers, loopersChange] = await getStat({ numberOfAscensions: 7 });
 
   const rollover = new Date();
   rollover.setUTCHours(24 + 3, 30, 0, 0);
@@ -72,7 +84,7 @@ export const loader = async () => {
       currentPathers,
       currentPathersChange,
       frequency,
-      totalTracked,
+      count,
       popularity,
     },
     {
@@ -108,9 +120,11 @@ export default function Index() {
     currentPathers,
     currentPathersChange,
     frequency,
-    totalTracked,
+    count,
     popularity,
   } = useLoaderData<typeof loader>();
+
+  const totalTracked = useLiveCount(count);
 
   const navigate = useNavigate();
   const { toggleColorMode, colorMode } = useColorMode();
@@ -185,7 +199,7 @@ export default function Index() {
 
         <Stack direction="row" justifyContent="center" alignItems="center">
           <Text>Now tracking</Text>
-          <Counter value={totalTracked} duration={1} lineHeight={25} />
+          <Counter value={totalTracked} spinUpSeconds={1} lineHeight={25} />
           <Text>incarnations!</Text>
         </Stack>
       </Stack>
