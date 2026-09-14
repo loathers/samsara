@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 
 import type { CountSnapshot } from "~/db.server";
 
-// `nextUpdateMs` is routinely already past, which would mean a request every frame.
 const MIN_POLL_MS = 30_000;
 
 function project(
