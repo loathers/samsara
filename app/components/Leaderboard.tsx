@@ -23,7 +23,6 @@ type Props = {
   ascensions: LeaderboardEntry[];
   showClass?: boolean;
   ranked?: boolean;
-  /** Names the boards that say which extras are worth a column of their own. */
   pathName: string;
   /** The board's measure, shown in its own column ahead of the daycount. */
   alternativeScore?: Board["extra"];
