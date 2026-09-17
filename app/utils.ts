@@ -88,9 +88,13 @@ export const getExtraEntries = (extra: JsonValue, omit: string[] = []) => {
 export const formatExtraValue = (value: JsonValue) =>
   typeof value === "number" ? numberFormatter.format(value) : String(value);
 
+/** The game writes some extras in lower case, and only their case needs fixing. */
+export const formatExtraKey = (key: string) =>
+  key.replace(/\b[a-z]/g, (c) => c.toUpperCase());
+
 export const formatExtra = (extra: JsonValue, omit: string[] = []) =>
   getExtraEntries(extra, omit)
-    .map(([key, value]) => `${key}: ${formatExtraValue(value)}`)
+    .map(([key, value]) => `${formatExtraKey(key)}: ${formatExtraValue(value)}`)
     .join(", ");
 
 export const percentFormatter = new Intl.NumberFormat(undefined, {

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { formatExtra, getExtraEntries, getPathAcronym } from "./utils";
+import {
+  formatExtra,
+  formatExtraKey,
+  getExtraEntries,
+  getPathAcronym,
+} from "./utils";
 
 describe("getPathAcronym", () => {
   it.each([
@@ -45,6 +50,22 @@ describe("formatExtra", () => {
 
   it("returns nothing once every key is omitted", () => {
     expect(formatExtra({ "Goo Score": 2965 }, ["Goo Score"])).toBe("");
+  });
+
+  it("title cases the keys the game writes in lower case", () => {
+    expect(formatExtra({ skills: 13, "starting points": 0 })).toBe(
+      "Skills: 13, Starting Points: 0",
+    );
+  });
+});
+
+describe("formatExtraKey", () => {
+  it.each([
+    ["skills", "Skills"],
+    ["starting points", "Starting Points"],
+    ["Goo Score", "Goo Score"],
+  ])("formats %s as %s", (key, expected) => {
+    expect(formatExtraKey(key)).toBe(expected);
   });
 });
 
