@@ -58,7 +58,7 @@ export default function BadMoonPath() {
           title="Leaderboard"
           description="The official leaderboard as it currently stands"
         >
-          <Leaderboard ascensions={hcLeaderboard}>
+          <Leaderboard pathName={path.name} ascensions={hcLeaderboard}>
             <ClassComparisonChart
               data={classes.main.hardcore}
             />
@@ -76,14 +76,21 @@ export default function BadMoonPath() {
               title="Leaderboard"
               description="The best runs anyone has managed"
             >
-              <Leaderboard ascensions={kittycore.hcLeaderboard} />
+              <Leaderboard
+                pathName={path.name}
+                ascensions={kittycore.hcLeaderboard}
+              />
             </LeaderboardAccordionItem>
             <LeaderboardAccordionItem
               slug="kittycore.recent"
               title="Recent Ascensions"
               description="A chronological catalogue of psychosis"
             >
-              <Leaderboard ascensions={kittycore.hcRecent} ranked={false} />
+              <Leaderboard
+                pathName={path.name}
+                ascensions={kittycore.hcRecent}
+                ranked={false}
+              />
             </LeaderboardAccordionItem>
             <LeaderboardAccordionItem
               slug="kittycore.dedication"
@@ -100,10 +107,12 @@ export default function BadMoonPath() {
           description="Some curious folks managed to run the path outside of Hardcore and we must respect their work"
         >
           <Leaderboard
+            pathName={path.name}
             title="Softcore Leaderboard?"
             ascensions={scLeaderboard}
           />
           <Leaderboard
+            pathName={path.name}
             title="Casual? Leaderboard??"
             ascensions={casualLeaderboard}
           />
@@ -113,7 +122,11 @@ export default function BadMoonPath() {
           title="Recent Ascensions"
           description="The most recent ascensions on this path"
         >
-          <Leaderboard ascensions={hcRecent} ranked={false} />
+          <Leaderboard
+            pathName={path.name}
+            ascensions={hcRecent}
+            ranked={false}
+          />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
           title="Dedication"

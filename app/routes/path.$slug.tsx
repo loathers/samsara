@@ -46,11 +46,16 @@ export const meta = ({ data }: MetaArgs<typeof loader>) => {
   ];
 };
 
+/** What every table of a board shows, ranked or not. */
+const shownOn = (b: BoardData) => ({
+  pathName: b.pathName,
+  omitExtra: b.board.extraEquals?.[0],
+});
+
 /** How a board's own ranking shows up in a table of it. */
 const rankedOn = (b: BoardData) => ({
-  pathName: b.pathName,
+  ...shownOn(b),
   alternativeScore: b.board.extra,
-  omitExtra: b.board.extraEquals?.[0],
 });
 
 type Category = {
@@ -127,16 +132,14 @@ const CATEGORIES: Category[] = [
           ascensions={b.scRecent}
           ranked={false}
           showClass={showClass}
-          pathName={b.pathName}
-          omitExtra={b.board.extraEquals?.[0]}
+          {...shownOn(b)}
         />
         <Leaderboard
           title="Hardcore"
           ascensions={b.hcRecent}
           ranked={false}
           showClass={showClass}
-          pathName={b.pathName}
-          omitExtra={b.board.extraEquals?.[0]}
+          {...shownOn(b)}
         />
       </>
     ),

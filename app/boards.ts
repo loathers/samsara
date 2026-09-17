@@ -4,8 +4,8 @@
  * and how it scores them both live here, and everything else reads them from here.
  */
 
-import type { JsonValue, Lifestyle, TagType } from "./db";
-import { STANDARD, getExtraEntries } from "./utils";
+import type { Lifestyle, TagType } from "./db";
+import { STANDARD } from "./utils";
 
 export type Board = {
   /** Stored in Tag.board. Null where the path ranks a single board. */
@@ -138,22 +138,10 @@ export const allBoards = (): [string, Board[]][] =>
  * cohorts split on. A path naming none of them, and every extra it does not name, is
  * metadata.
  */
-export const visibleExtras = (pathName?: string) =>
-  (pathName === undefined ? [] : boardsFor({ name: pathName })).flatMap((board) =>
+export const visibleExtras = (pathName: string) =>
+  boardsFor({ name: pathName }).flatMap((board) =>
     [board.extra?.key, board.extraEquals?.[0]].filter((key) => key !== undefined),
   );
-
-export const splitExtras = (
-  extra: JsonValue,
-  visible: string[],
-  omit: string[] = [],
-) => {
-  const entries = getExtraEntries(extra, omit);
-  return {
-    shown: entries.filter(([key]) => visible.includes(key)),
-    hidden: entries.filter(([key]) => !visible.includes(key)),
-  };
-};
 
 /** The measure a path's official leaderboard used, which is its first board's. */
 export const pathExtra = (pathName: string) =>

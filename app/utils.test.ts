@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 
+import { visibleExtras } from "./boards";
 import {
   formatExtra,
   formatExtraKey,
   getExtraEntries,
   getPathAcronym,
+  splitExtras,
 } from "./utils";
 
 describe("getPathAcronym", () => {
@@ -78,5 +80,42 @@ describe("getExtraEntries", () => {
 
   it.each([[{}], [null], [[1, 2]]])("returns nothing for %s", (extra) => {
     expect(getExtraEntries(extra)).toEqual([]);
+  });
+});
+
+describe("splitExtras", () => {
+  it("shows the extra a board ranks on", () => {
+    expect(
+      splitExtras({ "Goo Score": 2965 }, visibleExtras("Grey Goo")).shown,
+    ).toEqual([["Goo Score", 2965]]);
+  });
+
+  it("shows the team on the board that mixes them, which filters on nothing", () => {
+    expect(
+      splitExtras({ Team: "Blue" }, visibleExtras("Blue vs. Red")).shown,
+    ).toEqual([["Team", "Blue"]]);
+  });
+
+  it("hides an extra no board of the path uses", () => {
+    expect(
+      splitExtras(
+        { skills: 13, "starting points": 0 },
+        visibleExtras("Avatar of Sneaky Pete"),
+      ),
+    ).toEqual({
+      shown: [],
+      hidden: [
+        ["skills", 13],
+        ["starting points", 0],
+      ],
+    });
+  });
+
+  it("drops a key the board holds constant without hiding it instead", () => {
+    expect(
+      splitExtras({ Team: "Blue", skills: 13 }, visibleExtras("Blue vs. Red"), [
+        "Team",
+      ]),
+    ).toEqual({ shown: [], hidden: [["skills", 13]] });
   });
 });

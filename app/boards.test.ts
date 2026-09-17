@@ -10,7 +10,6 @@ import {
   hashSection,
   findBoard,
   nextHash,
-  splitExtras,
   tagHash,
   visibleExtras,
   yearBoard,
@@ -223,44 +222,6 @@ describe("visibleExtras", () => {
 
   it("takes nothing from a path whose boards rank on days and turns alone", () => {
     expect(visibleExtras("Avatar of Sneaky Pete")).toEqual([]);
-    expect(visibleExtras(undefined)).toEqual([]);
   });
 });
 
-describe("splitExtras", () => {
-  it("shows the extra a board ranks on", () => {
-    expect(
-      splitExtras({ "Goo Score": 2965 }, visibleExtras("Grey Goo")).shown,
-    ).toEqual([["Goo Score", 2965]]);
-  });
-
-  it("shows the team on the board that mixes them, which filters on nothing", () => {
-    expect(
-      splitExtras({ Team: "Blue" }, visibleExtras("Blue vs. Red")).shown,
-    ).toEqual([["Team", "Blue"]]);
-  });
-
-  it("hides an extra no board of the path uses", () => {
-    expect(
-      splitExtras(
-        { skills: 13, "starting points": 0 },
-        visibleExtras("Avatar of Sneaky Pete"),
-      ),
-    ).toEqual({
-      shown: [],
-      hidden: [
-        ["skills", 13],
-        ["starting points", 0],
-      ],
-    });
-  });
-
-  it("drops the omitted keys from both halves", () => {
-    expect(
-      splitExtras({ Team: "Blue", skills: 13 }, visibleExtras("Blue vs. Red"), [
-        "Team",
-        "skills",
-      ]),
-    ).toEqual({ shown: [], hidden: [] });
-  });
-});

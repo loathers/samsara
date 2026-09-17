@@ -76,6 +76,7 @@ export default function NoPath() {
           description="The official leaderboards as they currently stand"
         >
           <Leaderboard
+            pathName={path.name}
             title="Softcore Leaderboard"
             ascensions={scLeaderboard}
           >
@@ -84,6 +85,7 @@ export default function NoPath() {
             />
           </Leaderboard>
           <Leaderboard
+            pathName={path.name}
             title="Hardcore Leaderboard"
             ascensions={hcLeaderboard}
           >
@@ -97,6 +99,7 @@ export default function NoPath() {
           description="No ronin, no karma, all vibes"
         >
           <Leaderboard
+            pathName={path.name}
             title="Casual Leaderboard"
             ascensions={casualLeaderboard}
           />
@@ -107,9 +110,24 @@ export default function NoPath() {
           title="Recent Ascensions"
           description="The most recent ascensions on this path"
         >
-          <Leaderboard title="Softcore" ascensions={scRecent} ranked={false} />
-          <Leaderboard title="Hardcore" ascensions={hcRecent} ranked={false} />
-          <Leaderboard title="Casual" ascensions={casualRecent} ranked={false} />
+          <Leaderboard
+            pathName={path.name}
+            title="Softcore"
+            ascensions={scRecent}
+            ranked={false}
+          />
+          <Leaderboard
+            pathName={path.name}
+            title="Hardcore"
+            ascensions={hcRecent}
+            ranked={false}
+          />
+          <Leaderboard
+            pathName={path.name}
+            title="Casual"
+            ascensions={casualRecent}
+            ranked={false}
+          />
         </LeaderboardAccordionItem>
         <LeaderboardAccordionItem
           title="Dedication"

@@ -1,6 +1,6 @@
 import { Container, Heading, Table } from "@chakra-ui/react";
 
-import { type Board, splitExtras, visibleExtras } from "~/boards";
+import { type Board, visibleExtras } from "~/boards";
 import { AscensionDate } from "~/components/AscensionDate";
 import { Class } from "~/components/Class";
 import { ExtraInfo } from "~/components/ExtraInfo";
@@ -10,10 +10,12 @@ import { Turncount } from "~/components/Turncount";
 import type { LeaderboardEntry } from "~/db.server";
 import {
   awardBg,
+  formatExtraEntries,
   formatExtraKey,
   formatExtraValue,
   getExtra,
   numberFormatter,
+  splitExtras,
 } from "~/utils";
 
 type Props = {
@@ -22,7 +24,7 @@ type Props = {
   showClass?: boolean;
   ranked?: boolean;
   /** Names the boards that say which extras are worth a column of their own. */
-  pathName?: string;
+  pathName: string;
   /** The board's measure, shown in its own column ahead of the daycount. */
   alternativeScore?: Board["extra"];
   omitExtra?: string;
@@ -48,12 +50,7 @@ export function Leaderboard({
   const extras = split.map(({ shown }) =>
     keys.length === 1
       ? shown.map(([, value]) => formatExtraValue(value)).join(", ")
-      : shown
-          .map(
-            ([key, value]) =>
-              `${formatExtraKey(key)}: ${formatExtraValue(value)}`,
-          )
-          .join(", "),
+      : formatExtraEntries(shown),
   );
   const showInfo = split.some(({ hidden }) => hidden.length > 0);
 
@@ -72,9 +69,7 @@ export function Leaderboard({
               <Table.ColumnHeader>Player</Table.ColumnHeader>
               <Table.ColumnHeader>Date</Table.ColumnHeader>
               {alternativeScore && (
-                <Table.ColumnHeader>
-                  {alternativeScore.label}
-                </Table.ColumnHeader>
+                <Table.ColumnHeader>{alternativeScore.label}</Table.ColumnHeader>
               )}
               {keys.length > 0 && (
                 <Table.ColumnHeader>
@@ -107,9 +102,7 @@ export function Leaderboard({
                 </Table.Cell>
                 {alternativeScore && (
                   <Table.Cell>
-                    {numberFormatter.format(
-                      getExtra(alternativeScore.key)(asc),
-                    )}
+                    {numberFormatter.format(getExtra(alternativeScore.key)(asc))}
                   </Table.Cell>
                 )}
                 {keys.length > 0 && <Table.Cell>{extras[i]}</Table.Cell>}
