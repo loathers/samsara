@@ -141,6 +141,7 @@ async function boardData(path: Path & { class: Class[] }, board: Board) {
 
   return {
     board,
+    pathName: path.name,
     recordBreaking,
     classes,
     ...(hardcoreLeaderboards as HardcoreLeaderboards),

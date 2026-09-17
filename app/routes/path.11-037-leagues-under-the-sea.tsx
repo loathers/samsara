@@ -32,10 +32,18 @@ export const meta = () => {
 
 const leaderboards = (b: BoardData) => (
   <>
-    <Leaderboard title="Softcore Leaderboard" ascensions={b.scLeaderboard}>
+    <Leaderboard
+      pathName={b.pathName}
+      title="Softcore Leaderboard"
+      ascensions={b.scLeaderboard}
+    >
       <ClassComparisonChart data={b.classes.main.softcore} />
     </Leaderboard>
-    <Leaderboard title="Hardcore Leaderboard" ascensions={b.hcLeaderboard}>
+    <Leaderboard
+      pathName={b.pathName}
+      title="Hardcore Leaderboard"
+      ascensions={b.hcLeaderboard}
+    >
       <ClassComparisonChart data={b.classes.main.hardcore} />
     </Leaderboard>
   </>
@@ -106,6 +114,7 @@ export default function SeaPath() {
                 postNerf,
                 <>
                   <Leaderboard
+                    pathName={path.name}
                     title="Softcore Pyrites"
                     ascensions={postNerf.scPyrite}
                   >
@@ -114,6 +123,7 @@ export default function SeaPath() {
                     />
                   </Leaderboard>
                   <Leaderboard
+                    pathName={path.name}
                     title="Hardcore Pyrites"
                     ascensions={postNerf.hcPyrite}
                   >
@@ -135,11 +145,13 @@ export default function SeaPath() {
               postNerf,
               <>
                 <Leaderboard
+                  pathName={path.name}
                   title="Softcore"
                   ascensions={postNerf.scRecent}
                   ranked={false}
                 />
                 <Leaderboard
+                  pathName={path.name}
                   title="Hardcore"
                   ascensions={postNerf.hcRecent}
                   ranked={false}

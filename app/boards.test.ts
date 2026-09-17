@@ -11,6 +11,7 @@ import {
   findBoard,
   nextHash,
   tagHash,
+  visibleExtras,
   yearBoard,
 } from "./boards";
 
@@ -209,3 +210,18 @@ describe("nextHash", () => {
     expect(nextHash(undefined, "leaderboards.blue", false)).toBe("");
   });
 });
+
+describe("visibleExtras", () => {
+  it("takes the key a board ranks on", () => {
+    expect(visibleExtras("Grey Goo")).toContain("Goo Score");
+  });
+
+  it("takes the key a board filters on, for every board of the path", () => {
+    expect(visibleExtras("Blue vs. Red")).toContain("Team");
+  });
+
+  it("takes nothing from a path whose boards rank on days and turns alone", () => {
+    expect(visibleExtras("Avatar of Sneaky Pete")).toEqual([]);
+  });
+});
+

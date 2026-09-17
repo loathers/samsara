@@ -76,6 +76,7 @@ export default function PathPage() {
             content: (
               <>
                 <Leaderboard
+                  pathName={path.name}
                   title="Softcore Leaderboard"
                   ascensions={softcore}
                   showClass
@@ -85,6 +86,7 @@ export default function PathPage() {
                   />
                 </Leaderboard>
                 <Leaderboard
+                  pathName={path.name}
                   title="Hardcore Leaderboard"
                   ascensions={hardcore}
                   showClass
@@ -99,6 +101,7 @@ export default function PathPage() {
         />
         <LeaderboardAccordionItem title="Pyrites" description="{PYRITE}">
           <Leaderboard
+            pathName={path.name}
             title="Softcore Pyrites"
             ascensions={scPyrite}
             showClass
@@ -108,6 +111,7 @@ export default function PathPage() {
             />
           </Leaderboard>
           <Leaderboard
+            pathName={path.name}
             title="Hardcore Pyrites"
             ascensions={hcPyrite}
             showClass
@@ -123,12 +127,14 @@ export default function PathPage() {
           description="The most recent ascensions on this path"
         >
           <Leaderboard
+            pathName={path.name}
             title="Softcore"
             ascensions={scRecent}
             ranked={false}
             showClass
           />
           <Leaderboard
+            pathName={path.name}
             title="Hardcore"
             ascensions={hcRecent}
             ranked={false}

@@ -85,13 +85,34 @@ export const getExtraEntries = (extra: JsonValue, omit: string[] = []) => {
   return Object.entries(run.extra).filter(([key]) => !omit.includes(key));
 };
 
+/** The extras a table gives a column of their own, and the metadata it keeps back. */
+export const splitExtras = (
+  extra: JsonValue,
+  visible: string[],
+  omit: string[] = [],
+) => {
+  const entries = getExtraEntries(extra, omit);
+  return {
+    shown: entries.filter(([key]) => visible.includes(key)),
+    hidden: entries.filter(([key]) => !visible.includes(key)),
+  };
+};
+
 export const formatExtraValue = (value: JsonValue) =>
   typeof value === "number" ? numberFormatter.format(value) : String(value);
 
+/** The game writes some extras in lower case, and only their case needs fixing. */
+export const formatExtraKey = (key: string) =>
+  key.replace(/\b[a-z]/g, (c) => c.toUpperCase());
+
+export const formatExtraEntry = ([key, value]: [string, JsonValue]) =>
+  `${formatExtraKey(key)}: ${formatExtraValue(value)}`;
+
+export const formatExtraEntries = (entries: [string, JsonValue][]) =>
+  entries.map(formatExtraEntry).join(", ");
+
 export const formatExtra = (extra: JsonValue, omit: string[] = []) =>
-  getExtraEntries(extra, omit)
-    .map(([key, value]) => `${key}: ${formatExtraValue(value)}`)
-    .join(", ");
+  formatExtraEntries(getExtraEntries(extra, omit));
 
 export const percentFormatter = new Intl.NumberFormat(undefined, {
   style: "percent",

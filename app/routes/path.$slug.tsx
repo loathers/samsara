@@ -46,10 +46,16 @@ export const meta = ({ data }: MetaArgs<typeof loader>) => {
   ];
 };
 
+/** What every table of a board shows, ranked or not. */
+const shownOn = (b: BoardData) => ({
+  pathName: b.pathName,
+  omitExtra: b.board.extraEquals?.[0],
+});
+
 /** How a board's own ranking shows up in a table of it. */
-const rankedOn = (board: BoardData["board"]) => ({
-  alternativeScore: board.extra,
-  omitExtra: board.extraEquals?.[0],
+const rankedOn = (b: BoardData) => ({
+  ...shownOn(b),
+  alternativeScore: b.board.extra,
 });
 
 type Category = {
@@ -74,7 +80,7 @@ const CATEGORIES: Category[] = [
           title="Softcore Leaderboard"
           ascensions={b.scLeaderboard}
           showClass={showClass}
-          {...rankedOn(b.board)}
+          {...rankedOn(b)}
         >
           <ClassComparisonChart data={b.classes.main.softcore} />
         </Leaderboard>
@@ -82,7 +88,7 @@ const CATEGORIES: Category[] = [
           title="Hardcore Leaderboard"
           ascensions={b.hcLeaderboard}
           showClass={showClass}
-          {...rankedOn(b.board)}
+          {...rankedOn(b)}
         >
           <ClassComparisonChart data={b.classes.main.hardcore} />
         </Leaderboard>
@@ -100,7 +106,7 @@ const CATEGORIES: Category[] = [
           title="Softcore Pyrites"
           ascensions={b.scPyrite}
           showClass={showClass}
-          {...rankedOn(b.board)}
+          {...rankedOn(b)}
         >
           <ClassComparisonChart data={b.classes.pyrite.softcore} />
         </Leaderboard>
@@ -108,7 +114,7 @@ const CATEGORIES: Category[] = [
           title="Hardcore Pyrites"
           ascensions={b.hcPyrite}
           showClass={showClass}
-          {...rankedOn(b.board)}
+          {...rankedOn(b)}
         >
           <ClassComparisonChart data={b.classes.pyrite.hardcore} />
         </Leaderboard>
@@ -126,14 +132,14 @@ const CATEGORIES: Category[] = [
           ascensions={b.scRecent}
           ranked={false}
           showClass={showClass}
-          omitExtra={b.board.extraEquals?.[0]}
+          {...shownOn(b)}
         />
         <Leaderboard
           title="Hardcore"
           ascensions={b.hcRecent}
           ranked={false}
           showClass={showClass}
-          omitExtra={b.board.extraEquals?.[0]}
+          {...shownOn(b)}
         />
       </>
     ),

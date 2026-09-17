@@ -132,6 +132,17 @@ export const boardPathNames = () => [...PATH_BOARDS.keys()];
 export const allBoards = (): [string, Board[]][] =>
   boardPathNames().map((name) => [name, boardsFor({ name })]);
 
+/**
+ * The extras a table gives a column of its own: the ones some board of the path ranks or
+ * filters on. Sibling boards count, so Blue vs. Red's overall board shows the team its
+ * cohorts split on. A path naming none of them, and every extra it does not name, is
+ * metadata.
+ */
+export const visibleExtras = (pathName: string) =>
+  boardsFor({ name: pathName }).flatMap((board) =>
+    [board.extra?.key, board.extraEquals?.[0]].filter((key) => key !== undefined),
+  );
+
 /** The measure a path's official leaderboard used, which is its first board's. */
 export const pathExtra = (pathName: string) =>
   boardsFor({ name: pathName })[0].extra;
